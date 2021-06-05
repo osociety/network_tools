@@ -1,7 +1,10 @@
 name: network_tools
-description: Networking Tool Package
+description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
 version: 0.0.1
-homepage:
+issue_tracker: https://github.com/git-elliot/network_tools/issues
+documentation: https://github.com/git-elliot/network_tools/blob/main/README.md
+repository: https://github.com/git-elliot/network_tools
+homepage: https://github.com/git-elliot/network_tools
 
 environment:
   sdk: ">=2.12.0 <3.0.0"

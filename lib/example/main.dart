@@ -1,26 +1,6 @@
-# Getting Started
+import '../network_tools.dart';
 
-Network Tools Supported
-
-1. Host Scanner
-
-2. Port Scanner
-
-What's not supported
-
-1. Mac Address of other devices on network
-
-## Import package in your app
-
-```dart
-import 'package:network_tools/network_tools.dart'; 
-```
-
-## Usage
-
-### Host Scanner
-
-```dart
+void main() {
   String ip = '192.168.1.12';
   // or You can also get ip using network_info_plus package
   // final String? ip = await (NetworkInfo().getWifiIP());
@@ -35,13 +15,8 @@ import 'package:network_tools/network_tools.dart';
     print('Found device: ${host}');
   }, onDone: () {
     print('Scan completed');
-  });// Don't forget to cancel the stream when not in use.
+  });
 
-```
-
-### Port Scanner
-
-```dart
   String target = '192.168.1.1';
   PortScanner.discover(target, progressCallback: (progress) {
     print('Progrees : $progress');
@@ -52,6 +27,4 @@ import 'package:network_tools/network_tools.dart';
   }, onDone: () {
     print('Scan completed');
   });
-```
-
-Inspired from [ping_discover_network](https://github.com/andrey-ushakov/ping_discover_network)
+}
