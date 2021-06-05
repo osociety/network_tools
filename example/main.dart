@@ -1,4 +1,4 @@
-import '../network_tools.dart';
+import 'package:network_tools/network_tools.dart';
 
 void main() {
   String ip = '192.168.1.12';
