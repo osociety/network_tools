@@ -10,11 +10,19 @@ class PortScanner {
   ///Tries connecting ports before until timeout reached.
   static Stream<OpenPort> discover(
     String hostIP, {
-    int maxPort = 1024,
+    int startPort = 0,
+    int endPort = 1024,
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 500),
   }) async* {
-    for (int i = 0; i < maxPort; ++i) {
+    if (startPort < 0 ||
+        endPort < 0 ||
+        startPort > 65535 ||
+        endPort > 65535 ||
+        startPort > endPort) {
+      throw 'Provide a valid port range between 0 to 65535 or startPort < endPort is not true';
+    }
+    for (int i = startPort; i <= endPort; ++i) {
       try {
         final Socket s = await Socket.connect(hostIP, i, timeout: timeout);
         s.destroy();
@@ -32,7 +40,7 @@ class PortScanner {
           rethrow;
         }
       }
-      progressCallback?.call(i * 100 / maxPort);
+      progressCallback?.call((i - startPort) * 100 / (endPort - startPort));
     }
   }
 

@@ -13,19 +13,28 @@ class HostScanner {
 
   ///Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   ///Set maxHost to higher value if you are not getting results.
-  ///It won't start again unless previous scan is completed due to heavy resource consumption.
+  ///It won't firstSubnet again unless previous scan is completed due to heavy resource consumption.
   static Stream<ActiveHost> discover(
     String subnet, {
-    int maxHost = 50,
+    int firstSubnet = 1,
+    int lastSubnet = 50,
     ProgressCallback? progressCallback,
   }) async* {
-    maxHost = min(maxHost, _getMaxHost(_lastNetworkAddress(subnet)));
+    int maxEnd = getMaxHost(subnet);
+    if (firstSubnet > lastSubnet ||
+        firstSubnet < 1 ||
+        lastSubnet < 1 ||
+        firstSubnet > maxEnd ||
+        lastSubnet > maxEnd) {
+      throw 'Invalid subnet range or firstSubnet < lastSubnet is not true';
+    }
+    lastSubnet = min(lastSubnet, maxEnd);
     if (_scanning) {
       print('Previous scan is not being completed');
       return;
     }
     _scanning = true;
-    for (int i = 1; i < maxHost; i++) {
+    for (int i = firstSubnet; i <= lastSubnet; i++) {
       final host = '$subnet.$i';
       final ping = Ping(host, count: 1, timeout: 1);
 
@@ -41,27 +50,27 @@ class HostScanner {
           print(pingData);
         }
       }
-      progressCallback?.call(i * 100 / maxHost);
+      progressCallback
+          ?.call((i - firstSubnet) * 100 / (lastSubnet - firstSubnet));
     }
     _scanning = false;
   }
 
-  static int _getMaxHost(int end) {
-    if (end < 128) {
+  static int getMaxHost(String subnet) {
+    List<String> lastSubnetStr = subnet.split('.');
+    if (lastSubnetStr.isEmpty) {
+      throw 'Invalid subnet Address';
+    }
+
+    int lastSubnet = int.parse(lastSubnetStr[0]);
+
+    if (lastSubnet < 128) {
       return 16777216;
-    } else if (end >= 128 && end < 192) {
+    } else if (lastSubnet >= 128 && lastSubnet < 192) {
       return 65536;
-    } else if (end >= 192 && end < 224) {
+    } else if (lastSubnet >= 192 && lastSubnet < 224) {
       return 256;
     }
     return 256;
-  }
-
-  static int _lastNetworkAddress(String subnet) {
-    List<String> end = subnet.split('.');
-    if (end.isEmpty) {
-      throw 'Invalid subnet Address';
-    }
-    return int.parse(end[0]);
   }
 }
