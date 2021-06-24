@@ -58,4 +58,11 @@ import 'package:network_tools/network_tools.dart';
   });
 ```
 
+## Donate
+
+Support this project. Buy me a coffee.
+|   Bitcoin |   UPI |
+|-----------|-------|
+|<img src="donation/bitcoin_qr.png" width = "100">|<img src="donation/bhim_upi_qr.png" width = "100">|
+
 Inspired from [ping_discover_network](https://github.com/andrey-ushakov/ping_discover_network)
