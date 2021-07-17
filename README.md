@@ -7,6 +7,9 @@ Network Tools Supported
 1. Host Scanner
 
 2. Port Scanner
+   a. Single
+   b. Range
+   c. Custom
 
 What's not supported
 
@@ -45,6 +48,7 @@ import 'package:network_tools/network_tools.dart';
 ### Port Scanner
 
 ```dart
+  //1. Range
   String target = '192.168.1.1';
   PortScanner.discover(target, startPort: 0, endPort: 1024,
       progressCallback: (progress) {
@@ -56,6 +60,11 @@ import 'package:network_tools/network_tools.dart';
   }, onDone: () {
     print('Scan completed');
   });
+  //2. Single
+  bool isOpen = PortScanner.isOpen(target,80);
+  //3. Custom
+  PortScanner.customDiscover(target, portList : const [22, 80, 139]);
+
 ```
 
 ## Support and Donate
