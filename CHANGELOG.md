@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.4
+
+Single and Custom Port Scan added.
+
 ## 0.0.3
 
 Subnet and Port range added.
