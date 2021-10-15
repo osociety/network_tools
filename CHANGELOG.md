@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.5
+
+Resolved issue #1
+
 ## 0.0.4
 
 Single and Custom Port Scan added.
