@@ -67,6 +67,11 @@ import 'package:network_tools/network_tools.dart';
 
 ```
 
+## Sample App
+
+[Vernet](https://github.com/git-elliot/vernet) is the open source app built on top of this library.
+You can check out the code and implementation for more detailed use case of this package. 
+
 ## Support and Donate
 
 1. Support this project by becoming stargazer of this project.
