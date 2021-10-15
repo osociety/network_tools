@@ -7,9 +7,9 @@ Network Tools Supported
 1. Host Scanner
 
 2. Port Scanner
-   a. Single
-   b. Range
-   c. Custom
+    1. Single
+    2. Range
+    3. Custom
 
 What's not supported
 
@@ -74,7 +74,7 @@ import 'package:network_tools/network_tools.dart';
 
     |   Bitcoin |   UPI |
     |-----------|-------|
-    |<img src="donation/bitcoin_qr.png" width = "100">|<img src="donation/bhim_upi_qr.png" width = "100">
+    |<img src="https://github.com/git-elliot/network_tools/blob/main/donation/bitcoin_qr.png" width = "100">|<img src="https://github.com/git-elliot/network_tools/blob/main/donation/bhim_upi_qr.png" width = "100">
 
 3. Support me on Ko-Fi
 

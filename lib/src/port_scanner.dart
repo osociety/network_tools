@@ -49,7 +49,7 @@ class PortScanner {
         await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
     if (address.length > 0) {
       String hostIP = address[0].address;
-      return await _connectToPort(hostIP, port, timeout);
+      return await connectToPort(hostIP, port, timeout);
     } else {
       throw 'Name can not be resolved';
     }
@@ -70,7 +70,7 @@ class PortScanner {
       for (int k = 0; k < portList.length; k++) {
         print('Checking for port ${portList[k]}');
         if (portList[k] >= 0 && portList[k] <= 65535) {
-          yield await _connectToPort(hostIP, portList[k], timeout);
+          yield await connectToPort(hostIP, portList[k], timeout);
         }
         progressCallback?.call(k * 100 / portList.length);
       }
@@ -103,7 +103,7 @@ class PortScanner {
       String hostIP = address[0].address;
       for (int i = startPort; i <= endPort; ++i) {
         print('Checking for port $i');
-        yield await _connectToPort(hostIP, i, timeout);
+        yield await connectToPort(hostIP, i, timeout);
         progressCallback?.call((i - startPort) * 100 / (endPort - startPort));
       }
       print("Port Scan completed");
@@ -112,7 +112,7 @@ class PortScanner {
     }
   }
 
-  static Future<OpenPort> _connectToPort(
+  static Future<OpenPort> connectToPort(
       String ip, int port, Duration timeout) async {
     try {
       final Socket s = await Socket.connect(ip, port, timeout: timeout);

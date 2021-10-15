@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:dart_ping/dart_ping.dart';
+import 'package:network_tools/network_tools.dart';
 import 'models/active_host.dart';
 import 'models/callbacks.dart';
 
@@ -54,6 +55,31 @@ class HostScanner {
           ?.call((i - firstSubnet) * 100 / (lastSubnet - firstSubnet));
     }
     _scanning = false;
+  }
+
+  static Stream<OpenPort> discoverPort(
+    String subnet,
+    int port, {
+    int firstSubnet = 1,
+    int lastSubnet = 50,
+    Duration timeout = const Duration(milliseconds: 500),
+    ProgressCallback? progressCallback,
+  }) async* {
+    int maxEnd = getMaxHost(subnet);
+    if (firstSubnet > lastSubnet ||
+        firstSubnet < 1 ||
+        lastSubnet < 1 ||
+        firstSubnet > maxEnd ||
+        lastSubnet > maxEnd) {
+      throw 'Invalid subnet range or firstSubnet < lastSubnet is not true';
+    }
+    lastSubnet = min(lastSubnet, maxEnd);
+    for (int i = firstSubnet; i <= lastSubnet; i++) {
+      final host = '$subnet.$i';
+      yield await PortScanner.connectToPort(host, port, timeout);
+      progressCallback
+          ?.call((i - firstSubnet) * 100 / (lastSubnet - firstSubnet));
+    }
   }
 
   static int getMaxHost(String subnet) {
