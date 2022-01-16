@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:math';
+
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/network_tools.dart';
-import 'models/active_host.dart';
-import 'models/callbacks.dart';
 
 ///Scans for all hosts in a subnet.
 class HostScanner {
@@ -20,6 +19,7 @@ class HostScanner {
     int firstSubnet = 1,
     int lastSubnet = 50,
     ProgressCallback? progressCallback,
+    bool showPingData = false,
   }) async* {
     int maxEnd = getMaxHost(subnet);
     if (firstSubnet > lastSubnet ||
@@ -35,26 +35,62 @@ class HostScanner {
       return;
     }
     _scanning = true;
+
+    List<Future<ActiveHost?>> activeHostsFuture = [];
+
     for (int i = firstSubnet; i <= lastSubnet; i++) {
       final host = '$subnet.$i';
       final ping = Ping(host, count: 1, timeout: 1);
 
-      await for (PingData pingData in ping.stream) {
-        if (pingData.summary != null) {
-          PingSummary? sum = pingData.summary;
-          if (sum != null) {
-            int rec = sum.received;
-            if (rec > 0) {
-              yield ActiveHost(host, i, ActiveHost.GENERIC);
-            }
+      HostScanner hostScanner = HostScanner();
+      activeHostsFuture.add(
+        hostScanner.getHostFromPing(
+          host: host,
+          i: i,
+          pingStream: ping.stream,
+          showPingData: showPingData,
+        ),
+      );
+    }
+
+    int i = 0;
+    for (Future<ActiveHost?> host in activeHostsFuture) {
+      i++;
+      ActiveHost? tempHost = await host;
+
+      progressCallback
+          ?.call((i - firstSubnet) * 100 / (lastSubnet - firstSubnet));
+
+      if (tempHost == null) {
+        continue;
+      }
+      yield tempHost;
+    }
+
+    _scanning = false;
+  }
+
+  Future<ActiveHost?> getHostFromPing({
+    required String host,
+    required int i,
+    required Stream<PingData> pingStream,
+    bool showPingData = false,
+  }) async {
+    await for (PingData pingData in pingStream) {
+      if (pingData.summary != null) {
+        PingSummary? sum = pingData.summary;
+        if (sum != null) {
+          int rec = sum.received;
+          if (rec > 0) {
+            return ActiveHost(host, i, ActiveHost.GENERIC);
           }
+        }
+        if (showPingData) {
           print(pingData);
         }
       }
-      progressCallback
-          ?.call((i - firstSubnet) * 100 / (lastSubnet - firstSubnet));
     }
-    _scanning = false;
+    return null;
   }
 
   static Stream<OpenPort> discoverPort(
