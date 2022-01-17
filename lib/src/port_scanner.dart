@@ -71,18 +71,19 @@ class PortScanner {
       final String hostIP = address[0].address;
       final List<Future<OpenPort>> openPortList = [];
       for (int k = 0; k < portList.length; k++) {
-        print('Checking for port ${portList[k]}');
         if (portList[k] >= 0 && portList[k] <= 65535) {
           openPortList.add(connectToPort(hostIP, portList[k], timeout));
         }
-        progressCallback?.call(k * 100 / portList.length);
       }
+
+      int counter = 0;
 
       for (final Future<OpenPort> openPortFuture in openPortList) {
-        yield await openPortFuture;
+        OpenPort openPort = await openPortFuture;
+        progressCallback?.call(counter * 100 / portList.length);
+        yield openPort;
+        counter++;
       }
-
-      print('Port Scan completed');
     } else {
       throw 'Name can not be resolved';
     }
