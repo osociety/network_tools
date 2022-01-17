@@ -69,13 +69,19 @@ class PortScanner {
         await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
     if (address.isNotEmpty) {
       final String hostIP = address[0].address;
+      final List<Future<OpenPort>> openPortList = [];
       for (int k = 0; k < portList.length; k++) {
         print('Checking for port ${portList[k]}');
         if (portList[k] >= 0 && portList[k] <= 65535) {
-          yield await connectToPort(hostIP, portList[k], timeout);
+          openPortList.add(connectToPort(hostIP, portList[k], timeout));
         }
         progressCallback?.call(k * 100 / portList.length);
       }
+
+      for (final Future<OpenPort> openPortFuture in openPortList) {
+        yield await openPortFuture;
+      }
+
       print('Port Scan completed');
     } else {
       throw 'Name can not be resolved';
@@ -101,19 +107,18 @@ class PortScanner {
           ' endPort is not true';
     }
 
-    final List<InternetAddress> address =
-        await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
-    if (address.isNotEmpty) {
-      final String hostIP = address[0].address;
-      for (int i = startPort; i <= endPort; ++i) {
-        print('Checking for port $i');
-        yield await connectToPort(hostIP, i, timeout);
-        progressCallback?.call((i - startPort) * 100 / (endPort - startPort));
-      }
-      print('Port Scan completed');
-    } else {
-      throw 'Name can not be resolved';
+    final List<int> portList = [];
+
+    for (int i = startPort; i <= endPort; ++i) {
+      portList.add(i);
     }
+
+    yield* customDiscover(
+      target,
+      portList: portList,
+      progressCallback: progressCallback,
+      timeout: timeout,
+    );
   }
 
   static Future<OpenPort> connectToPort(

@@ -8,7 +8,8 @@ import 'package:network_tools/network_tools.dart';
 class HostScanner {
   ///Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   ///Set maxHost to higher value if you are not getting results.
-  ///It won't firstSubnet again unless previous scan is completed due to heavy resource consumption.
+  ///It won't firstSubnet again unless previous scan is completed due to heavy
+  /// resource consumption.
   static Stream<ActiveHost> discover(
     String subnet, {
     int firstSubnet = 1,
@@ -89,11 +90,19 @@ class HostScanner {
       throw 'Invalid subnet range or firstSubnet < lastSubnet is not true';
     }
     final int lastValidSubnet = min(lastSubnet, maxEnd);
+    final List<Future<OpenPort>> openPortList = [];
     for (int i = firstSubnet; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
-      yield await PortScanner.connectToPort(host, port, timeout);
-      progressCallback
-          ?.call((i - firstSubnet) * 100 / (lastValidSubnet - firstSubnet));
+      openPortList.add(PortScanner.connectToPort(host, port, timeout));
+    }
+
+    int counter = firstSubnet;
+    for (final Future<OpenPort> openPortFuture in openPortList) {
+      yield await openPortFuture;
+      progressCallback?.call(
+        (counter - firstSubnet) * 100 / (lastValidSubnet - firstSubnet),
+      );
+      counter++;
     }
   }
 
