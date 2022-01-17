@@ -1,3 +1,5 @@
+import 'package:dart_ping/dart_ping.dart';
+
 /// ActiveHost which implements comparable
 /// By default sort by hostId ascending
 class ActiveHost extends Comparable<ActiveHost> {
@@ -6,10 +8,12 @@ class ActiveHost extends Comparable<ActiveHost> {
   String _ip;
   int hostId;
   String _make;
+  PingData _pingData;
 
   String get ip => _ip;
   String get make => _make;
-  ActiveHost(this._ip, this.hostId, this._make);
+  PingData get pingData => _pingData;
+  ActiveHost(this._ip, this.hostId, this._make, this._pingData);
 
   @override
   int get hashCode => _ip.hashCode;

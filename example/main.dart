@@ -33,7 +33,7 @@ void main() {
   }); // Don't forget to cancel the stream when not in use.
 
   String target = '192.168.1.1';
-  PortScanner.discover(target, startPort: 0, endPort: 1024,
+  PortScanner.discover(target, startPort: 0, endPort: 100,
       progressCallback: (progress) {
     print('Progress for port discovery : $progress');
   }).listen((event) {
@@ -41,6 +41,6 @@ void main() {
       print('Found open port : $event');
     }
   }, onDone: () {
-    print('Scan completed');
+    print('Port Scan from 0 to 100 completed');
   });
 }
