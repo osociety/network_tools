@@ -9,11 +9,13 @@ class HostScanner {
   ///Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   ///Set maxHost to higher value if you are not getting results.
   ///It won't firstSubnet again unless previous scan is completed due to heavy resource consumption.
-  static Stream<ActiveHost> discover(String subnet,
-      {int firstSubnet = 1,
-      int lastSubnet = 254,
-      ProgressCallback? progressCallback}) async* {
-    int maxEnd = getMaxHost(subnet);
+  static Stream<ActiveHost> discover(
+    String subnet, {
+    int firstSubnet = 1,
+    int lastSubnet = 254,
+    ProgressCallback? progressCallback,
+  }) async* {
+    final int maxEnd = getMaxHost(subnet);
     if (firstSubnet > lastSubnet ||
         firstSubnet < 1 ||
         lastSubnet < 1 ||
@@ -21,11 +23,11 @@ class HostScanner {
         lastSubnet > maxEnd) {
       throw 'Invalid subnet range or firstSubnet < lastSubnet is not true';
     }
-    lastSubnet = min(lastSubnet, maxEnd);
+    final int lastValidSubnet = min(lastSubnet, maxEnd);
 
-    List<Future<ActiveHost?>> activeHostsFuture = [];
+    final List<Future<ActiveHost?>> activeHostsFuture = [];
 
-    for (int i = firstSubnet; i <= lastSubnet; i++) {
+    for (int i = firstSubnet; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
       final ping = Ping(host, count: 1, timeout: 1);
 
@@ -39,12 +41,12 @@ class HostScanner {
     }
 
     int i = 0;
-    for (Future<ActiveHost?> host in activeHostsFuture) {
+    for (final Future<ActiveHost?> host in activeHostsFuture) {
       i++;
-      ActiveHost? tempHost = await host;
+      final ActiveHost? tempHost = await host;
 
       progressCallback
-          ?.call((i - firstSubnet) * 100 / (lastSubnet - firstSubnet));
+          ?.call((i - firstSubnet) * 100 / (lastValidSubnet - firstSubnet));
 
       if (tempHost == null) {
         continue;
@@ -58,12 +60,12 @@ class HostScanner {
     required int i,
     required Stream<PingData> pingStream,
   }) async {
-    await for (PingData pingData in pingStream) {
-      PingSummary? sum = pingData.summary;
+    await for (final PingData pingData in pingStream) {
+      final PingSummary? sum = pingData.summary;
       if (sum != null) {
-        int rec = sum.received;
+        final int rec = sum.received;
         if (rec > 0) {
-          return ActiveHost(host, i, ActiveHost.GENERIC, pingData);
+          return ActiveHost(host, i, ActiveHost.generic, pingData);
         }
       }
     }
@@ -78,7 +80,7 @@ class HostScanner {
     Duration timeout = const Duration(milliseconds: 500),
     ProgressCallback? progressCallback,
   }) async* {
-    int maxEnd = getMaxHost(subnet);
+    final int maxEnd = getMaxHost(subnet);
     if (firstSubnet > lastSubnet ||
         firstSubnet < 1 ||
         lastSubnet < 1 ||
@@ -86,22 +88,22 @@ class HostScanner {
         lastSubnet > maxEnd) {
       throw 'Invalid subnet range or firstSubnet < lastSubnet is not true';
     }
-    lastSubnet = min(lastSubnet, maxEnd);
-    for (int i = firstSubnet; i <= lastSubnet; i++) {
+    final int lastValidSubnet = min(lastSubnet, maxEnd);
+    for (int i = firstSubnet; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
       yield await PortScanner.connectToPort(host, port, timeout);
       progressCallback
-          ?.call((i - firstSubnet) * 100 / (lastSubnet - firstSubnet));
+          ?.call((i - firstSubnet) * 100 / (lastValidSubnet - firstSubnet));
     }
   }
 
   static int getMaxHost(String subnet) {
-    List<String> lastSubnetStr = subnet.split('.');
+    final List<String> lastSubnetStr = subnet.split('.');
     if (lastSubnetStr.isEmpty) {
       throw 'Invalid subnet Address';
     }
 
-    int lastSubnet = int.parse(lastSubnetStr[0]);
+    final int lastSubnet = int.parse(lastSubnetStr[0]);
 
     if (lastSubnet < 128) {
       return 16777216;
