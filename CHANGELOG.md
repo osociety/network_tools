@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.6
+
+Resolved issue #9 and #10
+
 ## 0.0.5
 
 Resolved issue #1
