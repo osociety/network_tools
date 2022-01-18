@@ -1,2 +1,2 @@
-///Progress Callback for scanners
+/// Progress Callback for scanners
 typedef ProgressCallback = void Function(double progress);
