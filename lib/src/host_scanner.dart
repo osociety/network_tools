@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
-import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/models/active_host.dart';
+import 'package:network_tools/src/models/callbacks.dart';
+import 'package:network_tools/src/models/open_port.dart';
+import 'package:network_tools/src/port_scanner.dart';
 
 /// Scans for all hosts in a subnet.
 class HostScanner {

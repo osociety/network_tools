@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'models/callbacks.dart';
-import 'models/open_port.dart';
+import 'package:network_tools/src/models/callbacks.dart';
+import 'package:network_tools/src/models/open_port.dart';
+import 'package:universal_io/io.dart';
 
 /// Scans open port for a target IP or domain.
 class PortScanner {
