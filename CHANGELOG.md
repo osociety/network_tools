@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.0.7
+
+Fixed
+
+1. Saving the response time from each device #9
+
+2. Example crash on Windows #14
+
+3. Bump package version #15
+
 ## 0.0.6
 
 Resolved issue #9 and #10

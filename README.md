@@ -50,7 +50,7 @@ import 'package:network_tools/network_tools.dart';
 ```dart
   //1. Range
   String target = '192.168.1.1';
-  PortScanner.discover(target, startPort: 0, endPort: 1024,
+  PortScanner.discover(target, startPort: 1, endPort: 1024,
       progressCallback: (progress) {
     print('Progress for port discovery : $progress');
   }).listen((event) {
