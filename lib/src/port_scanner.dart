@@ -50,7 +50,12 @@ class PortScanner {
         await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
     if (address.isNotEmpty) {
       final String hostIP = address[0].address;
-      return connectToPort(hostIP, port, timeout);
+      return connectToPort(
+        activeHostsController: StreamController<OpenPort>(),
+        ip: hostIP,
+        port: port,
+        timeout: timeout,
+      );
     } else {
       throw 'Name can not be resolved';
     }
@@ -59,27 +64,44 @@ class PortScanner {
   /// Scans ports only listed in [portList] for a [target]. Progress can be
   /// retrieved by [progressCallback]
   /// Tries connecting ports before until [timeout] reached.
+  /// [resultsInIpAscendingOrder] = false will return results faster but not in
+  /// ascending order and without [progressCallback].
   static Stream<OpenPort> customDiscover(
     String target, {
     List<int> portList = commonPorts,
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 500),
+    bool resultsInIpAscendingOrder = true,
   }) async* {
     final List<InternetAddress> address =
         await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
     if (address.isNotEmpty) {
       final String hostIP = address[0].address;
       final List<Future<OpenPort>> openPortList = [];
+      final StreamController<OpenPort> activeHostsController =
+          StreamController<OpenPort>();
+
       for (int k = 0; k < portList.length; k++) {
         if (portList[k] >= 0 && portList[k] <= 65535) {
-          openPortList.add(connectToPort(hostIP, portList[k], timeout));
+          openPortList.add(
+            connectToPort(
+              ip: hostIP,
+              port: portList[k],
+              timeout: timeout,
+              activeHostsController: activeHostsController,
+            ),
+          );
         }
+      }
+
+      if (!resultsInIpAscendingOrder) {
+        yield* activeHostsController.stream;
       }
 
       int counter = 0;
 
       for (final Future<OpenPort> openPortFuture in openPortList) {
-        OpenPort openPort = await openPortFuture;
+        final OpenPort openPort = await openPortFuture;
         progressCallback?.call(counter * 100 / portList.length);
         yield openPort;
         counter++;
@@ -98,6 +120,7 @@ class PortScanner {
     int endPort = defaultEndPort,
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 500),
+    bool resultsInIpAscendingOrder = true,
   }) async* {
     if (startPort < 0 ||
         endPort < 0 ||
@@ -119,18 +142,23 @@ class PortScanner {
       portList: portList,
       progressCallback: progressCallback,
       timeout: timeout,
+      resultsInIpAscendingOrder: resultsInIpAscendingOrder,
     );
   }
 
-  static Future<OpenPort> connectToPort(
-    String ip,
-    int port,
-    Duration timeout,
-  ) async {
+  static Future<OpenPort> connectToPort({
+    required String ip,
+    required int port,
+    required Duration timeout,
+    required StreamController<OpenPort> activeHostsController,
+  }) async {
     try {
       final Socket s = await Socket.connect(ip, port, timeout: timeout);
       s.destroy();
-      return OpenPort(ip, port, true);
+      final OpenPort tempOpenPort = OpenPort(ip, port, true);
+      activeHostsController.add(tempOpenPort);
+
+      return tempOpenPort;
     } catch (e) {
       if (e is! SocketException) {
         rethrow;
@@ -138,7 +166,10 @@ class PortScanner {
 
       // Check if connection timed out or we got one of predefined errors
       if (e.osError == null || _errorCodes.contains(e.osError?.errorCode)) {
-        return OpenPort(ip, port, false);
+        final OpenPort tempOpenPort = OpenPort(ip, port, false);
+
+        activeHostsController.add(tempOpenPort);
+        return tempOpenPort;
       } else {
         // Error 23,24: Too many open files in system
         rethrow;

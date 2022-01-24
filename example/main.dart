@@ -8,7 +8,7 @@ void main() {
   final stream = HostScanner.discover(
     subnet,
     firstSubnet: 1,
-    lastSubnet: 50,
+    lastSubnet: 254,
     progressCallback: (progress) {
       print('Progress for host discovery : $progress');
     },
@@ -30,7 +30,7 @@ void main() {
     subnet,
     53,
     firstSubnet: 1,
-    lastSubnet: 50,
+    lastSubnet: 254,
     progressCallback: (progress) {
       print('Progress for port discovery on host : $progress');
     },
@@ -47,11 +47,11 @@ void main() {
     },
   ); // Don't forget to cancel the stream when not in use.
 
-  String target = '192.168.1.1';
+  const String target = '192.168.1.1';
   PortScanner.discover(
     target,
-    startPort: 0,
-    endPort: 100,
+    startPort: 1,
+    endPort: 65535,
     progressCallback: (progress) {
       print('Progress for port discovery : $progress');
     },
@@ -62,7 +62,7 @@ void main() {
       }
     },
     onDone: () {
-      print('Port Scan from 0 to 100 completed');
+      print('Port Scan from 0 to 65535 completed');
     },
   );
 }
