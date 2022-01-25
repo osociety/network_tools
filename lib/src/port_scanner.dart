@@ -7,7 +7,7 @@ import 'package:universal_io/io.dart';
 /// Scans open port for a target IP or domain.
 class PortScanner {
   static const int defaultStartPort = 1;
-  static const int defaultEndPort = 65535;
+  static const int defaultEndPort = 1024;
   static const List<int> commonPorts = [
     20,
     21,

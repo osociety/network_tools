@@ -51,7 +51,7 @@ void main() {
   PortScanner.discover(
     target,
     startPort: 1,
-    endPort: 65535,
+    endPort: 1024,
     progressCallback: (progress) {
       print('Progress for port discovery : $progress');
     },
@@ -62,7 +62,7 @@ void main() {
       }
     },
     onDone: () {
-      print('Port Scan from 0 to 65535 completed');
+      print('Port Scan from 0 to 1024 completed');
     },
   );
 }
