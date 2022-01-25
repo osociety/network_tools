@@ -98,7 +98,7 @@ class HostScanner {
     int port, {
     int firstSubnet = 1,
     int lastSubnet = 254,
-    Duration timeout = const Duration(milliseconds: 500),
+    Duration timeout = const Duration(milliseconds: 2000),
     ProgressCallback? progressCallback,
     bool resultsInIpAscendingOrder = true,
   }) async* {

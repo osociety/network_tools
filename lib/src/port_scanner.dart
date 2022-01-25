@@ -6,8 +6,8 @@ import 'package:universal_io/io.dart';
 
 /// Scans open port for a target IP or domain.
 class PortScanner {
-  static const int defaultStartPort = 0;
-  static const int defaultEndPort = 1024;
+  static const int defaultStartPort = 1;
+  static const int defaultEndPort = 65535;
   static const List<int> commonPorts = [
     20,
     21,
@@ -40,7 +40,7 @@ class PortScanner {
   static Future<OpenPort> isOpen(
     String target,
     int port, {
-    Duration timeout = const Duration(milliseconds: 500),
+    Duration timeout = const Duration(milliseconds: 2000),
   }) async {
     if (port < 0 || port > 65535) {
       throw 'Provide a valid port range between '
@@ -70,7 +70,7 @@ class PortScanner {
     String target, {
     List<int> portList = commonPorts,
     ProgressCallback? progressCallback,
-    Duration timeout = const Duration(milliseconds: 500),
+    Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInIpAscendingOrder = true,
   }) async* {
     final List<InternetAddress> address =
@@ -119,7 +119,7 @@ class PortScanner {
     int startPort = defaultStartPort,
     int endPort = defaultEndPort,
     ProgressCallback? progressCallback,
-    Duration timeout = const Duration(milliseconds: 500),
+    Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInIpAscendingOrder = true,
   }) async* {
     if (startPort < 0 ||

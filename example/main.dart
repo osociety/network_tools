@@ -58,7 +58,7 @@ void main() {
   ).listen(
     (event) {
       if (event.isOpen) {
-        print('Found open port : $event');
+        print('Found open port : ${event.port}');
       }
     },
     onDone: () {
