@@ -2,19 +2,25 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
-import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/models/active_host.dart';
+import 'package:network_tools/src/models/callbacks.dart';
+import 'package:network_tools/src/models/open_port.dart';
+import 'package:network_tools/src/port_scanner.dart';
 
-///Scans for all hosts in a subnet.
+/// Scans for all hosts in a subnet.
 class HostScanner {
-  ///Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
-  ///Set maxHost to higher value if you are not getting results.
-  ///It won't firstSubnet again unless previous scan is completed due to heavy
+  /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
+  /// Set maxHost to higher value if you are not getting results.
+  /// It won't firstSubnet again unless previous scan is completed due to heavy
   /// resource consumption.
+  /// [resultsInIpAscendingOrder] = false will return results faster but not in
+  /// ascending order and without [progressCallback].
   static Stream<ActiveHost> discover(
     String subnet, {
     int firstSubnet = 1,
     int lastSubnet = 254,
     ProgressCallback? progressCallback,
+    bool resultsInIpAscendingOrder = true,
   }) async* {
     final int maxEnd = getMaxHost(subnet);
     if (firstSubnet > lastSubnet ||
@@ -27,6 +33,8 @@ class HostScanner {
     final int lastValidSubnet = min(lastSubnet, maxEnd);
 
     final List<Future<ActiveHost?>> activeHostsFuture = [];
+    final StreamController<ActiveHost> activeHostsController =
+        StreamController<ActiveHost>();
 
     for (int i = firstSubnet; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
@@ -34,11 +42,16 @@ class HostScanner {
 
       activeHostsFuture.add(
         _getHostFromPing(
+          activeHostsController: activeHostsController,
           host: host,
           i: i,
           pingStream: ping.stream,
         ),
       );
+    }
+
+    if (!resultsInIpAscendingOrder) {
+      yield* activeHostsController.stream;
     }
 
     int i = 0;
@@ -60,26 +73,34 @@ class HostScanner {
     required String host,
     required int i,
     required Stream<PingData> pingStream,
+    required StreamController<ActiveHost> activeHostsController,
   }) async {
     await for (final PingData pingData in pingStream) {
-      final PingSummary? sum = pingData.summary;
-      if (sum != null) {
-        final int rec = sum.received;
-        if (rec > 0) {
-          return ActiveHost(host, i, ActiveHost.generic, pingData);
+      final PingResponse? response = pingData.response;
+      if (response != null) {
+        final Duration? time = response.time;
+        if (time != null) {
+          final ActiveHost tempActiveHost =
+              ActiveHost(host, i, ActiveHost.generic, pingData);
+          activeHostsController.add(tempActiveHost);
+          return tempActiveHost;
         }
       }
     }
     return null;
   }
 
+  /// Scans for all hosts that have the specific port that was given.
+  /// [resultsInIpAscendingOrder] = false will return results faster but not in
+  /// ascending order and without [progressCallback].
   static Stream<OpenPort> discoverPort(
     String subnet,
     int port, {
     int firstSubnet = 1,
     int lastSubnet = 254,
-    Duration timeout = const Duration(milliseconds: 500),
+    Duration timeout = const Duration(milliseconds: 2000),
     ProgressCallback? progressCallback,
+    bool resultsInIpAscendingOrder = true,
   }) async* {
     final int maxEnd = getMaxHost(subnet);
     if (firstSubnet > lastSubnet ||
@@ -91,9 +112,23 @@ class HostScanner {
     }
     final int lastValidSubnet = min(lastSubnet, maxEnd);
     final List<Future<OpenPort>> openPortList = [];
+    final StreamController<OpenPort> activeHostsController =
+        StreamController<OpenPort>();
+
     for (int i = firstSubnet; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
-      openPortList.add(PortScanner.connectToPort(host, port, timeout));
+      openPortList.add(
+        PortScanner.connectToPort(
+          ip: host,
+          port: port,
+          timeout: timeout,
+          activeHostsController: activeHostsController,
+        ),
+      );
+    }
+
+    if (!resultsInIpAscendingOrder) {
+      yield* activeHostsController.stream;
     }
 
     int counter = firstSubnet;
