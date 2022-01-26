@@ -1,6 +1,14 @@
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
 
 void main() {
+  Logger.root.level = Level.FINE;
+  Logger.root.onRecord.listen((record) {
+    print(
+        '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}');
+  });
+  final _log = Logger('port_scan');
   const String ip = '192.168.1.1';
   // or You can also get ip using network_info_plus package
   // final String? ip = await (NetworkInfo().getWifiIP());
@@ -13,18 +21,18 @@ void main() {
     firstSubnet: 1,
     lastSubnet: 254,
     progressCallback: (progress) {
-      print('Progress for port discovery on host : $progress');
+      _log.finer('Progress for port discovery on host : $progress');
     },
   );
 
   stream2.listen(
     (port) {
       if (port.isOpen) {
-        print('Found open port: ${port.port} on ${port.ip}');
+        _log.fine('Found open port: ${port.port} on ${port.ip}');
       }
     },
     onDone: () {
-      print('Port Scan completed');
+      _log.fine('Port Scan completed');
     },
   ); // Don't forget to cancel the stream when not in use.
 
@@ -34,16 +42,16 @@ void main() {
     startPort: 1,
     endPort: 9400,
     progressCallback: (progress) {
-      print('Progress for port discovery : $progress');
+      _log.finer('Progress for port discovery : $progress');
     },
   ).listen(
     (event) {
       if (event.isOpen) {
-        print('Found open port : ${event.port}');
+        _log.fine('Found open port : ${event.port}');
       }
     },
     onDone: () {
-      print('Port Scan from 1 to 9400 completed');
+      _log.fine('Port Scan from 1 to 9400 completed');
     },
   );
 }
