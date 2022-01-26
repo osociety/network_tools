@@ -67,6 +67,11 @@ import 'package:network_tools/network_tools.dart';
 
 ```
 
+### Run examples
+
+Run host scan : `dart example/host_scan.dart`
+Run port scan : `dart example/port_scan.dart`
+
 ## Sample App
 
 [Vernet](https://github.com/git-elliot/vernet) is the open source app built on top of this library.

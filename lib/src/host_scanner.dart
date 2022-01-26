@@ -76,10 +76,10 @@ class HostScanner {
     required StreamController<ActiveHost> activeHostsController,
   }) async {
     await for (final PingData pingData in pingStream) {
-      final PingSummary? sum = pingData.summary;
-      if (sum != null) {
-        final int rec = sum.received;
-        if (rec > 0) {
+      final PingResponse? response = pingData.response;
+      if (response != null) {
+        final Duration? time = response.time;
+        if (time != null) {
           final ActiveHost tempActiveHost =
               ActiveHost(host, i, ActiveHost.generic, pingData);
           activeHostsController.add(tempActiveHost);
