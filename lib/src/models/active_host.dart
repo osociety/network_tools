@@ -15,6 +15,7 @@ class ActiveHost extends Comparable<ActiveHost> {
   String get ip => _ip;
   String get make => _make;
   PingData get pingData => _pingData;
+  Duration? get reponseTime => _pingData.response!.time;
 
   @override
   int get hashCode => _ip.hashCode;
@@ -29,6 +30,6 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   @override
   String toString() {
-    return 'IP : $_ip, HostId : $hostId, make: $_make';
+    return 'IP : $_ip, HostId : $hostId, make: $_make, Time: ${reponseTime?.inMilliseconds}ms';
   }
 }

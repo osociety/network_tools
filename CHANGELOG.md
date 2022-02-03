@@ -1,5 +1,13 @@
 # Change Log
 
+## 1.0.8
+
+Fixes
+
+1. #13: Add logs using logging package
+
+2. #20: Even more points in pub.dev page
+
 ## 1.0.7
 
 Fixed
