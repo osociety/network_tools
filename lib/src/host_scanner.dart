@@ -19,6 +19,7 @@ class HostScanner {
     String subnet, {
     int firstSubnet = 1,
     int lastSubnet = 254,
+    int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInIpAscendingOrder = true,
   }) async* {
@@ -38,13 +39,12 @@ class HostScanner {
 
     for (int i = firstSubnet; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
-      final ping = Ping(host, count: 1, timeout: 1);
       activeHostsFuture.add(
         _getHostFromPing(
           activeHostsController: activeHostsController,
           host: host,
           i: i,
-          pingStream: ping.stream,
+          timeoutInSeconds: timeoutInSeconds,
         ),
       );
     }
@@ -71,14 +71,16 @@ class HostScanner {
   static Future<ActiveHost?> _getHostFromPing({
     required String host,
     required int i,
-    required Stream<PingData> pingStream,
     required StreamController<ActiveHost> activeHostsController,
+    int timeoutInSeconds = 1,
   }) async {
-    await for (final PingData pingData in pingStream) {
-      final PingResponse? response = pingData.response;
-      if (response != null) {
-        final Duration? time = response.time;
-        if (time != null) {
+    
+    await for (final PingData pingData
+        in Ping(host, count: 1, timeout: timeoutInSeconds).stream) {
+      final PingSummary? sum = pingData.summary;
+      if (sum != null) {
+        final int rec = sum.received;
+        if (rec > 0) {
           final ActiveHost tempActiveHost =
               ActiveHost(host, i, ActiveHost.generic, pingData);
           activeHostsController.add(tempActiveHost);
