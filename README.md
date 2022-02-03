@@ -67,6 +67,24 @@ import 'package:network_tools/network_tools.dart';
 
 ```
 
+### Run examples
+
+1. Run host scan : `dart example/host_scan.dart`
+2. Run port scan : `dart example/port_scan.dart`
+
+## Enable Debugging
+
+Add this code to your `main.dart` file
+
+```dart
+Logger.root.level = Level.FINE; //set to finest for detailed log
+  Logger.root.onRecord.listen((record) {
+    print(
+        '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}');
+  });
+
+```
+
 ## Sample App
 
 [Vernet](https://github.com/git-elliot/vernet) is the open source app built on top of this library.
