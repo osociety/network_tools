@@ -97,7 +97,7 @@ You can check out the code and implementation for more detailed use case of this
 
     |   Bitcoin |   UPI |
     |-----------|-------|
-    |<img src="https://github.com/git-elliot/network_tools/blob/main/donation/bitcoin_qr.png" width = "100">|<img src="https://github.com/git-elliot/network_tools/blob/main/donation/bhim_upi_qr.png" width = "100">
+    |<img src="https://raw.githubusercontent.com/git-elliot/network_tools/main/donation/bitcoin_qr.png" width = "100">|<img src="https://raw.githubusercontent.com/git-elliot/network_tools/main/donation/bhim_upi_qr.png" width = "100">
 
 3. Support me on Ko-Fi
 
