@@ -155,7 +155,7 @@ class PortScanner {
     try {
       final Socket s = await Socket.connect(ip, port, timeout: timeout);
       s.destroy();
-      final OpenPort tempOpenPort = OpenPort(ip, port, true);
+      final OpenPort tempOpenPort = OpenPort(ip, port, isOpen: true);
       activeHostsController.add(tempOpenPort);
 
       return tempOpenPort;
@@ -166,7 +166,7 @@ class PortScanner {
 
       // Check if connection timed out or we got one of predefined errors
       if (e.osError == null || _errorCodes.contains(e.osError?.errorCode)) {
-        final OpenPort tempOpenPort = OpenPort(ip, port, false);
+        final OpenPort tempOpenPort = OpenPort(ip, port);
 
         activeHostsController.add(tempOpenPort);
         return tempOpenPort;
