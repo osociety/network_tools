@@ -9,11 +9,17 @@ environment:
   sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
+  # Multi-platform network ping utility.
   dart_ping: ^7.0.1
+  # Deal with internationalized/localized messages and more.
   intl: ^0.17.0
+  # Debugging and error logging.
   logging: ^1.0.2
+  # Cross-platform 'dart:io' that works in all platforms.
   universal_io: ^2.0.4
 
 dev_dependencies:
+  # Set of lint rules for Dart.
   lint: ^1.8.2
+  # Writing and running Dart tests.
   test: ^1.21.4
