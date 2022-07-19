@@ -1,12 +1,12 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 2.0.0
+version: 1.0.9
 issue_tracker: https://github.com/git-elliot/network_tools/issues
 repository: https://github.com/git-elliot/network_tools
 homepage: https://github.com/git-elliot/network_tools
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   # Multi-platform network ping utility.
