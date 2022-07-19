@@ -6,7 +6,8 @@ void main() {
   Logger.root.level = Level.FINE;
   Logger.root.onRecord.listen((record) {
     print(
-        '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}');
+      '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
+    );
   });
   final _log = Logger('port_scan');
   const String ip = '192.168.1.1';
@@ -15,11 +16,13 @@ void main() {
   final String subnet = ip.substring(0, ip.lastIndexOf('.'));
 
   // [New] Scan for a single open port in a subnet
+  // You can set [firstSubnet] and scan will start from this host in the network.
+  // Similarly set [lastSubnet] and scan will end at this host in the network.
   final stream2 = HostScanner.discoverPort(
     subnet,
     53,
-    firstSubnet: 1,
-    lastSubnet: 254,
+    // firstSubnet: 1,
+    // lastSubnet: 254,
     progressCallback: (progress) {
       _log.finer('Progress for port discovery on host : $progress');
     },
@@ -39,7 +42,8 @@ void main() {
   const String target = '192.168.1.1';
   PortScanner.discover(
     target,
-    startPort: 1,
+    // Scan will start from this port.
+    // startPort: 1,
     endPort: 9400,
     progressCallback: (progress) {
       _log.finer('Progress for port discovery : $progress');
