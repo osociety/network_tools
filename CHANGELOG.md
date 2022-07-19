@@ -1,5 +1,11 @@
 # Change Log
 
+## 1.0.9
+
+1. Updated dart_ping package version to 7.0.1
+
+2. Updated test package version to 1.21.4
+
 ## 1.0.8
 
 Fixes
