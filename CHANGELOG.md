@@ -1,5 +1,13 @@
 # Change Log
 
+## 2.0.0
+
+1. **Breaking change**. Bump minimum dart version to 2.17.0.
+
+2. Updated dart_ping package version to 7.0.1.
+
+3. Updated test package version to 1.21.4.
+
 ## 1.0.8
 
 Fixes
