@@ -29,9 +29,11 @@ void main() {
   );
 
   stream2.listen(
-    (port) {
-      if (port.isOpen) {
-        _log.fine('Found open port: ${port.port} on ${port.ip}');
+    (activeHost) {
+      final OpenPort deviceWithOpenPort = activeHost.openPort[0];
+      if (deviceWithOpenPort.isOpen) {
+        _log.fine(
+            'Found open port: ${deviceWithOpenPort.port} on ${activeHost.ip}');
       }
     },
     onDone: () {
@@ -49,9 +51,11 @@ void main() {
       _log.finer('Progress for port discovery : $progress');
     },
   ).listen(
-    (event) {
-      if (event.isOpen) {
-        _log.fine('Found open port : ${event.port}');
+    (activeHost) {
+      final OpenPort deviceWithOpenPort = activeHost.openPort[0];
+
+      if (deviceWithOpenPort.isOpen) {
+        _log.fine('Found open port : ${deviceWithOpenPort.port}');
       }
     },
     onDone: () {

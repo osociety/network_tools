@@ -7,7 +7,7 @@ import 'package:network_tools/src/models/open_port.dart';
 class ActiveHost extends Comparable<ActiveHost> {
   ActiveHost(
     this._ip, {
-    this.openPort,
+    this.openPort = const [],
     PingData? pingData,
     this.deviceName = generic,
     this.mdnsInfo,
@@ -27,7 +27,7 @@ class ActiveHost extends Comparable<ActiveHost> {
   MdnsInfo? mdnsInfo;
 
   /// List of all the open port of this device
-  List<OpenPort>? openPort;
+  List<OpenPort> openPort;
 
   String get ip => _ip;
 
