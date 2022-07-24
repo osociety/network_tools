@@ -1,3 +1,5 @@
+/// Service record list that is including the protocol, mostly _tcp, _udp may
+/// not work
 List<String> srvRecordsList = [
   '_uscan._tcp', // Any HP-compatible network scanners
   '_uscans._tcp', // Any SSL/TLS-capable HP-compatible network scanners
@@ -24,4 +26,5 @@ List<String> srvRecordsList = [
   '_mqtt._tcp',
   '_autodiscover._tcp',
   '_sip._tcp',
+  '_minecraft._tcp'
 ];
