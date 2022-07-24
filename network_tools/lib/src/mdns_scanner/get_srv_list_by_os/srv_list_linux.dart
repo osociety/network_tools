@@ -7,7 +7,9 @@ class SrvListLinux {
     final HashSet<String> srvList = HashSet<String>();
 
     try {
-      srvList.addAll(await runAvahiBrowseCommand());
+      // Using this command is missing some results and could make the rest of
+      // the program not search all needed srv types.
+      // srvList.addAll(await runAvahiBrowseCommand());
       srvList.addAll(await runMdnsScanCommand());
     } catch (e) {
       print('Error:\n$e');
