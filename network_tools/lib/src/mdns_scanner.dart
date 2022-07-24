@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dart_ping/dart_ping.dart';
 import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/list_of_srv_records.dart';
@@ -53,22 +54,34 @@ class MdnsScanner {
 
     final List<ActiveHost> listOfActiveHost = [];
     for (final MdnsInfo foundMdns in mdnsFoundList) {
-      final List<InternetAddress> hostIpList =
-          await InternetAddress.lookup(foundMdns.mdnsName);
-      for (final InternetAddress hostIp in hostIpList) {
-        final String fullMdnsName = foundMdns.mdnsName;
-        final String mdnsNameOnlyStart =
-            fullMdnsName.substring(0, fullMdnsName.indexOf('.'));
+      final String hostIp =
+          (await InternetAddress.lookup(foundMdns.mdnsName))[0].address;
 
-        final ActiveHost tempHost = ActiveHost(
-          hostIp.address,
-          deviceName: mdnsNameOnlyStart,
-          mdnsInfo: foundMdns,
-        );
-        listOfActiveHost.add(tempHost);
-      }
+      final ActiveHost tempHost = ActiveHost(
+        hostIp,
+        foundMdns.getOnlyTheStartOfMdnsName(),
+        await getPingData(hostIp),
+        mdnsInfo: foundMdns,
+      );
+      listOfActiveHost.add(tempHost);
     }
 
     return listOfActiveHost;
+  }
+
+  static Future<PingData> getPingData(String host) async {
+    const int timeoutInSeconds = 1;
+
+    await for (final PingData pingData
+        in Ping(host, count: 1, timeout: timeoutInSeconds).stream) {
+      final PingResponse? response = pingData.response;
+      if (response != null) {
+        final Duration? time = response.time;
+        if (time != null) {
+          return pingData;
+        }
+      }
+    }
+    return const PingData();
   }
 }
