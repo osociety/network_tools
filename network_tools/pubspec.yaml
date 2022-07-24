@@ -16,6 +16,8 @@ dependencies:
   logging: ^1.0.2
   # Performing mDNS queries (e.g. Bonjour, Avahi).
   multicast_dns: ^0.3.2+1
+  # Process run helpers
+  process_run: ^0.12.3+2
   # Cross-platform 'dart:io' that works in all platforms.
   universal_io: ^2.0.4
 

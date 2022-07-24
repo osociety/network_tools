@@ -4,10 +4,12 @@ class MdnsInfo {
     required this.mdnsPort,
     required this.mdnsDomainName,
     required this.mdnsServiceType,
+    required this.mdnsSrvTarget,
   });
 
   /// Also can be called target
   String mdnsName;
+  String mdnsSrvTarget;
   int mdnsPort;
 
   /// Also can be called bundleId
