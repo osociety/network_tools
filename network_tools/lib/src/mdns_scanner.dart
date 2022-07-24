@@ -56,10 +56,15 @@ class MdnsScanner {
     for (final MdnsInfo foundMdns in mdnsFoundList) {
       final String hostIp =
           (await InternetAddress.lookup(foundMdns.mdnsName))[0].address;
+      final String fullMdnsName = foundMdns.mdnsName;
+      final String mdnsNameOnlyStart =
+          fullMdnsName.substring(0, fullMdnsName.indexOf('.'));
+
       final ActiveHost tempHost = ActiveHost(
         hostIp,
-        ActiveHost.generic,
+        mdnsNameOnlyStart,
         await getPingData(hostIp),
+        mdnsInfo: foundMdns,
       );
       listOfActiveHost.add(tempHost);
     }
