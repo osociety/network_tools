@@ -8,8 +8,10 @@ import 'package:network_tools/src/models/mdns_info.dart';
 
 class MdnsScanner {
   /// This method searching for all the mdns devices in the network.
-  /// The implementation is **Lacking!** and will not find all the results
-  /// that actual exist in the network!, only some of them.
+  /// TODO: The implementation is **Lacking!** and will not find all the
+  /// TODO: results that actual exist in the network!, only some of them.
+  /// TODO: This is because missing functionality in dart
+  /// TODO: https://github.com/flutter/flutter/issues/97210
   static Future<List<ActiveHost>> searchMdnsDevices() async {
     final List<Future<List<ActiveHost>>> activeHostListsFuture = [];
     for (final String srvRecord in srvRecordsList) {

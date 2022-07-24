@@ -20,4 +20,5 @@ List<String> srvRecordsList = [
   '_ptp._tcp', // Any devices supporting the Picture Transfer Protocol over this network
   '_googlecast._tcp', // Is there a ChromeCast-capable device in this network
   '_airport._tcp', // Any Apple AirPort WiFi APs
+  '_esphomelib._tcp'
 ];
