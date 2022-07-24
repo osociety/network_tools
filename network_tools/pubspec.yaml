@@ -14,6 +14,8 @@ dependencies:
   intl: ^0.17.0
   # Debugging and error logging.
   logging: ^1.0.2
+  # Performing mDNS queries (e.g. Bonjour, Avahi).
+  multicast_dns: ^0.3.2+1
   # Cross-platform 'dart:io' that works in all platforms.
   universal_io: ^2.0.4
 
@@ -22,4 +24,3 @@ dev_dependencies:
   lint: ^1.8.2
   # Writing and running Dart tests.
   test: ^1.21.4
-
