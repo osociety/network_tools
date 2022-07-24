@@ -12,5 +12,11 @@ class MdnsInfo {
 
   /// Also can be called bundleId
   String mdnsDomainName;
+
+  /// Srv record of the dns
   String mdnsServiceType;
+
+  String getOnlyTheStartOfMdnsName() {
+    return mdnsName.substring(0, mdnsName.indexOf('.'));
+  }
 }
