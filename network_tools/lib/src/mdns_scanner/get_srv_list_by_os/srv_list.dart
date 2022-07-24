@@ -8,6 +8,12 @@ class SrvList {
     if (Platform.isLinux) {
       return SrvListLinux.getSrvRecordList();
     }
+    // else if (Platform.isMacOS){
+    //   // I think the command should be dns-sd so
+    //   // dns-sd -B _services._dns-sd._udp local.
+    //   // and
+    //   // dns-sd -B _ipp._tcp local.
+    // }
 
     // Get srv record list is not supported on this os
     return [];
