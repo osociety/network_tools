@@ -22,7 +22,6 @@ class MdnsScanner {
     final List<String>? srvRecordsFromOs = await SrvList.getSrvRecordList();
 
     if (srvRecordsFromOs == null || srvRecordsFromOs.isEmpty) {
-      print("Commands for os couldn't be found");
       srvRecordListToSearchIn = srvRecordsList;
     } else {
       srvRecordListToSearchIn = srvRecordsFromOs;
