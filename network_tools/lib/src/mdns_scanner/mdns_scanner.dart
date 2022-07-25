@@ -23,6 +23,7 @@ class MdnsScanner {
 
     if (srvRecordsFromOs == null || srvRecordsFromOs.isEmpty) {
       srvRecordListToSearchIn = tcpSrvRecordsList;
+      srvRecordListToSearchIn.addAll(udpSrvRecordsList);
     } else {
       srvRecordListToSearchIn = srvRecordsFromOs;
     }
@@ -71,16 +72,21 @@ class MdnsScanner {
 
     final List<ActiveHost> listOfActiveHost = [];
     for (final MdnsInfo foundMdns in mdnsFoundList) {
-      final String hostIp =
-          (await InternetAddress.lookup(foundMdns.mdnsSrvTarget))[0].address;
+      final List<InternetAddress> internetAddressList =
+          await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
 
-      final ActiveHost tempHost = ActiveHost(
-        hostIp,
-        foundMdns.getOnlyTheStartOfMdnsName(),
-        await getPingData(hostIp),
-        mdnsInfo: foundMdns,
-      );
-      listOfActiveHost.add(tempHost);
+      // There can be multiple devices with the same name
+      for (final InternetAddress internetAddress in internetAddressList) {
+        final String hostIp = internetAddress.address;
+
+        final ActiveHost tempHost = ActiveHost(
+          hostIp,
+          foundMdns.getOnlyTheStartOfMdnsName(),
+          await getPingData(hostIp),
+          mdnsInfo: foundMdns,
+        );
+        listOfActiveHost.add(tempHost);
+      }
     }
 
     return listOfActiveHost;
