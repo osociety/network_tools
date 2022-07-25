@@ -22,7 +22,7 @@ class MdnsScanner {
     final List<String>? srvRecordsFromOs = await SrvList.getSrvRecordList();
 
     if (srvRecordsFromOs == null || srvRecordsFromOs.isEmpty) {
-      srvRecordListToSearchIn = srvRecordsList;
+      srvRecordListToSearchIn = tcpSrvRecordsList;
     } else {
       srvRecordListToSearchIn = srvRecordsFromOs;
     }
