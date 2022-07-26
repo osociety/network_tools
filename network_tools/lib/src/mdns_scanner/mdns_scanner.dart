@@ -27,8 +27,6 @@ class MdnsScanner {
       srvRecordListToSearchIn = srvRecordsFromOs;
     }
 
-    await Future.delayed(const Duration(milliseconds: 5));
-
     final List<Future<List<ActiveHost>>> activeHostListsFuture = [];
     for (final String srvRecord in srvRecordListToSearchIn) {
       activeHostListsFuture.add(_findingMdnsWithIp(srvRecord));
