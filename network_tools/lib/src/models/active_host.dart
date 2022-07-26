@@ -12,7 +12,13 @@ class ActiveHost extends Comparable<ActiveHost> {
     this.deviceName = generic,
     this.mdnsInfo,
   }) {
-    hostId = int.parse(_ip.substring(_ip.lastIndexOf('.') + 1, _ip.length));
+    if (_ip.contains('.')) {
+      hostId = int.parse(_ip.substring(_ip.lastIndexOf('.') + 1, _ip.length));
+    } else if (_ip.contains(':')) {
+      hostId = int.parse(_ip.substring(_ip.lastIndexOf(':') + 1, _ip.length));
+    } else {
+      hostId = -1;
+    }
     pingData ??= getPingData(_ip);
     _pingData = pingData;
   }
