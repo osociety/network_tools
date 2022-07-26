@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:dart_ping/dart_ping.dart';
 import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
@@ -27,8 +26,6 @@ class MdnsScanner {
     } else {
       srvRecordListToSearchIn = srvRecordsFromOs;
     }
-
-    await Future.delayed(const Duration(milliseconds: 5));
 
     final List<Future<List<ActiveHost>>> activeHostListsFuture = [];
     for (final String srvRecord in srvRecordListToSearchIn) {
@@ -81,8 +78,7 @@ class MdnsScanner {
 
         final ActiveHost tempHost = ActiveHost(
           hostIp,
-          foundMdns.getOnlyTheStartOfMdnsName(),
-          await getPingData(hostIp),
+          deviceName: foundMdns.getOnlyTheStartOfMdnsName(),
           mdnsInfo: foundMdns,
         );
         listOfActiveHost.add(tempHost);
@@ -90,21 +86,5 @@ class MdnsScanner {
     }
 
     return listOfActiveHost;
-  }
-
-  static Future<PingData> getPingData(String host) async {
-    const int timeoutInSeconds = 1;
-
-    await for (final PingData pingData
-        in Ping(host, count: 1, timeout: timeoutInSeconds).stream) {
-      final PingResponse? response = pingData.response;
-      if (response != null) {
-        final Duration? time = response.time;
-        if (time != null) {
-          return pingData;
-        }
-      }
-    }
-    return const PingData();
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
 import 'package:network_tools/src/models/open_port.dart';
 import 'package:universal_io/io.dart';
@@ -37,7 +38,7 @@ class PortScanner {
   ];
 
   /// Checks if the single [port] is open or not for the [target].
-  static Future<OpenPort> isOpen(
+  static Future<ActiveHost?> isOpen(
     String target,
     int port, {
     Duration timeout = const Duration(milliseconds: 2000),
@@ -51,7 +52,7 @@ class PortScanner {
     if (address.isNotEmpty) {
       final String hostIP = address[0].address;
       return connectToPort(
-        activeHostsController: StreamController<OpenPort>(),
+        activeHostsController: StreamController<ActiveHost>(),
         ip: hostIP,
         port: port,
         timeout: timeout,
@@ -66,7 +67,7 @@ class PortScanner {
   /// Tries connecting ports before until [timeout] reached.
   /// [resultsInIpAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<OpenPort> customDiscover(
+  static Stream<ActiveHost> customDiscover(
     String target, {
     List<int> portList = commonPorts,
     ProgressCallback? progressCallback,
@@ -77,9 +78,9 @@ class PortScanner {
         await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
     if (address.isNotEmpty) {
       final String hostIP = address[0].address;
-      final List<Future<OpenPort>> openPortList = [];
-      final StreamController<OpenPort> activeHostsController =
-          StreamController<OpenPort>();
+      final List<Future<ActiveHost?>> openPortList = [];
+      final StreamController<ActiveHost> activeHostsController =
+          StreamController<ActiveHost>();
 
       for (int k = 0; k < portList.length; k++) {
         if (portList[k] >= 0 && portList[k] <= 65535) {
@@ -100,8 +101,11 @@ class PortScanner {
 
       int counter = 0;
 
-      for (final Future<OpenPort> openPortFuture in openPortList) {
-        final OpenPort openPort = await openPortFuture;
+      for (final Future<ActiveHost?> openPortFuture in openPortList) {
+        final ActiveHost? openPort = await openPortFuture;
+        if (openPort == null) {
+          continue;
+        }
         progressCallback?.call(counter * 100 / portList.length);
         yield openPort;
         counter++;
@@ -114,7 +118,7 @@ class PortScanner {
   /// Scans port from [startPort] to [endPort] of [target]. Progress can be
   /// retrieved by [progressCallback]
   /// Tries connecting ports before until [timeout] reached.
-  static Stream<OpenPort> discover(
+  static Stream<ActiveHost> discover(
     String target, {
     int startPort = defaultStartPort,
     int endPort = defaultEndPort,
@@ -146,19 +150,19 @@ class PortScanner {
     );
   }
 
-  static Future<OpenPort> connectToPort({
+  static Future<ActiveHost?> connectToPort({
     required String ip,
     required int port,
     required Duration timeout,
-    required StreamController<OpenPort> activeHostsController,
+    required StreamController<ActiveHost> activeHostsController,
   }) async {
     try {
       final Socket s = await Socket.connect(ip, port, timeout: timeout);
       s.destroy();
-      final OpenPort tempOpenPort = OpenPort(ip, port, isOpen: true);
-      activeHostsController.add(tempOpenPort);
+      final ActiveHost activeHost = ActiveHost(ip, openPort: [OpenPort(port)]);
+      activeHostsController.add(activeHost);
 
-      return tempOpenPort;
+      return activeHost;
     } catch (e) {
       if (e is! SocketException) {
         rethrow;
@@ -166,10 +170,7 @@ class PortScanner {
 
       // Check if connection timed out or we got one of predefined errors
       if (e.osError == null || _errorCodes.contains(e.osError?.errorCode)) {
-        final OpenPort tempOpenPort = OpenPort(ip, port);
-
-        activeHostsController.add(tempOpenPort);
-        return tempOpenPort;
+        return null;
       } else {
         // Error 23,24: Too many open files in system
         rethrow;
