@@ -1,38 +1,42 @@
 # Change Log
 
+## 2.1.0
+
+Added partly support for searching mdns devices.
+
 ## 2.0.0
 
-1. **Breaking change**. Bump minimum dart version to 2.17.0.
+**Breaking change**. Bump minimum dart version to 2.17.0.
 
-2. Updated dart_ping package version to 7.0.1.
+Updated dart_ping package version to 7.0.1.
 
-3. Updated test package version to 1.21.4.
+Updated test package version to 1.21.4.
 
 ## 1.0.8
 
 Fixes
 
-1. #13: Add logs using logging package
+Add logs using logging package #13.
 
-2. #20: Even more points in pub.dev page
+Even more points in pub.dev page #20.
 
 ## 1.0.7
 
 Fixed
 
-1. Saving the response time from each device #9
+Saving the response time from each device #9.
 
-2. Example crash on Windows #14
+Example crash on Windows #14.
 
-3. Bump package version #15
+Bump package version #15.
 
 ## 0.0.6
 
-Resolved issue #9 and #10
+Resolved issue #9 and #10.
 
 ## 0.0.5
 
-Resolved issue #1
+Resolved issue #1.
 
 ## 0.0.4
 
@@ -44,8 +48,8 @@ Subnet and Port range added.
 
 ## 0.0.2
 
-Added example and followed pub conventions
+Added example and followed pub conventions.
 
 ## 0.0.1
 
-* PortScanner and HostScanner
+PortScanner and HostScanner.

@@ -1,16 +1,25 @@
 import 'package:dart_ping/dart_ping.dart';
+import 'package:network_tools/src/models/mdns_info.dart';
 
 /// ActiveHost which implements comparable
 /// By default sort by hostId ascending
 class ActiveHost extends Comparable<ActiveHost> {
-  ActiveHost(this._ip, this.hostId, this._make, this._pingData);
+  ActiveHost(
+    this._ip,
+    this._make,
+    this._pingData, {
+    this.mdnsInfo,
+  }) {
+    hostId = int.parse(_ip.substring(_ip.lastIndexOf('.') + 1, _ip.length));
+  }
 
   static const generic = 'Generic Device';
   static const router = 'Router';
   final String _ip;
-  int hostId;
+  late int hostId;
   final String _make;
   final PingData _pingData;
+  MdnsInfo? mdnsInfo;
 
   String get ip => _ip;
   String get make => _make;

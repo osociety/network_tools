@@ -80,7 +80,7 @@ class HostScanner {
         final Duration? time = response.time;
         if (time != null) {
           final ActiveHost tempActiveHost =
-              ActiveHost(host, i, ActiveHost.generic, pingData);
+              ActiveHost(host, ActiveHost.generic, pingData);
           activeHostsController.add(tempActiveHost);
           return tempActiveHost;
         }
