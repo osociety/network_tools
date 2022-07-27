@@ -11,9 +11,9 @@ Network Tools Supported
     2. Range
     3. Custom
 
-What's not supported
+Partly Work:
 
-1. Mac Address of other devices on network
+1. Mdns Scanner
 
 ## Import package in your app
 
@@ -48,41 +48,52 @@ import 'package:network_tools/network_tools.dart';
 ### Port Scanner
 
 ```dart
-  //1. Range
-  String target = '192.168.1.1';
-  PortScanner.discover(target, startPort: 1, endPort: 1024,
+    //1. Range
+    String target = '192.168.1.1';
+    PortScanner.discover(target, startPort: 1, endPort: 1024,
       progressCallback: (progress) {
     print('Progress for port discovery : $progress');
-  }).listen((event) {
+    }).listen((event) {
     if (event.isOpen) {
       print('Found open port : $event');
     }
-  }, onDone: () {
+    }, onDone: () {
     print('Scan completed');
-  });
-  //2. Single
-  bool isOpen = PortScanner.isOpen(target,80);
-  //3. Custom
-  PortScanner.customDiscover(target, portList : const [22, 80, 139]);
-
+    });
+    //2. Single
+    bool isOpen = PortScanner.isOpen(target,80);
+    //3. Custom
+    PortScanner.customDiscover(target, portList : const [22, 80, 139]);
 ```
+
+### Mdns Scanner
+
+```dart
+    for (final ActiveHost activeHost in await MdnsScanner.searchMdnsDevices()) {
+      final MdnsInfo? mdnsInfo = activeHost.mdnsInfo;
+      print(
+        'IP: ${activeHost.ip}, Port: ${mdnsInfo!.mdnsPort}, ServiceType: ${mdnsInfo.mdnsServiceType}, MdnsName: ${mdnsInfo.getOnlyTheStartOfMdnsName()}',
+      );
+    }
+```
+
 
 ### Run examples
 
 1. Run host scan : `dart example/host_scan.dart`
 2. Run port scan : `dart example/port_scan.dart`
+3. Run mdns scan : `dart example/mdns_scan.dart`
 
 ## Enable Debugging
 
 Add this code to your `main.dart` file
 
 ```dart
-Logger.root.level = Level.FINE; //set to finest for detailed log
-  Logger.root.onRecord.listen((record) {
-    print(
-        '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}');
-  });
-
+    Logger.root.level = Level.FINE; //set to finest for detailed log
+      Logger.root.onRecord.listen((record) {
+        print(
+            '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}');
+      });
 ```
 
 ## Sample App
