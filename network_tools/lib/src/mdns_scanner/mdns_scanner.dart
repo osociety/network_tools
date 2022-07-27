@@ -4,11 +4,9 @@ import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
 import 'package:network_tools/src/mdns_scanner/list_of_srv_records.dart';
-import 'package:network_tools/src/models/mdns_info.dart';
 
 class MdnsScanner {
   /// This method searching for all the mdns devices in the network.
-  /// Shows only results for IPv4.
   /// TODO: The implementation is **Lacking!** and will not find all the
   /// TODO: results that actual exist in the network!, only some of them.
   /// TODO: This is because missing functionality in dart
@@ -74,10 +72,8 @@ class MdnsScanner {
 
       // There can be multiple devices with the same name
       for (final InternetAddress internetAddress in internetAddressList) {
-        final String hostIp = internetAddress.address;
-
         final ActiveHost tempHost = ActiveHost(
-          hostIp,
+          internetAddress: internetAddress,
           deviceName: foundMdns.getOnlyTheStartOfMdnsName(),
           mdnsInfo: foundMdns,
         );

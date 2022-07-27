@@ -14,7 +14,7 @@ class HostScanner {
   /// resource consumption.
   /// [resultsInIpAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<ActiveHost> discover(
+  static Stream<ActiveHost> getAllPingableDevices(
     String subnet, {
     int firstSubnet = 1,
     int lastSubnet = 254,
@@ -79,7 +79,7 @@ class HostScanner {
         final Duration? time = response.time;
         if (time != null) {
           final ActiveHost tempActiveHost =
-              ActiveHost(host, pingData: pingData);
+              ActiveHost.buildWithIp(ip: host, pingData: pingData);
           activeHostsController.add(tempActiveHost);
           return tempActiveHost;
         }
@@ -91,7 +91,7 @@ class HostScanner {
   /// Scans for all hosts that have the specific port that was given.
   /// [resultsInIpAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<ActiveHost> discoverPort(
+  static Stream<ActiveHost> scanDevicesForSinglePort(
     String subnet,
     int port, {
     int firstSubnet = 1,

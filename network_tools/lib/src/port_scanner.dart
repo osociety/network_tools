@@ -118,7 +118,7 @@ class PortScanner {
   /// Scans port from [startPort] to [endPort] of [target]. Progress can be
   /// retrieved by [progressCallback]
   /// Tries connecting ports before until [timeout] reached.
-  static Stream<ActiveHost> discover(
+  static Stream<ActiveHost> scanPortsForSingleDevice(
     String target, {
     int startPort = defaultStartPort,
     int endPort = defaultEndPort,
@@ -159,7 +159,8 @@ class PortScanner {
     try {
       final Socket s = await Socket.connect(ip, port, timeout: timeout);
       s.destroy();
-      final ActiveHost activeHost = ActiveHost(ip, openPort: [OpenPort(port)]);
+      final ActiveHost activeHost =
+          ActiveHost.buildWithIp(ip: ip, openPort: [OpenPort(port)]);
       activeHostsController.add(activeHost);
 
       return activeHost;

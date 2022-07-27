@@ -18,7 +18,7 @@ void main() {
 
   // You can set [firstSubnet] and scan will start from this host in the network.
   // Similarly set [lastSubnet] and scan will end at this host in the network.
-  final stream = HostScanner.discover(
+  final stream = HostScanner.getAllPingableDevices(
     subnet,
     // firstSubnet: 1,
     // lastSubnet: 254,

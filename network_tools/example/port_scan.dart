@@ -18,7 +18,7 @@ void main() {
   // [New] Scan for a single open port in a subnet
   // You can set [firstSubnet] and scan will start from this host in the network.
   // Similarly set [lastSubnet] and scan will end at this host in the network.
-  final stream2 = HostScanner.discoverPort(
+  final stream2 = HostScanner.scanDevicesForSinglePort(
     subnet,
     53,
     // firstSubnet: 1,
@@ -33,7 +33,8 @@ void main() {
       final OpenPort deviceWithOpenPort = activeHost.openPort[0];
       if (deviceWithOpenPort.isOpen) {
         _log.fine(
-            'Found open port: ${deviceWithOpenPort.port} on ${activeHost.ip}');
+          'Found open port: ${deviceWithOpenPort.port} on ${activeHost.ip}',
+        );
       }
     },
     onDone: () {
@@ -42,7 +43,7 @@ void main() {
   ); // Don't forget to cancel the stream when not in use.
 
   const String target = '192.168.1.1';
-  PortScanner.discover(
+  PortScanner.scanPortsForSingleDevice(
     target,
     // Scan will start from this port.
     // startPort: 1,
@@ -55,7 +56,7 @@ void main() {
       final OpenPort deviceWithOpenPort = activeHost.openPort[0];
 
       if (deviceWithOpenPort.isOpen) {
-        _log.fine('Found open port : ${deviceWithOpenPort.port}');
+        _log.fine('Found open port: ${deviceWithOpenPort.port}');
       }
     },
     onDone: () {
