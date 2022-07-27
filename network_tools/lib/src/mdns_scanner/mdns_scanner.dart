@@ -74,7 +74,6 @@ class MdnsScanner {
       for (final InternetAddress internetAddress in internetAddressList) {
         final ActiveHost tempHost = ActiveHost(
           internetAddress: internetAddress,
-          deviceName: foundMdns.getOnlyTheStartOfMdnsName(),
           mdnsInfo: foundMdns,
         );
         listOfActiveHost.add(tempHost);

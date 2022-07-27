@@ -18,6 +18,7 @@ class MdnsInfo {
   /// Srv record of the dns
   String mdnsServiceType;
 
+  /// mDNS name without the ._tcp.local
   String getOnlyTheStartOfMdnsName() {
     return mdnsName.substring(0, mdnsName.indexOf('.'));
   }

@@ -10,7 +10,6 @@ class ActiveHost extends Comparable<ActiveHost> {
     required this.internetAddress,
     this.openPort = const [],
     PingData? pingData,
-    this.deviceName = generic,
     this.mdnsInfo,
   }) {
     final String _ip = internetAddress.address;
@@ -23,13 +22,13 @@ class ActiveHost extends Comparable<ActiveHost> {
     }
     pingData ??= getPingData(_ip);
     _pingData = pingData;
+    waitingForActiveHostSetupToComplete = setHostNameAndMdns();
   }
 
   factory ActiveHost.buildWithIp({
     required String ip,
     List<OpenPort> openPort = const [],
     PingData? pingData,
-    String deviceName = generic,
     MdnsInfo? mdnsInfo,
   }) {
     final InternetAddress? internetAddressTemp = InternetAddress.tryParse(ip);
@@ -40,15 +39,15 @@ class ActiveHost extends Comparable<ActiveHost> {
       internetAddress: internetAddressTemp,
       openPort: openPort,
       pingData: pingData,
-      deviceName: deviceName,
       mdnsInfo: mdnsInfo,
     );
   }
 
   static const generic = 'Generic Device';
-  static const router = 'Router';
-  final InternetAddress internetAddress;
+  InternetAddress internetAddress;
   late int hostId;
+  String? hostName;
+  String? weirdHostName;
   late final PingData _pingData;
 
   /// Mdns information of this device
@@ -58,11 +57,20 @@ class ActiveHost extends Comparable<ActiveHost> {
   List<OpenPort> openPort;
 
   /// This device name does not following any guideline and is just some name
-  /// that we find for the device
-  final String deviceName;
+  /// that we can show for the device.
+  /// Preferably hostName, if not than mDNS name, if not than will get the
+  /// value of [generic].
+  /// This value **can change after the object got created** since getting
+  /// host name of device is running async function.
+  String deviceName = generic;
   PingData get pingData => _pingData;
   Duration? get responseTime => _pingData.response?.time;
   String get ip => internetAddress.address;
+
+  /// This var let us know from out side if all the setup got completed.
+  /// Since getting host name is async function [ActiveHost] does not contain
+  /// all of the values when the constructor completed
+  late Future<void> waitingForActiveHostSetupToComplete;
 
   @override
   int get hashCode => internetAddress.address.hashCode;
@@ -78,7 +86,7 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   @override
   String toString() {
-    return 'IP : ${internetAddress.address}, HostId : $hostId, make: $deviceName, Time: ${responseTime?.inMilliseconds}ms';
+    return 'IP: ${internetAddress.address}, HostId: $hostId, deviceName: $deviceName, Time: ${responseTime?.inMilliseconds}ms';
   }
 
   static PingData getPingData(String host) {
@@ -96,5 +104,29 @@ class ActiveHost extends Comparable<ActiveHost> {
       }
     });
     return tempPingData;
+  }
+
+  /// Try to find the host name of this device, if not exist host name will
+  /// stay null
+  Future<void> setHostNameAndMdns() async {
+    // For some reason when internetAddress.host get called before the reverse
+    // there is weired value
+    weirdHostName = internetAddress.host;
+
+    // In the future if mdnsInfo is null it will execute a search
+    // Currently the functionality is missing in dart multicast_dns package
+    // https://github.com/flutter/flutter/issues/96755
+
+    try {
+      internetAddress = await internetAddress.reverse();
+      hostName = internetAddress.host;
+      deviceName = hostName!;
+    } catch (e) {
+      // Some devices does not have host name and the reverse search will just
+      // throw exception.
+      if (mdnsInfo != null) {
+        deviceName = mdnsInfo!.getOnlyTheStartOfMdnsName();
+      }
+    }
   }
 }
