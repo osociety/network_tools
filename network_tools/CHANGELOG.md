@@ -1,5 +1,13 @@
 # Change Log
 
+## 2.2.0
+
+Ip field in ActiveHost is now InternetAddress type instead of string which improve handling of IPv6.
+
+ActiveHost now contains host name of the address if exist.
+
+Better naming of methods
+
 ## 2.1.0
 
 Added partly support for searching mdns devices.
