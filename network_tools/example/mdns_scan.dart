@@ -4,7 +4,7 @@ Future<void> main() async {
   for (final ActiveHost activeHost in await MdnsScanner.searchMdnsDevices()) {
     final MdnsInfo? mdnsInfo = activeHost.mdnsInfo;
     print(
-      'IP: ${activeHost.ip}, Port: ${mdnsInfo!.mdnsPort}, ServiceType: ${mdnsInfo.mdnsServiceType}, MdnsName: ${mdnsInfo.getOnlyTheStartOfMdnsName()}',
+      'Address: ${activeHost.address}, Port: ${mdnsInfo!.mdnsPort}, ServiceType: ${mdnsInfo.mdnsServiceType}, MdnsName: ${mdnsInfo.getOnlyTheStartOfMdnsName()}',
     );
   }
 }

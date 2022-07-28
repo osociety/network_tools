@@ -5,7 +5,7 @@ import 'package:network_tools/src/models/callbacks.dart';
 import 'package:network_tools/src/models/open_port.dart';
 import 'package:universal_io/io.dart';
 
-/// Scans open port for a target IP or domain.
+/// Scans open port for a target Address or domain.
 class PortScanner {
   static const int defaultStartPort = 1;
   static const int defaultEndPort = 1024;
@@ -50,10 +50,10 @@ class PortScanner {
     final List<InternetAddress> address =
         await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
     if (address.isNotEmpty) {
-      final String hostIP = address[0].address;
+      final String hostAddress = address[0].address;
       return connectToPort(
         activeHostsController: StreamController<ActiveHost>(),
-        ip: hostIP,
+        address: hostAddress,
         port: port,
         timeout: timeout,
       );
@@ -65,19 +65,19 @@ class PortScanner {
   /// Scans ports only listed in [portList] for a [target]. Progress can be
   /// retrieved by [progressCallback]
   /// Tries connecting ports before until [timeout] reached.
-  /// [resultsInIpAscendingOrder] = false will return results faster but not in
+  /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
   static Stream<ActiveHost> customDiscover(
     String target, {
     List<int> portList = commonPorts,
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 2000),
-    bool resultsInIpAscendingOrder = true,
+    bool resultsInAddressAscendingOrder = true,
   }) async* {
     final List<InternetAddress> address =
         await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
     if (address.isNotEmpty) {
-      final String hostIP = address[0].address;
+      final String hostAddress = address[0].address;
       final List<Future<ActiveHost?>> openPortList = [];
       final StreamController<ActiveHost> activeHostsController =
           StreamController<ActiveHost>();
@@ -86,7 +86,7 @@ class PortScanner {
         if (portList[k] >= 0 && portList[k] <= 65535) {
           openPortList.add(
             connectToPort(
-              ip: hostIP,
+              address: hostAddress,
               port: portList[k],
               timeout: timeout,
               activeHostsController: activeHostsController,
@@ -95,7 +95,7 @@ class PortScanner {
         }
       }
 
-      if (!resultsInIpAscendingOrder) {
+      if (!resultsInAddressAscendingOrder) {
         yield* activeHostsController.stream;
       }
 
@@ -124,7 +124,7 @@ class PortScanner {
     int endPort = defaultEndPort,
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 2000),
-    bool resultsInIpAscendingOrder = true,
+    bool resultsInAddressAscendingOrder = true,
   }) async* {
     if (startPort < 0 ||
         endPort < 0 ||
@@ -146,21 +146,21 @@ class PortScanner {
       portList: portList,
       progressCallback: progressCallback,
       timeout: timeout,
-      resultsInIpAscendingOrder: resultsInIpAscendingOrder,
+      resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
     );
   }
 
   static Future<ActiveHost?> connectToPort({
-    required String ip,
+    required String address,
     required int port,
     required Duration timeout,
     required StreamController<ActiveHost> activeHostsController,
   }) async {
     try {
-      final Socket s = await Socket.connect(ip, port, timeout: timeout);
+      final Socket s = await Socket.connect(address, port, timeout: timeout);
       s.destroy();
-      final ActiveHost activeHost =
-          ActiveHost.buildWithIp(ip: ip, openPort: [OpenPort(port)]);
+      final ActiveHost activeHost = ActiveHost.buildWithAddress(
+          address: address, openPort: [OpenPort(port)]);
       activeHostsController.add(activeHost);
 
       return activeHost;

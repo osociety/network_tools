@@ -12,30 +12,33 @@ class ActiveHost extends Comparable<ActiveHost> {
     PingData? pingData,
     this.mdnsInfo,
   }) {
-    final String _ip = internetAddress.address;
+    final String tempAddress = internetAddress.address;
 
-    if (_ip.contains('.')) {
-      hostId = _ip.substring(_ip.lastIndexOf('.') + 1, _ip.length);
-    } else if (_ip.contains(':')) {
-      hostId = _ip.substring(_ip.lastIndexOf(':') + 1, _ip.length);
+    if (tempAddress.contains('.')) {
+      hostId = tempAddress.substring(
+          tempAddress.lastIndexOf('.') + 1, tempAddress.length);
+    } else if (tempAddress.contains(':')) {
+      hostId = tempAddress.substring(
+          tempAddress.lastIndexOf(':') + 1, tempAddress.length);
     } else {
       hostId = '-1';
     }
 
-    pingData ??= getPingData(_ip);
+    pingData ??= getPingData(tempAddress);
     _pingData = pingData;
     waitingForActiveHostSetupToComplete = setHostNameAndMdns();
   }
 
-  factory ActiveHost.buildWithIp({
-    required String ip,
+  factory ActiveHost.buildWithAddress({
+    required String address,
     List<OpenPort> openPort = const [],
     PingData? pingData,
     MdnsInfo? mdnsInfo,
   }) {
-    final InternetAddress? internetAddressTemp = InternetAddress.tryParse(ip);
+    final InternetAddress? internetAddressTemp =
+        InternetAddress.tryParse(address);
     if (internetAddressTemp == null) {
-      throw 'Cant parse ip $ip to InternetAddress';
+      throw 'Cant parse address $address to InternetAddress';
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
@@ -67,7 +70,7 @@ class ActiveHost extends Comparable<ActiveHost> {
   String deviceName = generic;
   PingData get pingData => _pingData;
   Duration? get responseTime => _pingData.response?.time;
-  String get ip => internetAddress.address;
+  String get address => internetAddress.address;
 
   /// This var let us know from out side if all the setup got completed.
   /// Since getting host name is async function [ActiveHost] does not contain
@@ -75,11 +78,10 @@ class ActiveHost extends Comparable<ActiveHost> {
   late Future<void> waitingForActiveHostSetupToComplete;
 
   @override
-  int get hashCode => internetAddress.address.hashCode;
+  int get hashCode => address.hashCode;
 
   @override
-  bool operator ==(dynamic o) =>
-      o is ActiveHost && internetAddress.address == o.internetAddress.address;
+  bool operator ==(dynamic o) => o is ActiveHost && address == o.address;
 
   @override
   int compareTo(ActiveHost other) {
@@ -88,7 +90,7 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   @override
   String toString() {
-    return 'IP: ${internetAddress.address}, HostId: $hostId, deviceName: $deviceName, Time: ${responseTime?.inMilliseconds}ms';
+    return 'Address: $address, HostId: $hostId, deviceName: $deviceName, Time: ${responseTime?.inMilliseconds}ms';
   }
 
   static PingData getPingData(String host) {

@@ -1,4 +1,4 @@
-/// Represents open port for a target IP
+/// Represents open port for a target Address
 class OpenPort {
   OpenPort(this._port, {this.isOpen = true});
 
