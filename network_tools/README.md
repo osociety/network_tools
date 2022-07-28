@@ -26,10 +26,10 @@ import 'package:network_tools/network_tools.dart';
 ### Host Scanner
 
 ```dart
- String ip = '192.168.1.12';
-  // or You can also get ip using network_info_plus package
-  // final String? ip = await (NetworkInfo().getWifiIP());
-  final String subnet = ip.substring(0, ip.lastIndexOf('.'));
+ String address = '192.168.1.12';
+  // or You can also get address using network_info_plus package
+  // final String? address = await (NetworkInfo().getWifiIP());
+  final String subnet = address.substring(0, address.lastIndexOf('.'));
   final stream = HostScanner.discover(subnet, firstSubnet: 1, lastSubnet: 50,
       progressCallback: (progress) {
     print('Progress for host discovery : $progress');
@@ -72,7 +72,7 @@ import 'package:network_tools/network_tools.dart';
     for (final ActiveHost activeHost in await MdnsScanner.searchMdnsDevices()) {
       final MdnsInfo? mdnsInfo = activeHost.mdnsInfo;
       print(
-        'IP: ${activeHost.ip}, Port: ${mdnsInfo!.mdnsPort}, ServiceType: ${mdnsInfo.mdnsServiceType}, MdnsName: ${mdnsInfo.getOnlyTheStartOfMdnsName()}',
+        'Address: ${activeHost.address}, Port: ${mdnsInfo!.mdnsPort}, ServiceType: ${mdnsInfo.mdnsServiceType}, MdnsName: ${mdnsInfo.getOnlyTheStartOfMdnsName()}',
       );
     }
 ```

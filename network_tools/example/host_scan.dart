@@ -10,20 +10,20 @@ void main() {
     );
   });
 
-  final _log = Logger('host_scan');
-  const String ip = '192.168.1.1';
-  // or You can also get ip using network_info_plus package
-  // final String? ip = await (NetworkInfo().getWifiIP());
-  final String subnet = ip.substring(0, ip.lastIndexOf('.'));
+  final log = Logger('host_scan');
+  const String address = '192.168.1.1';
+  // or You can also get address using network_info_plus package
+  // final String? address = await (NetworkInfo().getWifiIP());
+  final String subnet = address.substring(0, address.lastIndexOf('.'));
 
   // You can set [firstSubnet] and scan will start from this host in the network.
   // Similarly set [lastSubnet] and scan will end at this host in the network.
-  final stream = HostScanner.discover(
+  final stream = HostScanner.getAllPingableDevices(
     subnet,
     // firstSubnet: 1,
     // lastSubnet: 254,
     progressCallback: (progress) {
-      _log.finer('Progress for host discovery : $progress');
+      log.finer('Progress for host discovery : $progress');
     },
   );
 
@@ -31,10 +31,10 @@ void main() {
     (ActiveHost host) {
       //Same host can be emitted multiple times
       //Use Set<ActiveHost> instead of List<ActiveHost>
-      _log.fine('Found device: $host');
+      log.fine('Found device: $host');
     },
     onDone: () {
-      _log.fine('Scan completed');
+      log.fine('Scan completed');
     },
   ); // Don't forget to cancel the stream when not in use.
 }

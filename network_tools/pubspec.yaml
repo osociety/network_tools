@@ -1,6 +1,6 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 2.1.0
+version: 3.0.0
 issue_tracker: https://github.com/git-elliot/network_tools/issues
 repository: https://github.com/git-elliot/network_tools/tree/main/network_tools
 
@@ -23,6 +23,6 @@ dependencies:
 
 dev_dependencies:
   # Set of lint rules for Dart.
-  lint: ^1.8.2
+  lint: ^1.10.0
   # Writing and running Dart tests.
   test: ^1.21.4

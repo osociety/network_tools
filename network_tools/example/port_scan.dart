@@ -9,22 +9,22 @@ void main() {
       '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
     );
   });
-  final _log = Logger('port_scan');
-  const String ip = '192.168.1.1';
-  // or You can also get ip using network_info_plus package
-  // final String? ip = await (NetworkInfo().getWifiIP());
-  final String subnet = ip.substring(0, ip.lastIndexOf('.'));
+  final log = Logger('port_scan');
+  const String address = '192.168.1.1';
+  // or You can also get address using network_info_plus package
+  // final String? address = await (NetworkInfo().getWifiIP());
+  final String subnet = address.substring(0, address.lastIndexOf('.'));
 
   // [New] Scan for a single open port in a subnet
   // You can set [firstSubnet] and scan will start from this host in the network.
   // Similarly set [lastSubnet] and scan will end at this host in the network.
-  final stream2 = HostScanner.discoverPort(
+  final stream2 = HostScanner.scanDevicesForSinglePort(
     subnet,
     53,
     // firstSubnet: 1,
     // lastSubnet: 254,
     progressCallback: (progress) {
-      _log.finer('Progress for port discovery on host : $progress');
+      log.finer('Progress for port discovery on host : $progress');
     },
   );
 
@@ -32,34 +32,35 @@ void main() {
     (activeHost) {
       final OpenPort deviceWithOpenPort = activeHost.openPort[0];
       if (deviceWithOpenPort.isOpen) {
-        _log.fine(
-            'Found open port: ${deviceWithOpenPort.port} on ${activeHost.ip}');
+        log.fine(
+          'Found open port: ${deviceWithOpenPort.port} on ${activeHost.address}',
+        );
       }
     },
     onDone: () {
-      _log.fine('Port Scan completed');
+      log.fine('Port Scan completed');
     },
   ); // Don't forget to cancel the stream when not in use.
 
   const String target = '192.168.1.1';
-  PortScanner.discover(
+  PortScanner.scanPortsForSingleDevice(
     target,
     // Scan will start from this port.
     // startPort: 1,
     endPort: 9400,
     progressCallback: (progress) {
-      _log.finer('Progress for port discovery : $progress');
+      log.finer('Progress for port discovery : $progress');
     },
   ).listen(
     (activeHost) {
       final OpenPort deviceWithOpenPort = activeHost.openPort[0];
 
       if (deviceWithOpenPort.isOpen) {
-        _log.fine('Found open port : ${deviceWithOpenPort.port}');
+        log.fine('Found open port: ${deviceWithOpenPort.port}');
       }
     },
     onDone: () {
-      _log.fine('Port Scan from 1 to 9400 completed');
+      log.fine('Port Scan from 1 to 9400 completed');
     },
   );
 }

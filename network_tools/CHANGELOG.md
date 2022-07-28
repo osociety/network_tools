@@ -1,12 +1,25 @@
 # Change Log
 
+## 3.0.0
+
+**Breaking change** Change most of the methods names
+    * HostScanner.discover To HostScanner.getAllPingableDevices
+    * HostScanner.discoverPort to HostScanner.scanDevicesForSinglePort
+    * PortScanner.discover to PortScanner.scanPortsForSingleDevice
+
+Ip field in ActiveHost is now InternetAddress type instead of string which improve handling of IPv6.
+
+ActiveHost now contains host name of the address if exist.
+
+Better naming of methods
+
 ## 2.1.0
 
 Added partly support for searching mdns devices.
 
 ## 2.0.0
 
-**Breaking change**. Bump minimum dart version to 2.17.0.
+**Breaking change** Bump minimum dart version to 2.17.0.
 
 Updated dart_ping package version to 7.0.1.
 
