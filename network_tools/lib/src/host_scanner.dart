@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
-import 'package:network_tools/src/models/open_port.dart';
 import 'package:network_tools/src/port_scanner.dart';
 
 /// Scans for all hosts in a subnet.
@@ -80,7 +79,7 @@ class HostScanner {
         final Duration? time = response.time;
         if (time != null) {
           final ActiveHost tempActiveHost =
-              ActiveHost(host, i, ActiveHost.generic, pingData);
+              ActiveHost(host, pingData: pingData);
           activeHostsController.add(tempActiveHost);
           return tempActiveHost;
         }
@@ -92,7 +91,7 @@ class HostScanner {
   /// Scans for all hosts that have the specific port that was given.
   /// [resultsInIpAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<OpenPort> discoverPort(
+  static Stream<ActiveHost> discoverPort(
     String subnet,
     int port, {
     int firstSubnet = 1,
@@ -110,13 +109,13 @@ class HostScanner {
       throw 'Invalid subnet range or firstSubnet < lastSubnet is not true';
     }
     final int lastValidSubnet = min(lastSubnet, maxEnd);
-    final List<Future<OpenPort>> openPortList = [];
-    final StreamController<OpenPort> activeHostsController =
-        StreamController<OpenPort>();
+    final List<Future<ActiveHost?>> activeHostOpenPortList = [];
+    final StreamController<ActiveHost> activeHostsController =
+        StreamController<ActiveHost>();
 
     for (int i = firstSubnet; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
-      openPortList.add(
+      activeHostOpenPortList.add(
         PortScanner.connectToPort(
           ip: host,
           port: port,
@@ -131,8 +130,12 @@ class HostScanner {
     }
 
     int counter = firstSubnet;
-    for (final Future<OpenPort> openPortFuture in openPortList) {
-      yield await openPortFuture;
+    for (final Future<ActiveHost?> openPortActiveHostFuture
+        in activeHostOpenPortList) {
+      final ActiveHost? activeHost = await openPortActiveHostFuture;
+      if (activeHost != null) {
+        yield activeHost;
+      }
       progressCallback?.call(
         (counter - firstSubnet) * 100 / (lastValidSubnet - firstSubnet),
       );
