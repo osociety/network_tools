@@ -10,7 +10,7 @@ void main() {
     );
   });
 
-  final _log = Logger('host_scan');
+  final log = Logger('host_scan');
   const String address = '192.168.1.1';
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
@@ -23,7 +23,7 @@ void main() {
     // firstSubnet: 1,
     // lastSubnet: 254,
     progressCallback: (progress) {
-      _log.finer('Progress for host discovery : $progress');
+      log.finer('Progress for host discovery : $progress');
     },
   );
 
@@ -31,10 +31,10 @@ void main() {
     (ActiveHost host) {
       //Same host can be emitted multiple times
       //Use Set<ActiveHost> instead of List<ActiveHost>
-      _log.fine('Found device: $host');
+      log.fine('Found device: $host');
     },
     onDone: () {
-      _log.fine('Scan completed');
+      log.fine('Scan completed');
     },
   ); // Don't forget to cancel the stream when not in use.
 }

@@ -160,7 +160,9 @@ class PortScanner {
       final Socket s = await Socket.connect(address, port, timeout: timeout);
       s.destroy();
       final ActiveHost activeHost = ActiveHost.buildWithAddress(
-          address: address, openPort: [OpenPort(port)]);
+        address: address,
+        openPort: [OpenPort(port)],
+      );
       activeHostsController.add(activeHost);
 
       return activeHost;

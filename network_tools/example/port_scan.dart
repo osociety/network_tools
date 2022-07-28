@@ -9,7 +9,7 @@ void main() {
       '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
     );
   });
-  final _log = Logger('port_scan');
+  final log = Logger('port_scan');
   const String address = '192.168.1.1';
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
@@ -24,7 +24,7 @@ void main() {
     // firstSubnet: 1,
     // lastSubnet: 254,
     progressCallback: (progress) {
-      _log.finer('Progress for port discovery on host : $progress');
+      log.finer('Progress for port discovery on host : $progress');
     },
   );
 
@@ -32,13 +32,13 @@ void main() {
     (activeHost) {
       final OpenPort deviceWithOpenPort = activeHost.openPort[0];
       if (deviceWithOpenPort.isOpen) {
-        _log.fine(
+        log.fine(
           'Found open port: ${deviceWithOpenPort.port} on ${activeHost.address}',
         );
       }
     },
     onDone: () {
-      _log.fine('Port Scan completed');
+      log.fine('Port Scan completed');
     },
   ); // Don't forget to cancel the stream when not in use.
 
@@ -49,18 +49,18 @@ void main() {
     // startPort: 1,
     endPort: 9400,
     progressCallback: (progress) {
-      _log.finer('Progress for port discovery : $progress');
+      log.finer('Progress for port discovery : $progress');
     },
   ).listen(
     (activeHost) {
       final OpenPort deviceWithOpenPort = activeHost.openPort[0];
 
       if (deviceWithOpenPort.isOpen) {
-        _log.fine('Found open port: ${deviceWithOpenPort.port}');
+        log.fine('Found open port: ${deviceWithOpenPort.port}');
       }
     },
     onDone: () {
-      _log.fine('Port Scan from 1 to 9400 completed');
+      log.fine('Port Scan from 1 to 9400 completed');
     },
   );
 }

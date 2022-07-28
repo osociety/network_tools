@@ -16,10 +16,14 @@ class ActiveHost extends Comparable<ActiveHost> {
 
     if (tempAddress.contains('.')) {
       hostId = tempAddress.substring(
-          tempAddress.lastIndexOf('.') + 1, tempAddress.length);
+        tempAddress.lastIndexOf('.') + 1,
+        tempAddress.length,
+      );
     } else if (tempAddress.contains(':')) {
       hostId = tempAddress.substring(
-          tempAddress.lastIndexOf(':') + 1, tempAddress.length);
+        tempAddress.lastIndexOf(':') + 1,
+        tempAddress.length,
+      );
     } else {
       hostId = '-1';
     }
