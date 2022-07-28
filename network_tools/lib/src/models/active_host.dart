@@ -13,13 +13,15 @@ class ActiveHost extends Comparable<ActiveHost> {
     this.mdnsInfo,
   }) {
     final String _ip = internetAddress.address;
+
     if (_ip.contains('.')) {
-      hostId = int.parse(_ip.substring(_ip.lastIndexOf('.') + 1, _ip.length));
+      hostId = _ip.substring(_ip.lastIndexOf('.') + 1, _ip.length);
     } else if (_ip.contains(':')) {
-      hostId = int.parse(_ip.substring(_ip.lastIndexOf(':') + 1, _ip.length));
+      hostId = _ip.substring(_ip.lastIndexOf(':') + 1, _ip.length);
     } else {
-      hostId = -1;
+      hostId = '-1';
     }
+
     pingData ??= getPingData(_ip);
     _pingData = pingData;
     waitingForActiveHostSetupToComplete = setHostNameAndMdns();
@@ -45,7 +47,7 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   static const generic = 'Generic Device';
   InternetAddress internetAddress;
-  late int hostId;
+  late String hostId;
   String? hostName;
   String? weirdHostName;
   late final PingData _pingData;
