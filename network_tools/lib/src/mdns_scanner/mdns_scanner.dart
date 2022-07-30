@@ -69,9 +69,13 @@ class MdnsScanner {
 
     final List<ActiveHost> listOfActiveHost = [];
     for (final MdnsInfo foundMdns in mdnsFoundList) {
-      final List<InternetAddress> internetAddressList =
-          await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
-
+      final List<InternetAddress>? internetAddressList;
+      try {
+        internetAddressList =
+        await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
+      } catch (e) {
+        continue;
+      }
       // There can be multiple devices with the same name
       for (final InternetAddress internetAddress in internetAddressList) {
         final ActiveHost tempHost = ActiveHost(
