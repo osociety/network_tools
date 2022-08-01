@@ -13,12 +13,16 @@ class MdnsScanner {
   /// TODO: https://github.com/flutter/flutter/issues/97210
   /// TODO: In some cases we resolve this missing functionality using
   /// TODO: specific os tools.
-  static Future<List<ActiveHost>> searchMdnsDevices() async {
+  static Future<List<ActiveHost>> searchMdnsDevices({
+    bool forceUseOfSavedSrvRecordList = false,
+  }) async {
     List<String> srvRecordListToSearchIn;
 
     final List<String>? srvRecordsFromOs = await SrvList.getSrvRecordList();
 
-    if (srvRecordsFromOs == null || srvRecordsFromOs.isEmpty) {
+    if (srvRecordsFromOs == null ||
+        srvRecordsFromOs.isEmpty ||
+        forceUseOfSavedSrvRecordList) {
       srvRecordListToSearchIn = tcpSrvRecordsList;
       srvRecordListToSearchIn.addAll(udpSrvRecordsList);
     } else {
@@ -72,7 +76,7 @@ class MdnsScanner {
       final List<InternetAddress>? internetAddressList;
       try {
         internetAddressList =
-        await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
+            await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
       } catch (e) {
         continue;
       }
