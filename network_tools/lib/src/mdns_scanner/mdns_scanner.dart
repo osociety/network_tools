@@ -60,11 +60,8 @@ class MdnsScanner {
         ResourceRecordQuery.service(ptr.domainName),
       )) {
         final MdnsInfo mdnsFound = MdnsInfo(
-          mdnsName: srv.name,
-          mdnsPort: srv.port,
-          mdnsDomainName: ptr.domainName,
-          mdnsServiceType: serviceType,
-          mdnsSrvTarget: srv.target,
+          srvResourceRecord: srv,
+          ptrResourceRecord: ptr,
         );
         mdnsFoundList.add(mdnsFound);
       }
