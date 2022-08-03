@@ -173,8 +173,9 @@ class PortScanner {
         return null;
       }
 
+      // Error 23,24: Too many open files in system
+      // e.osError can't be null here so `!` can be used
       if (e.osError!.errorCode == 23 || e.osError!.errorCode == 24) {
-        // Error 23,24: Too many open files in system
         // Hotfix: Wait for the timeout (+ a little more) to complete and retry
         // -> Other connections must be closed now and the file handles available again
 
