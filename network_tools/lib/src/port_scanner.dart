@@ -188,6 +188,8 @@ class PortScanner {
           activeHostsController: activeHostsController,
         );
       }
+
+      rethrow;
     }
   }
 
