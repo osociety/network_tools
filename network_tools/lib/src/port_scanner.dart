@@ -171,9 +171,21 @@ class PortScanner {
       // Check if connection timed out or we got one of predefined errors
       if (e.osError == null || _errorCodes.contains(e.osError?.errorCode)) {
         return null;
-      } else {
+      }
+
+      if (e.osError!.errorCode == 23 || e.osError!.errorCode == 24) {
         // Error 23,24: Too many open files in system
-        rethrow;
+        // Hotfix: Wait for the timeout (+ a little more) to complete and retry
+        // -> Other connections must be closed now and the file handles available again
+
+        await Future.delayed(timeout + const Duration(milliseconds: 250));
+
+        return connectToPort(
+          ip: ip,
+          port: port,
+          timeout: timeout,
+          activeHostsController: activeHostsController,
+        );
       }
     }
   }
