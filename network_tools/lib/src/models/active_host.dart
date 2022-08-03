@@ -10,7 +10,7 @@ class ActiveHost extends Comparable<ActiveHost> {
     required this.internetAddress,
     this.openPort = const [],
     PingData? pingData,
-    this.mdnsInfo,
+    MdnsInfo? mdnsInfoVar,
   }) {
     final String tempAddress = internetAddress.address;
 
@@ -30,7 +30,20 @@ class ActiveHost extends Comparable<ActiveHost> {
 
     pingData ??= getPingData(tempAddress);
     _pingData = pingData;
-    waitingForActiveHostSetupToComplete = setHostNameAndMdns();
+
+    hostName = setHostInfo();
+
+    // For some reason when internetAddress.host get called before the reverse
+    // there is weired value
+    weirdHostName = internetAddress.host;
+
+    if (mdnsInfoVar != null) {
+      mdnsInfo = Future.value(mdnsInfoVar);
+    } else {
+      mdnsInfo = setMdnsInfo();
+    }
+
+    deviceName = setDeviceName();
   }
 
   factory ActiveHost.buildWithAddress({
@@ -48,19 +61,19 @@ class ActiveHost extends Comparable<ActiveHost> {
       internetAddress: internetAddressTemp,
       openPort: openPort,
       pingData: pingData,
-      mdnsInfo: mdnsInfo,
+      mdnsInfoVar: mdnsInfo,
     );
   }
 
   static const generic = 'Generic Device';
   InternetAddress internetAddress;
   late String hostId;
-  String? hostName;
-  String? weirdHostName;
+  late Future<String?> hostName;
+  late String weirdHostName;
   late final PingData _pingData;
 
   /// Mdns information of this device
-  MdnsInfo? mdnsInfo;
+  late Future<MdnsInfo?> mdnsInfo;
 
   /// List of all the open port of this device
   List<OpenPort> openPort;
@@ -71,15 +84,10 @@ class ActiveHost extends Comparable<ActiveHost> {
   /// value of [generic].
   /// This value **can change after the object got created** since getting
   /// host name of device is running async function.
-  String deviceName = generic;
+  late Future<String> deviceName;
   PingData get pingData => _pingData;
   Duration? get responseTime => _pingData.response?.time;
   String get address => internetAddress.address;
-
-  /// This var let us know from out side if all the setup got completed.
-  /// Since getting host name is async function [ActiveHost] does not contain
-  /// all of the values when the constructor completed
-  late Future<void> waitingForActiveHostSetupToComplete;
 
   @override
   int get hashCode => address.hashCode;
@@ -94,7 +102,11 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   @override
   String toString() {
-    return 'Address: $address, HostId: $hostId, deviceName: $deviceName, Time: ${responseTime?.inMilliseconds}ms';
+    return 'Address: $address, HostId: $hostId, Time: ${responseTime?.inMilliseconds}ms';
+  }
+
+  Future<String> toStringFull() async {
+    return 'Address: $address, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
   }
 
   static PingData getPingData(String host) {
@@ -116,7 +128,7 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   /// Try to find the host name of this device, if not exist host name will
   /// stay null
-  Future<void> setHostNameAndMdns() async {
+  Future<String?> setHostInfo() async {
     // For some reason when internetAddress.host get called before the reverse
     // there is weired value
     weirdHostName = internetAddress.host;
@@ -127,14 +139,33 @@ class ActiveHost extends Comparable<ActiveHost> {
 
     try {
       internetAddress = await internetAddress.reverse();
-      hostName = internetAddress.host;
-      deviceName = hostName!;
+      return internetAddress.host;
     } catch (e) {
       // Some devices does not have host name and the reverse search will just
       // throw exception.
-      if (mdnsInfo != null) {
-        deviceName = mdnsInfo!.getOnlyTheStartOfMdnsName();
-      }
     }
+    return null;
+  }
+
+  /// Try to find the mdns name of this device, if not exist mdns name will
+  /// be null
+  /// TODO: search mdns name for each device
+  Future<MdnsInfo?> setMdnsInfo() async {
+    return null;
+  }
+
+  /// Set some kind of device name.
+  /// Will try couple of names, if all are null will just return [generic]
+  Future<String> setDeviceName() async {
+    final String? hostNameTemp = await hostName;
+
+    if (hostNameTemp != null) {
+      return hostNameTemp;
+    }
+    final MdnsInfo? mdnsTemp = await mdnsInfo;
+    if (mdnsTemp != null) {
+      return mdnsTemp.getOnlyTheStartOfMdnsName();
+    }
+    return generic;
   }
 }

@@ -81,7 +81,7 @@ class MdnsScanner {
       for (final InternetAddress internetAddress in internetAddressList) {
         final ActiveHost tempHost = ActiveHost(
           internetAddress: internetAddress,
-          mdnsInfo: foundMdns,
+          mdnsInfoVar: foundMdns,
         );
         listOfActiveHost.add(tempHost);
       }
