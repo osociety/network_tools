@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:html';
 
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
