@@ -19,7 +19,7 @@ Added partly support for searching mdns devices.
 
 ## 2.0.0
 
-**Breaking change**. Bump minimum dart version to 2.17.0.
+**Breaking change** Bump minimum dart version to 2.17.0.
 
 Updated dart_ping package version to 7.0.1.
 
