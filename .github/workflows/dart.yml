@@ -43,3 +43,10 @@ jobs:
       - name: Run tests
         run: dart test
         working-directory: ./network_tools
+
+      - name: Upload Coverage to CodeCov
+        uses: codecov/codecov-action@v1 
+        with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        file: coverage/lcov.info
+
