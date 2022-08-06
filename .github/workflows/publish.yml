@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v1
       - name: Publish
         uses: sakebook/actions-flutter-pub-publisher@v1.4.1'
-        working-directory: ./network_tools
         with:
           credential: ${{ secrets.CREDENTIAL_JSON }}
           flutter_package: false
+          package_directory: ./network_tools
           skip_test: true
           dry_run: true
