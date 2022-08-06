@@ -1,12 +1,10 @@
-// import 'package:flutter_test/flutter_test.dart';
+import 'package:network_tools/network_tools.dart';
+import 'package:test/test.dart';
 
-// import 'package:network_tools/network_tools.dart';
-
-// void main() {
-//   test('adds one to input values', () {
-//     final calculator = Calculator();
-//     expect(calculator.addOne(2), 3);
-//     expect(calculator.addOne(-7), -6);
-//     expect(calculator.addOne(0), 1);
-//   });
-// }
+void main() {
+  test('Testing Host Scanner', () {
+    expect(HostScanner.getMaxHost("10.0.0.0"), HostScanner.classASubnets);
+    expect(HostScanner.getMaxHost("164.0.0.0"), HostScanner.classBSubnets);
+    expect(HostScanner.getMaxHost("200.0.0.0"), HostScanner.classCSubnets);
+  });
+}
