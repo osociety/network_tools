@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
-import 'package:network_tools/src/models/open_port.dart';
 import 'package:network_tools/src/port_scanner.dart';
 
 /// Scans for all hosts in a subnet.
@@ -143,7 +142,6 @@ class HostScanner {
       counter++;
     }
   }
-
 
   static const classASubnets = 16777216;
   static const classBSubnets = 65536;
