@@ -1,9 +1,5 @@
 # Change Log
 
-## 3.1.0
-
-Bug fixes and improvement
-
 ## 3.0.0
 
 **Breaking change** Change most of the methods names
@@ -17,6 +13,8 @@ Ip field in ActiveHost is now InternetAddress type instead of string which impro
 ActiveHost now contains host name of the address if exist.
 
 Better naming of methods
+
+Bug fixes and improvements
 
 ## 2.1.0
 
