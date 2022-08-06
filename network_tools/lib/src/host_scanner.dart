@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
+import 'package:network_tools/src/models/open_port.dart';
 import 'package:network_tools/src/port_scanner.dart';
 
 /// Scans for all hosts in a subnet.
@@ -143,6 +144,10 @@ class HostScanner {
     }
   }
 
+
+  static const classASubnets = 16777216;
+  static const classBSubnets = 65536;
+  static const classCSubnets = 256;
   static int getMaxHost(String subnet) {
     final List<String> lastSubnetStr = subnet.split('.');
     if (lastSubnetStr.isEmpty) {
@@ -152,12 +157,12 @@ class HostScanner {
     final int lastSubnet = int.parse(lastSubnetStr[0]);
 
     if (lastSubnet < 128) {
-      return 16777216;
+      return classASubnets;
     } else if (lastSubnet >= 128 && lastSubnet < 192) {
-      return 65536;
+      return classBSubnets;
     } else if (lastSubnet >= 192 && lastSubnet < 224) {
-      return 256;
+      return classCSubnets;
     }
-    return 256;
+    return classCSubnets;
   }
 }
