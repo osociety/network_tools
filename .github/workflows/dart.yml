@@ -45,7 +45,7 @@ jobs:
         working-directory: ./network_tools
 
       - name: Upload Coverage to CodeCov
-        uses: codecov/codecov-action@v1 
+        uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: coverage/test/network_tools_test.dart.vm.json
