@@ -48,5 +48,5 @@ jobs:
         uses: codecov/codecov-action@v1 
         with:
           token: ${{secrets.CODECOV_TOKEN}}
-          file: coverage/lcov.info
+          file: coverage/test/network_tools_test.dart.vm.json
 
