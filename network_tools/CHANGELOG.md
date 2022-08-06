@@ -1,9 +1,14 @@
 # Change Log
 
+## 3.1.0
+
+Bug fixes and improvement
+
 ## 3.0.0
 
 **Breaking change** Change most of the methods names
-    * HostScanner.discover To HostScanner.getAllPingableDevices
+
+    * HostScanner.discover to HostScanner.getAllPingableDevices
     * HostScanner.discoverPort to HostScanner.scanDevicesForSinglePort
     * PortScanner.discover to PortScanner.scanPortsForSingleDevice
 
