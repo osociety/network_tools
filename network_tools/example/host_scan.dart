@@ -28,10 +28,10 @@ void main() {
   );
 
   stream.listen(
-    (ActiveHost host) {
+    (ActiveHost host) async {
       //Same host can be emitted multiple times
       //Use Set<ActiveHost> instead of List<ActiveHost>
-      log.fine('Found device: $host');
+      log.fine('Found device: ${await host.toStringFull()}');
     },
     onDone: () {
       log.fine('Scan completed');
