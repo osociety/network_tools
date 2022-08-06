@@ -155,6 +155,7 @@ class PortScanner {
     required int port,
     required Duration timeout,
     required StreamController<ActiveHost> activeHostsController,
+    int recursionCount = 0,
   }) async {
     try {
       final Socket s = await Socket.connect(address, port, timeout: timeout);
@@ -174,10 +175,28 @@ class PortScanner {
       // Check if connection timed out or we got one of predefined errors
       if (e.osError == null || _errorCodes.contains(e.osError?.errorCode)) {
         return null;
-      } else {
-        // Error 23,24: Too many open files in system
-        rethrow;
       }
+
+      // Error 23,24: Too many open files in system
+      // e.osError can't be null here so `!` can be used
+      // Do no more than 2 retries to prevent infinite loops
+      if (recursionCount < 3 &&
+          (e.osError!.errorCode == 23 || e.osError!.errorCode == 24)) {
+        // Hotfix: Wait for the timeout (+ a little more) to complete and retry
+        // -> Other connections must be closed now and the file handles available again
+
+        await Future.delayed(timeout + const Duration(milliseconds: 250));
+
+        return connectToPort(
+          address: address,
+          port: port,
+          timeout: timeout,
+          activeHostsController: activeHostsController,
+          recursionCount: recursionCount + 1,
+        );
+      }
+
+      rethrow;
     }
   }
 

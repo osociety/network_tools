@@ -3,7 +3,8 @@
 ## 3.0.0
 
 **Breaking change** Change most of the methods names
-    * HostScanner.discover To HostScanner.getAllPingableDevices
+
+    * HostScanner.discover to HostScanner.getAllPingableDevices
     * HostScanner.discoverPort to HostScanner.scanDevicesForSinglePort
     * PortScanner.discover to PortScanner.scanPortsForSingleDevice
 
@@ -12,6 +13,8 @@ Ip field in ActiveHost is now InternetAddress type instead of string which impro
 ActiveHost now contains host name of the address if exist.
 
 Better naming of methods
+
+Bug fixes and improvements
 
 ## 2.1.0
 

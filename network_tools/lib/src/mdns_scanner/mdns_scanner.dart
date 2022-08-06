@@ -49,7 +49,23 @@ class MdnsScanner {
   ) async {
     final List<MdnsInfo> mdnsFoundList = [];
 
-    final MDnsClient client = MDnsClient();
+    final MDnsClient client = MDnsClient(
+      rawDatagramSocketFactory: (
+        dynamic host,
+        int port, {
+        bool? reuseAddress,
+        bool? reusePort,
+        int? ttl,
+      }) {
+        return RawDatagramSocket.bind(
+          host,
+          port,
+          reusePort: Platform.isWindows ? false : true,
+          ttl: ttl!,
+        );
+      },
+    );
+
     await client.start();
 
     await for (final PtrResourceRecord ptr in client.lookup<PtrResourceRecord>(

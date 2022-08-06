@@ -1,6 +1,7 @@
 # Network Tools
 
 [![pub package](https://img.shields.io/pub/v/network_tools.svg)](https://pub.dev/packages/network_tools)
+[![codecov](https://codecov.io/gh/git-elliot/network_tools/branch/main/graph/badge.svg?token=J9G2472GQZ)](https://codecov.io/gh/git-elliot/network_tools)
 
 Network Tools Supported
 
