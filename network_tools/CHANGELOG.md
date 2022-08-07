@@ -1,9 +1,5 @@
 # Change Log
 
-## 3.0.7
-
-Testing CI/CD for dart package publish github action
-
 ## 3.0.0
 
 **Breaking change** Change most of the methods names
