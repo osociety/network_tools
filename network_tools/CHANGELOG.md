@@ -2,7 +2,7 @@
 
 ## 3.0.0+1
 
-Dart package publish github action added.
+This release is only meant to test Github Actions for Dart Package publishing. It's same as v3.0.0. Nothing changed.
 
 ## 3.0.0
 
