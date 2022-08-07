@@ -1,6 +1,6 @@
 # Change Log
 
-## 3.0.1
+## 3.0.0
 
 **Breaking change** Change most of the methods names
 
