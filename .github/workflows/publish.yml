@@ -34,11 +34,11 @@ jobs:
           sh ./pub_login.sh
 
       - name: Check Publish Warnings
-        run: pub publish --dry-run
+        run: dart pub publish --dry-run
         working-directory: ./network_tools
 
       - name: Publish Package
-        run: pub publish -f
+        run: dart pub publish -f
         working-directory: ./network_tools
 
       # - name: Publish Dart/Flutter package  
