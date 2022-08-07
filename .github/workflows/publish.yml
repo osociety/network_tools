@@ -40,12 +40,3 @@ jobs:
       - name: Publish Package
         run: dart pub publish -f
         working-directory: ./network_tools
-
-      # - name: Publish Dart/Flutter package  
-      #   uses: sakebook/actions-flutter-pub-publisher@v1.4.1
-      #   with:
-      #     credential: ${{ secrets.CREDENTIAL_JSON }}
-      #     flutter_package: false
-      #     package_directory: ./network_tools
-      #     skip_test: true
-      #     dry_run: false
