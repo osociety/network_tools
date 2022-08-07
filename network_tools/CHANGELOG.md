@@ -1,6 +1,6 @@
 # Change Log
 
-## 3.0.5
+## 3.0.6
 
 Testing CI/CD for dart package publish github action
 
