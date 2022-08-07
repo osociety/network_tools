@@ -30,7 +30,7 @@ cat <<EOF > $HOME/.config/dart/pub-credentials.json
   "refreshToken":"${PUB_DEV_PUBLISH_REFRESH_TOKEN}",
   "tokenEndpoint":"${PUB_DEV_PUBLISH_TOKEN_ENDPOINT}",
   "idToken": "${PUB_DEV_PUBLISH_ID_TOKEN}",
-  "scopes":["https://www.googleapis.com/auth/userinfo.email","openid"],
+  "scopes":["openid","https://www.googleapis.com/auth/userinfo.email"],
   "expiration":${PUB_DEV_PUBLISH_EXPIRATION}
 }
 EOF
