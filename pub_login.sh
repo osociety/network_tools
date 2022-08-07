@@ -22,9 +22,9 @@ if [ -z "${PUB_DEV_PUBLISH_EXPIRATION}" ]; then
   echo "Missing PUB_DEV_PUBLISH_EXPIRATION environment variable"
   exit 1
 fi
-
+mkdir -p $HOME/.config/dart
 # Create credentials.json file.
-cat <<EOF > ~/.pub-cache/credentials.json
+cat <<EOF > $HOME/.config/dart/pub-credentials.json
 {
   "accessToken":"${PUB_DEV_PUBLISH_ACCESS_TOKEN}",
   "refreshToken":"${PUB_DEV_PUBLISH_REFRESH_TOKEN}",
