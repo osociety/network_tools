@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.0.0+1
+
+Dart package publish github action added.
+
 ## 3.0.0
 
 **Breaking change** Change most of the methods names
