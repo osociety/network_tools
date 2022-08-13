@@ -12,6 +12,7 @@ class MdnsScanner {
   /// TODO: This is because missing functionality in dart
   /// TODO: https://github.com/flutter/flutter/issues/97210
   /// TODO: In some cases we resolve this missing functionality using
+  /// TODO: specific os tools.
   static Future<List<ActiveHost>> searchMdnsDevices({
     bool forceUseOfSavedSrvRecordList = false,
   }) async {
