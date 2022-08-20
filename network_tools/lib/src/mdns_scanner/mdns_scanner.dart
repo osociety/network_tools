@@ -18,15 +18,18 @@ class MdnsScanner {
   }) async {
     List<String> srvRecordListToSearchIn;
 
-    final List<String>? srvRecordsFromOs = await SrvList.getSrvRecordList();
-
-    if (srvRecordsFromOs == null ||
-        srvRecordsFromOs.isEmpty ||
-        forceUseOfSavedSrvRecordList) {
+    if (forceUseOfSavedSrvRecordList) {
       srvRecordListToSearchIn = tcpSrvRecordsList;
       srvRecordListToSearchIn.addAll(udpSrvRecordsList);
     } else {
-      srvRecordListToSearchIn = srvRecordsFromOs;
+      final List<String>? srvRecordsFromOs = await SrvList.getSrvRecordList();
+
+      if (srvRecordsFromOs == null || srvRecordsFromOs.isEmpty) {
+        srvRecordListToSearchIn = tcpSrvRecordsList;
+        srvRecordListToSearchIn.addAll(udpSrvRecordsList);
+      } else {
+        srvRecordListToSearchIn = srvRecordsFromOs;
+      }
     }
 
     final List<Future<List<ActiveHost>>> activeHostListsFuture = [];

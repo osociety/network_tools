@@ -141,8 +141,15 @@ class ActiveHost extends Comparable<ActiveHost> {
       internetAddress = await internetAddress.reverse();
       return internetAddress.host;
     } catch (e) {
-      // Some devices does not have host name and the reverse search will just
-      // throw exception.
+      if (e is SocketException &&
+          e.osError != null &&
+          e.osError!.message == 'Name or service not known') {
+        // Some devices does not have host name and the reverse search will just
+        // throw exception.
+        // We don't need to print this crash as it is by design.
+      } else {
+        print('Exception here: $e');
+      }
     }
     return null;
   }
