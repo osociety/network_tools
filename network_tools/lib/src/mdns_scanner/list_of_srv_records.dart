@@ -71,6 +71,7 @@ List<String> tcpSrvRecordsList = [
   '_axis-video._tcp', // "properties": { "macaddress": "00408c*" } "properties": { "macaddress": "accc8e*" } "properties": { "macaddress": "b8a44f*" }
   '_androidtvremote2._tcp',
   '_ewelink._tcp',
+  '_nvstream_dbd._tcp',
 ];
 
 List<String> udpSrvRecordsList = [
