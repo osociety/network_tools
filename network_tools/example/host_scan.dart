@@ -16,12 +16,12 @@ void main() {
   // final String? address = await (NetworkInfo().getWifiIP());
   final String subnet = address.substring(0, address.lastIndexOf('.'));
 
-  // You can set [firstSubnet] and scan will start from this host in the network.
-  // Similarly set [lastSubnet] and scan will end at this host in the network.
+  // You can set [firstHostId] and scan will start from this host in the network.
+  // Similarly set [lastHostId] and scan will end at this host in the network.
   final stream = HostScanner.getAllPingableDevices(
     subnet,
-    // firstSubnet: 1,
-    // lastSubnet: 254,
+    // firstHostId: 1,
+    // lastHostId: 254,
     progressCallback: (progress) {
       log.finer('Progress for host discovery : $progress');
     },
