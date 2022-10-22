@@ -16,13 +16,13 @@ void main() {
   final String subnet = address.substring(0, address.lastIndexOf('.'));
 
   // [New] Scan for a single open port in a subnet
-  // You can set [firstSubnet] and scan will start from this host in the network.
-  // Similarly set [lastSubnet] and scan will end at this host in the network.
+  // You can set [firstHostId] and scan will start from this host in the network.
+  // Similarly set [lastHostId] and scan will end at this host in the network.
   final stream2 = HostScanner.scanDevicesForSinglePort(
     subnet,
     53,
-    // firstSubnet: 1,
-    // lastSubnet: 254,
+    // firstHostId: 1,
+    // lastHostId: 254,
     progressCallback: (progress) {
       log.finer('Progress for port discovery on host : $progress');
     },
