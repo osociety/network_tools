@@ -2,7 +2,7 @@
 
 ## 3.0.0+3
 
-Refactoring for field names.
+Refactoring for field names
 
 ## 3.0.0+2
 
