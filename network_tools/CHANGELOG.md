@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.0.0+3
+
+Refactoring for field names
+
 ## 3.0.0+2
 
 This release is only meant to test Github Actions for Dart Package publishing. It's same as v3.0.0. Nothing changed.

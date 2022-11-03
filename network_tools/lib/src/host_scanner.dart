@@ -10,33 +10,33 @@ import 'package:network_tools/src/port_scanner.dart';
 class HostScanner {
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   /// Set maxHost to higher value if you are not getting results.
-  /// It won't firstSubnet again unless previous scan is completed due to heavy
+  /// It won't firstHostId again unless previous scan is completed due to heavy
   /// resource consumption.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
   static Stream<ActiveHost> getAllPingableDevices(
     String subnet, {
-    int firstSubnet = 1,
-    int lastSubnet = 254,
+    int firstHostId = 1,
+    int lastHostId = 254,
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
     final int maxEnd = getMaxHost(subnet);
-    if (firstSubnet > lastSubnet ||
-        firstSubnet < 1 ||
-        lastSubnet < 1 ||
-        firstSubnet > maxEnd ||
-        lastSubnet > maxEnd) {
-      throw 'Invalid subnet range or firstSubnet < lastSubnet is not true';
+    if (firstHostId > lastHostId ||
+        firstHostId < 1 ||
+        lastHostId < 1 ||
+        firstHostId > maxEnd ||
+        lastHostId > maxEnd) {
+      throw 'Invalid subnet range or firstHostId < lastHostId is not true';
     }
-    final int lastValidSubnet = min(lastSubnet, maxEnd);
+    final int lastValidSubnet = min(lastHostId, maxEnd);
 
     final List<Future<ActiveHost?>> activeHostsFuture = [];
     final StreamController<ActiveHost> activeHostsController =
         StreamController<ActiveHost>();
 
-    for (int i = firstSubnet; i <= lastValidSubnet; i++) {
+    for (int i = firstHostId; i <= lastValidSubnet; i++) {
       activeHostsFuture.add(
         _getHostFromPing(
           activeHostsController: activeHostsController,
@@ -57,7 +57,7 @@ class HostScanner {
       final ActiveHost? tempHost = await host;
 
       progressCallback
-          ?.call((i - firstSubnet) * 100 / (lastValidSubnet - firstSubnet));
+          ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
 
       if (tempHost == null) {
         continue;
@@ -94,26 +94,26 @@ class HostScanner {
   static Stream<ActiveHost> scanDevicesForSinglePort(
     String subnet,
     int port, {
-    int firstSubnet = 1,
-    int lastSubnet = 254,
+    int firstHostId = 1,
+    int lastHostId = 254,
     Duration timeout = const Duration(milliseconds: 2000),
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
     final int maxEnd = getMaxHost(subnet);
-    if (firstSubnet > lastSubnet ||
-        firstSubnet < 1 ||
-        lastSubnet < 1 ||
-        firstSubnet > maxEnd ||
-        lastSubnet > maxEnd) {
-      throw 'Invalid subnet range or firstSubnet < lastSubnet is not true';
+    if (firstHostId > lastHostId ||
+        firstHostId < 1 ||
+        lastHostId < 1 ||
+        firstHostId > maxEnd ||
+        lastHostId > maxEnd) {
+      throw 'Invalid subnet range or firstHostId < lastHostId is not true';
     }
-    final int lastValidSubnet = min(lastSubnet, maxEnd);
+    final int lastValidSubnet = min(lastHostId, maxEnd);
     final List<Future<ActiveHost?>> activeHostOpenPortList = [];
     final StreamController<ActiveHost> activeHostsController =
         StreamController<ActiveHost>();
 
-    for (int i = firstSubnet; i <= lastValidSubnet; i++) {
+    for (int i = firstHostId; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
       activeHostOpenPortList.add(
         PortScanner.connectToPort(
@@ -129,7 +129,7 @@ class HostScanner {
       yield* activeHostsController.stream;
     }
 
-    int counter = firstSubnet;
+    int counter = firstHostId;
     for (final Future<ActiveHost?> openPortActiveHostFuture
         in activeHostOpenPortList) {
       final ActiveHost? activeHost = await openPortActiveHostFuture;
@@ -137,7 +137,7 @@ class HostScanner {
         yield activeHost;
       }
       progressCallback?.call(
-        (counter - firstSubnet) * 100 / (lastValidSubnet - firstSubnet),
+        (counter - firstHostId) * 100 / (lastValidSubnet - firstHostId),
       );
       counter++;
     }
@@ -147,18 +147,18 @@ class HostScanner {
   static const classBSubnets = 65536;
   static const classCSubnets = 256;
   static int getMaxHost(String subnet) {
-    final List<String> lastSubnetStr = subnet.split('.');
-    if (lastSubnetStr.isEmpty) {
+    final List<String> lastHostIdStr = subnet.split('.');
+    if (lastHostIdStr.isEmpty) {
       throw 'Invalid subnet Address';
     }
 
-    final int lastSubnet = int.parse(lastSubnetStr[0]);
+    final int lastHostId = int.parse(lastHostIdStr[0]);
 
-    if (lastSubnet < 128) {
+    if (lastHostId < 128) {
       return classASubnets;
-    } else if (lastSubnet >= 128 && lastSubnet < 192) {
+    } else if (lastHostId >= 128 && lastHostId < 192) {
       return classBSubnets;
-    } else if (lastSubnet >= 192 && lastSubnet < 224) {
+    } else if (lastHostId >= 192 && lastHostId < 224) {
       return classCSubnets;
     }
     return classCSubnets;
