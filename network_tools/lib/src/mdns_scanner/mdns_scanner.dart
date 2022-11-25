@@ -92,14 +92,20 @@ class MdnsScanner {
       final List<InternetAddress>? internetAddressList;
       try {
         internetAddressList =
-            await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
+        await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
+
+        // There can be multiple devices with the same name
+        for (final InternetAddress internetAddress in internetAddressList) {
+          final ActiveHost tempHost = ActiveHost(
+            internetAddress: internetAddress,
+            mdnsInfoVar: foundMdns,
+          );
+          listOfActiveHost.add(tempHost);
+        }
       } catch (e) {
-        continue;
-      }
-      // There can be multiple devices with the same name
-      for (final InternetAddress internetAddress in internetAddressList) {
+        print('Error finding ip of mdns record ${foundMdns.ptrResourceRecord.name} srv target ${foundMdns.mdnsSrvTarget} , will add it with ip 0.0.0.0\n$e');
         final ActiveHost tempHost = ActiveHost(
-          internetAddress: internetAddress,
+          internetAddress: InternetAddress('0.0.0.0'),
           mdnsInfoVar: foundMdns,
         );
         listOfActiveHost.add(tempHost);
