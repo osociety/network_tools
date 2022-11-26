@@ -8,9 +8,9 @@ Network Tools Supported
 1. Host Scanner
 
 2. Port Scanner
-    1. Single
-    2. Range
-    3. Custom
+   1. Single
+   2. Range
+   3. Custom
 
 Partly Work:
 
@@ -19,7 +19,7 @@ Partly Work:
 ## Import package in your app
 
 ```dart
-import 'package:network_tools/network_tools.dart'; 
+import 'package:network_tools/network_tools.dart';
 ```
 
 ## Usage
@@ -31,7 +31,7 @@ import 'package:network_tools/network_tools.dart';
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
   final String subnet = address.substring(0, address.lastIndexOf('.'));
-  final stream = HostScanner.discover(subnet, firstSubnet: 1, lastSubnet: 50,
+  final stream = HostScanner.discover(subnet, firstHostId: 1, lastHostId: 50,
       progressCallback: (progress) {
     print('Progress for host discovery : $progress');
   });
@@ -78,7 +78,6 @@ import 'package:network_tools/network_tools.dart';
     }
 ```
 
-
 ### Run examples
 
 1. Run host scan : `dart example/host_scan.dart`
@@ -100,19 +99,19 @@ Add this code to your `main.dart` file
 ## Sample App
 
 [Vernet](https://github.com/git-elliot/vernet) is the open source app built on top of this library.
-You can check out the code and implementation for more detailed use case of this package. 
+You can check out the code and implementation for more detailed use case of this package.
 
 ## Support and Donate
 
 1. Support this project by becoming stargazer of this project.
 2. Buy me a coffee.
 
-    |   Bitcoin |   UPI |
-    |-----------|-------|
-    |<img src="https://raw.githubusercontent.com/git-elliot/network_tools/main/donation/bitcoin_qr.png" width = "100">|<img src="https://raw.githubusercontent.com/git-elliot/network_tools/main/donation/bhim_upi_qr.png" width = "100">
+   | Bitcoin                                                                                                           | UPI                                                                                                                |
+   | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+   | <img src="https://raw.githubusercontent.com/git-elliot/network_tools/main/donation/bitcoin_qr.png" width = "100"> | <img src="https://raw.githubusercontent.com/git-elliot/network_tools/main/donation/bhim_upi_qr.png" width = "100"> |
 
 3. Support me on Ko-Fi
 
-    [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/fs0c13ty)
+   [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/fs0c13ty)
 
 Inspired from [ping_discover_network](https://github.com/andrey-ushakov/ping_discover_network)
