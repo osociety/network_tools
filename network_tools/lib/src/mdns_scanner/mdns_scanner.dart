@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
 import 'package:network_tools/src/mdns_scanner/list_of_srv_records.dart';
+import 'package:universal_io/io.dart';
 
 class MdnsScanner {
   /// This method searching for all the mdns devices in the network.
@@ -63,7 +62,7 @@ class MdnsScanner {
         return RawDatagramSocket.bind(
           host,
           port,
-          reusePort: Platform.isWindows ? false : true,
+          reusePort: !Platform.isWindows,
           ttl: ttl!,
         );
       },
@@ -92,7 +91,7 @@ class MdnsScanner {
       final List<InternetAddress>? internetAddressList;
       try {
         internetAddressList =
-        await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
+            await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
 
         // There can be multiple devices with the same name
         for (final InternetAddress internetAddress in internetAddressList) {
@@ -103,7 +102,8 @@ class MdnsScanner {
           listOfActiveHost.add(tempHost);
         }
       } catch (e) {
-        print('Error finding ip of mdns record ${foundMdns.ptrResourceRecord.name} srv target ${foundMdns.mdnsSrvTarget} , will add it with ip 0.0.0.0\n$e');
+        print(
+            'Error finding ip of mdns record ${foundMdns.ptrResourceRecord.name} srv target ${foundMdns.mdnsSrvTarget} , will add it with ip 0.0.0.0\n$e');
         final ActiveHost tempHost = ActiveHost(
           internetAddress: InternetAddress('0.0.0.0'),
           mdnsInfoVar: foundMdns,
