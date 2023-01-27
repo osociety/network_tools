@@ -13,7 +13,7 @@ dependencies:
   # Deal with internationalized/localized messages and more.
   intl: ^0.18.0
   # Debugging and error logging.
-  logging: ^1.1.0
+  logging: ^1.1.1
   # Performing mDNS queries (e.g. Bonjour, Avahi).
   multicast_dns: ^0.3.2+2
   # Process run helpers

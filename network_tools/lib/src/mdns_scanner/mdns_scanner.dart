@@ -33,7 +33,7 @@ class MdnsScanner {
 
     final List<Future<List<ActiveHost>>> activeHostListsFuture = [];
     for (final String srvRecord in srvRecordListToSearchIn) {
-      activeHostListsFuture.add(_findingMdnsWithAddress(srvRecord));
+      activeHostListsFuture.add(findingMdnsWithAddress(srvRecord));
     }
 
     final List<ActiveHost> activeHostList = [];
@@ -46,7 +46,7 @@ class MdnsScanner {
     return activeHostList;
   }
 
-  static Future<List<ActiveHost>> _findingMdnsWithAddress(
+  static Future<List<ActiveHost>> findingMdnsWithAddress(
     String serviceType,
   ) async {
     final List<MdnsInfo> mdnsFoundList = [];
