@@ -68,6 +68,9 @@ class ActiveHost extends Comparable<ActiveHost> {
   static const generic = 'Generic Device';
   InternetAddress internetAddress;
   late String hostId;
+
+  /// Host name of the device, not to be confused with deviceName which does
+  /// not follow any internet protocol property
   late Future<String?> hostName;
   late String weirdHostName;
   late final PingData _pingData;
