@@ -103,7 +103,8 @@ class MdnsScanner {
         }
       } catch (e) {
         print(
-            'Error finding ip of mdns record ${foundMdns.ptrResourceRecord.name} srv target ${foundMdns.mdnsSrvTarget} , will add it with ip 0.0.0.0\n$e');
+          'Error finding ip of mdns record ${foundMdns.ptrResourceRecord.name} srv target ${foundMdns.mdnsSrvTarget} , will add it with ip 0.0.0.0\n$e',
+        );
         final ActiveHost tempHost = ActiveHost(
           internetAddress: InternetAddress('0.0.0.0'),
           mdnsInfoVar: foundMdns,
