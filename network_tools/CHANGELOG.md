@@ -1,6 +1,6 @@
 # Change Log
 
-## 3.1.0+4
+## 3.1.0
 
 Web Support and bug fixes for mDns devices giving error in getting IP
 
