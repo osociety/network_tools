@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.1.0+4
+
+Web Support and bug fixes for mDns devices giving error in getting IP
+
 ## 3.0.0+3
 
 Refactoring for field names
