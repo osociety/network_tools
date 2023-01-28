@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:process_run/shell.dart';
 
 class SrvListLinux {
@@ -10,7 +11,7 @@ class SrvListLinux {
       srvList.addAll(await runAvahiBrowseCommand());
       srvList.addAll(await runMdnsScanCommand());
     } catch (e) {
-      print('Error:\n$e');
+      log.severe('Error:\n$e');
     }
     return srvList.toList();
   }
@@ -34,7 +35,7 @@ timeout 2s avahi-browse --all -p
         final String? resultStderr = error.result?.stderr.toString();
         if (resultStderr != null &&
             resultStderr.contains('No such file or directory')) {
-          print(
+          log.fine(
             'You can make the mdns process better by installing `avahi-browse`',
           );
           return [];
@@ -58,7 +59,7 @@ timeout 2s avahi-browse --all -p
         }
       }
     } catch (e) {
-      print('Error getting info from avahi-browse\n$e');
+      log.severe('Error getting info from avahi-browse\n$e');
     }
     return srvListAvahi;
   }
@@ -83,7 +84,7 @@ timeout 2s mdns-scan
 
         if (resultStderr == null ||
             (resultStderr.contains('No such file or directory'))) {
-          print(
+          log.fine(
             'You can make the mdns process better by installing `mdns-scan`',
           );
           return [];
@@ -104,7 +105,7 @@ timeout 2s mdns-scan
         }
       }
     } catch (e) {
-      print('Error getting info from mdns-scan\n$e');
+      log.severe('Error getting info from mdns-scan\n$e');
     }
     return srvListMdnsScan;
   }

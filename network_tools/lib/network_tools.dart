@@ -1,7 +1,6 @@
 library network_tools;
 
 //TODO: add dartdocs
-
 export 'src/host_scanner.dart';
 export 'src/mdns_scanner/mdns_scanner.dart';
 export 'src/models/active_host.dart';

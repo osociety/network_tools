@@ -1,6 +1,7 @@
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/src/models/mdns_info.dart';
 import 'package:network_tools/src/models/open_port.dart';
+import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
 /// ActiveHost which implements comparable
@@ -151,7 +152,7 @@ class ActiveHost extends Comparable<ActiveHost> {
         // throw exception.
         // We don't need to print this crash as it is by design.
       } else {
-        print('Exception here: $e');
+        log.severe('Exception here: $e');
       }
     }
     return null;
