@@ -1,7 +1,7 @@
 import 'package:dart_ping/dart_ping.dart';
-import 'package:logging/logging.dart';
 import 'package:network_tools/src/models/mdns_info.dart';
 import 'package:network_tools/src/models/open_port.dart';
+import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
 /// ActiveHost which implements comparable
@@ -92,8 +92,6 @@ class ActiveHost extends Comparable<ActiveHost> {
   PingData get pingData => _pingData;
   Duration? get responseTime => _pingData.response?.time;
   String get address => internetAddress.address;
-
-  final log = Logger('active_host');
 
   @override
   int get hashCode => address.hashCode;

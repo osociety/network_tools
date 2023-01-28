@@ -1,10 +1,9 @@
 import 'dart:collection';
 
-import 'package:logging/logging.dart';
+import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:process_run/shell.dart';
 
 class SrvListLinux {
-  static final log = Logger("srv_list_linux");
   static Future<List<String>?> getSrvRecordList() async {
     final HashSet<String> srvList = HashSet<String>();
 

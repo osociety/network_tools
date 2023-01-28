@@ -10,7 +10,6 @@ void main() {
     );
   });
 
-  final log = Logger('host_scan');
   const String address = '192.168.1.1';
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());

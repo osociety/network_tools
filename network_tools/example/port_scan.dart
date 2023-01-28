@@ -9,7 +9,7 @@ void main() {
       '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
     );
   });
-  final log = Logger('port_scan');
+
   const String address = '192.168.1.1';
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
