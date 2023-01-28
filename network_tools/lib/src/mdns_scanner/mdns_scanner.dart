@@ -1,8 +1,8 @@
-import 'package:logging/logging.dart';
 import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
 import 'package:network_tools/src/mdns_scanner/list_of_srv_records.dart';
+import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
 class MdnsScanner {
@@ -13,7 +13,6 @@ class MdnsScanner {
   /// TODO: https://github.com/flutter/flutter/issues/97210
   /// TODO: In some cases we resolve this missing functionality using
   /// TODO: specific os tools.
-  static final log = Logger('active_host');
 
   static Future<List<ActiveHost>> searchMdnsDevices({
     bool forceUseOfSavedSrvRecordList = false,
