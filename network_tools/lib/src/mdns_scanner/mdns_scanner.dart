@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
 import 'package:network_tools/src/mdns_scanner/list_of_srv_records.dart';
+import 'package:universal_io/io.dart';
 
 class MdnsScanner {
   /// This method searching for all the mdns devices in the network.
@@ -34,7 +33,7 @@ class MdnsScanner {
 
     final List<Future<List<ActiveHost>>> activeHostListsFuture = [];
     for (final String srvRecord in srvRecordListToSearchIn) {
-      activeHostListsFuture.add(_findingMdnsWithAddress(srvRecord));
+      activeHostListsFuture.add(findingMdnsWithAddress(srvRecord));
     }
 
     final List<ActiveHost> activeHostList = [];
@@ -47,7 +46,7 @@ class MdnsScanner {
     return activeHostList;
   }
 
-  static Future<List<ActiveHost>> _findingMdnsWithAddress(
+  static Future<List<ActiveHost>> findingMdnsWithAddress(
     String serviceType,
   ) async {
     final List<MdnsInfo> mdnsFoundList = [];
@@ -63,7 +62,7 @@ class MdnsScanner {
         return RawDatagramSocket.bind(
           host,
           port,
-          reusePort: Platform.isWindows ? false : true,
+          reusePort: !Platform.isWindows,
           ttl: ttl!,
         );
       },
@@ -93,13 +92,20 @@ class MdnsScanner {
       try {
         internetAddressList =
             await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
+
+        // There can be multiple devices with the same name
+        for (final InternetAddress internetAddress in internetAddressList) {
+          final ActiveHost tempHost = ActiveHost(
+            internetAddress: internetAddress,
+            mdnsInfoVar: foundMdns,
+          );
+          listOfActiveHost.add(tempHost);
+        }
       } catch (e) {
-        continue;
-      }
-      // There can be multiple devices with the same name
-      for (final InternetAddress internetAddress in internetAddressList) {
+        print(
+            'Error finding ip of mdns record ${foundMdns.ptrResourceRecord.name} srv target ${foundMdns.mdnsSrvTarget} , will add it with ip 0.0.0.0\n$e');
         final ActiveHost tempHost = ActiveHost(
-          internetAddress: internetAddress,
+          internetAddress: InternetAddress('0.0.0.0'),
           mdnsInfoVar: foundMdns,
         );
         listOfActiveHost.add(tempHost);

@@ -1,6 +1,6 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 3.0.0+3
+version: 3.1.0
 issue_tracker: https://github.com/osociety/network_tools/issues
 repository: https://github.com/osociety/network_tools/tree/main/network_tools
 
@@ -9,20 +9,20 @@ environment:
 
 dependencies:
   # Multi-platform network ping utility.
-  dart_ping: ^7.0.1
+  dart_ping: ^8.0.1
   # Deal with internationalized/localized messages and more.
-  intl: ^0.17.0
+  intl: ^0.18.0
   # Debugging and error logging.
-  logging: ^1.0.2
+  logging: ^1.1.1
   # Performing mDNS queries (e.g. Bonjour, Avahi).
-  multicast_dns: ^0.3.2+1
+  multicast_dns: ^0.3.2+2
   # Process run helpers
-  process_run: ^0.12.3+2
+  process_run: ^0.12.5+2
   # Cross-platform 'dart:io' that works in all platforms.
   universal_io: ^2.0.4
 
 dev_dependencies:
   # Set of lint rules for Dart.
-  lint: ^1.10.0
+  lint: ^2.0.1
   # Writing and running Dart tests.
-  test: ^1.21.4
+  test: ^1.22.2
