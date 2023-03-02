@@ -64,7 +64,7 @@ class MdnsScanner {
         return RawDatagramSocket.bind(
           host,
           port,
-          reusePort: !Platform.isWindows,
+          reusePort: !Platform.isWindows && !Platform.isAndroid,
           ttl: ttl!,
         );
       },
