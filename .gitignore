@@ -30,4 +30,5 @@
 .pub-cache/
 .pub/
 build/
+*.mocks.dart
 

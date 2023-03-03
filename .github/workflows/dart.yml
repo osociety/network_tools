@@ -28,6 +28,10 @@ jobs:
         run: dart pub get
         working-directory: ./network_tools
 
+      - name: Auto generate code using build_runner 
+        run: dart run build_runner build --delete-conflicting-outputs
+        working-directory: ./network_tools
+
       # Uncomment this step to verify the use of 'dart format' on each commit.
       # - name: Verify formatting
       #   run: dart format --output=none --set-exit-if-changed .

@@ -97,7 +97,7 @@ class ActiveHost extends Comparable<ActiveHost> {
   int get hashCode => address.hashCode;
 
   @override
-  bool operator ==(dynamic o) => o is ActiveHost && address == o.address;
+  bool operator ==(Object o) => o is ActiveHost && address == o.address;
 
   @override
   int compareTo(ActiveHost other) {

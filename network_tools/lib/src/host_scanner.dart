@@ -2,19 +2,28 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
+import 'package:mockito/annotations.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
 import 'package:network_tools/src/port_scanner.dart';
 
+@GenerateNiceMocks([MockSpec<HostScanner>()])
+
 /// Scans for all hosts in a subnet.
 class HostScanner {
+  factory HostScanner() {
+    return _singleton;
+  }
+  HostScanner._internal();
+  static final HostScanner _singleton = HostScanner._internal();
+
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   /// Set maxHost to higher value if you are not getting results.
   /// It won't firstHostId again unless previous scan is completed due to heavy
   /// resource consumption.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<ActiveHost> getAllPingableDevices(
+  Stream<ActiveHost> getAllPingableDevices(
     String subnet, {
     int firstHostId = 1,
     int lastHostId = 254,
@@ -66,7 +75,7 @@ class HostScanner {
     }
   }
 
-  static Future<ActiveHost?> _getHostFromPing({
+  Future<ActiveHost?> _getHostFromPing({
     required String host,
     required int i,
     required StreamController<ActiveHost> activeHostsController,
@@ -91,7 +100,7 @@ class HostScanner {
   /// Scans for all hosts that have the specific port that was given.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<ActiveHost> scanDevicesForSinglePort(
+  Stream<ActiveHost> scanDevicesForSinglePort(
     String subnet,
     int port, {
     int firstHostId = 1,
@@ -146,7 +155,7 @@ class HostScanner {
   static const classASubnets = 16777216;
   static const classBSubnets = 65536;
   static const classCSubnets = 256;
-  static int getMaxHost(String subnet) {
+  int getMaxHost(String subnet) {
     final List<String> lastHostIdStr = subnet.split('.');
     if (lastHostIdStr.isEmpty) {
       throw 'Invalid subnet Address';

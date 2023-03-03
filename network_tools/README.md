@@ -96,6 +96,11 @@ Add this code to your `main.dart` file
       });
 ```
 
+## Run unit tests
+
+1. dart run build_runner build --delete-conflicting-outputs
+2. dart test
+
 ## Sample App
 
 [Vernet](https://github.com/git-elliot/vernet) is the open source app built on top of this library.
