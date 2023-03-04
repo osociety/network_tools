@@ -4,15 +4,9 @@ import 'package:universal_io/io.dart';
 
 void main() {
   group('Testing Host Scanner', () {
-    test('Running getMaxHost tests', () {
-      expect(HostScanner.getMaxHost("10.0.0.0"), HostScanner.classASubnets);
-      expect(HostScanner.getMaxHost("164.0.0.0"), HostScanner.classBSubnets);
-      expect(HostScanner.getMaxHost("200.0.0.0"), HostScanner.classCSubnets);
-    });
-
-    test('Running getAllPingableDevices tests', () async {
-      String interfaceIp = "127.0.0";
-      String myOwnHost = "127.0.0.1";
+    String interfaceIp = "127.0.0";
+    String myOwnHost = "127.0.0.1";
+    setUp(() async {
       final interfaceList = await NetworkInterface.list();
       if (interfaceList.isNotEmpty) {
         final localInterface = interfaceList.elementAt(0);
@@ -22,6 +16,9 @@ void main() {
           interfaceIp = address.substring(0, address.lastIndexOf('.'));
         }
       }
+    });
+
+    test('Running getAllPingableDevices tests', () {
       expectLater(
         HostScanner.getAllPingableDevices(interfaceIp),
         emits(isA<ActiveHost>()),
@@ -30,6 +27,29 @@ void main() {
         HostScanner.getAllPingableDevices(interfaceIp),
         emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
       );
+    });
+
+    test('Running scanDevicesForSinglePort tests', () {
+      expectLater(
+        HostScanner.scanDevicesForSinglePort(
+          interfaceIp,
+          53,
+        ), //DNS should be running at least
+        emits(isA<ActiveHost>()),
+      );
+      expectLater(
+        HostScanner.scanDevicesForSinglePort(interfaceIp, 53),
+        emitsThrough(
+          // hoping should always return first host address
+          ActiveHost(internetAddress: InternetAddress('$interfaceIp.1')),
+        ),
+      );
+    });
+
+    test('Running getMaxHost tests', () {
+      expect(HostScanner.getMaxHost("10.0.0.0"), HostScanner.classASubnets);
+      expect(HostScanner.getMaxHost("164.0.0.0"), HostScanner.classBSubnets);
+      expect(HostScanner.getMaxHost("200.0.0.0"), HostScanner.classCSubnets);
     });
   });
 }

@@ -26,4 +26,3 @@ dev_dependencies:
   lint: ^2.0.1
   # Writing and running Dart tests.
   test: ^1.22.2
-  
