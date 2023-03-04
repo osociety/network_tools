@@ -147,20 +147,32 @@ class HostScanner {
   static const classBSubnets = 65536;
   static const classCSubnets = 256;
   static int getMaxHost(String subnet) {
-    final List<String> lastHostIdStr = subnet.split('.');
-    if (lastHostIdStr.isEmpty) {
-      throw 'Invalid subnet Address';
+    if (subnet.isEmpty) {
+      throw ArgumentError('Invalid subnet address, address can not be empty.');
+    }
+    final List<String> firstOctetStr = subnet.split('.');
+    if (firstOctetStr.isEmpty) {
+      throw ArgumentError(
+        'Invalid subnet address, address should be in IPv4 format x.x.x',
+      );
     }
 
-    final int lastHostId = int.parse(lastHostIdStr[0]);
+    final int firstOctet = int.parse(firstOctetStr[0]);
 
-    if (lastHostId < 128) {
+    if (firstOctet > 0 && firstOctet < 128) {
       return classASubnets;
-    } else if (lastHostId >= 128 && lastHostId < 192) {
+    } else if (firstOctet >= 128 && firstOctet < 192) {
       return classBSubnets;
-    } else if (lastHostId >= 192 && lastHostId < 224) {
+    } else if (firstOctet >= 192 && firstOctet < 224) {
       return classCSubnets;
     }
-    return classCSubnets;
+    // Out of range for first octet
+    throw RangeError.range(
+      firstOctet,
+      1,
+      223,
+      'subnet',
+      'Out of range for first octet',
+    );
   }
 }

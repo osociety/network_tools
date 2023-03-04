@@ -6,13 +6,17 @@ void main() {
   group('Testing Host Scanner', () {
     String interfaceIp = "127.0.0";
     String myOwnHost = "127.0.0.1";
-    //Fetching interface network
+    // Fetching interfaceIp and hostIp
     setUp(() async {
-      final interfaceList = await NetworkInterface.list();
+      final interfaceList =
+          await NetworkInterface.list(); //will give interface list
       if (interfaceList.isNotEmpty) {
-        final localInterface = interfaceList.elementAt(0);
+        final localInterface =
+            interfaceList.elementAt(0); //fetching first interface like en0/eth0
         if (localInterface.addresses.isNotEmpty) {
-          final address = localInterface.addresses.elementAt(0).address;
+          final address = localInterface.addresses
+              .elementAt(0)
+              .address; //gives IP address of GHA local machine.
           myOwnHost = address;
           interfaceIp = address.substring(0, address.lastIndexOf('.'));
         }
@@ -21,10 +25,12 @@ void main() {
 
     test('Running getAllPingableDevices tests', () {
       expectLater(
+        //There should be at least one device pingable in network
         HostScanner.getAllPingableDevices(interfaceIp),
         emits(isA<ActiveHost>()),
       );
       expectLater(
+        //Should emit at least our own local machine when pinging all hosts.
         HostScanner.getAllPingableDevices(interfaceIp),
         emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
       );
@@ -41,9 +47,32 @@ void main() {
     });
 
     test('Running getMaxHost tests', () {
+      expect(() => HostScanner.getMaxHost(""), throwsArgumentError);
+      expect(() => HostScanner.getMaxHost("x"), throwsFormatException);
+      expect(() => HostScanner.getMaxHost("x.x.x"), throwsFormatException);
+      expect(() => HostScanner.getMaxHost("0"), throwsRangeError);
+      expect(() => HostScanner.getMaxHost("0.0.0.0"), throwsRangeError);
+      expect(() => HostScanner.getMaxHost("256.0.0.0"), throwsRangeError);
+
       expect(HostScanner.getMaxHost("10.0.0.0"), HostScanner.classASubnets);
       expect(HostScanner.getMaxHost("164.0.0.0"), HostScanner.classBSubnets);
       expect(HostScanner.getMaxHost("200.0.0.0"), HostScanner.classCSubnets);
+
+      expect(
+        ![HostScanner.classASubnets, HostScanner.classCSubnets]
+            .contains(HostScanner.getMaxHost("164.0.0.0")),
+        true,
+      );
+      expect(
+        ![HostScanner.classBSubnets, HostScanner.classCSubnets]
+            .contains(HostScanner.getMaxHost("10.0.0.0")),
+        true,
+      );
+      expect(
+        ![HostScanner.classASubnets, HostScanner.classBSubnets]
+            .contains(HostScanner.getMaxHost("200.0.0.0")),
+        true,
+      );
     });
   });
 }
