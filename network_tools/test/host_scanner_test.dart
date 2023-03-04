@@ -36,6 +36,19 @@ void main() {
       );
     });
 
+    test('Running getAllPingableDevicesAsync tests', () {
+      expectLater(
+        //There should be at least one device pingable in network
+        HostScanner.getAllPingableDevicesAsync(interfaceIp),
+        emits(isA<ActiveHost>()),
+      );
+      expectLater(
+        //Should emit at least our own local machine when pinging all hosts.
+        HostScanner.getAllPingableDevicesAsync(interfaceIp),
+        emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
+      );
+    });
+
     test('Running scanDevicesForSinglePort tests', () {
       expectLater(
         HostScanner.scanDevicesForSinglePort(
