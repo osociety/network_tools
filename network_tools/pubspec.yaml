@@ -22,8 +22,6 @@ dependencies:
   universal_io: ^2.0.4
 
 dev_dependencies:
-  # A build system for Dart code generation and modular compilation.
-  build_runner: 
   # Set of lint rules for Dart.
   lint: ^2.0.1
   # Writing and running Dart tests.

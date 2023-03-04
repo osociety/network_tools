@@ -98,8 +98,7 @@ Add this code to your `main.dart` file
 
 ## Run unit tests
 
-1. dart run build_runner build --delete-conflicting-outputs
-2. dart test
+1. dart test
 
 ## Sample App
 
