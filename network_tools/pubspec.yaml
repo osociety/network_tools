@@ -14,8 +14,6 @@ dependencies:
   intl: ^0.18.0
   # Debugging and error logging.
   logging: ^1.1.1
-  # Mock library for Dart.
-  mockito: ^5.3.2
   # Performing mDNS queries (e.g. Bonjour, Avahi).
   multicast_dns: ^0.3.2+2
   # Process run helpers

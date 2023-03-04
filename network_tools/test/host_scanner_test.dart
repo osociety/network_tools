@@ -1,20 +1,28 @@
-import 'package:mockito/mockito.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
-import '../lib/src/host_scanner.mocks.dart';
 
 void main() {
   group('Testing Host Scanner', () {
-    final mockHostScanner = MockHostScanner();
-    test('Running getAllPingableDevices tests', () {
-      final activeHost =
-          ActiveHost(internetAddress: InternetAddress("10.0.0.1"));
-      when(mockHostScanner.getAllPingableDevices("10.0.0"))
-          .thenAnswer((_) => Stream.value(activeHost));
-      expect(
-        mockHostScanner.getAllPingableDevices("10.0.0"),
-        emits(ActiveHost(internetAddress: InternetAddress("10.0.0.1"))),
+    test('Running getAllPingableDevices tests', () async {
+      String interfaceIp = "127.0.0";
+      String myOwnHost = "127.0.0.1";
+      final interfaceList = await NetworkInterface.list();
+      if (interfaceList.isNotEmpty) {
+        final localInterface = interfaceList.elementAt(0);
+        if (localInterface.addresses.isNotEmpty) {
+          final address = localInterface.addresses.elementAt(0).address;
+          myOwnHost = address;
+          interfaceIp = address.substring(0, address.lastIndexOf('.'));
+        }
+      }
+      expectLater(
+        HostScanner.getAllPingableDevices(interfaceIp),
+        emits(isA<ActiveHost>()),
+      );
+      expectLater(
+        HostScanner.getAllPingableDevices(interfaceIp),
+        emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
       );
     });
   });
