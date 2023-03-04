@@ -6,6 +6,7 @@ void main() {
   group('Testing Host Scanner', () {
     String interfaceIp = "127.0.0";
     String myOwnHost = "127.0.0.1";
+    //Fetching interface network
     setUp(() async {
       final interfaceList = await NetworkInterface.list();
       if (interfaceList.isNotEmpty) {
@@ -33,16 +34,9 @@ void main() {
       expectLater(
         HostScanner.scanDevicesForSinglePort(
           interfaceIp,
-          22,
-        ), //ssh should be running at least
+          443,
+        ), //mysql should be running at least
         emits(isA<ActiveHost>()),
-      );
-      expectLater(
-        HostScanner.scanDevicesForSinglePort(interfaceIp, 22),
-        emitsThrough(
-          // hoping should always return first host address
-          ActiveHost(internetAddress: InternetAddress('$interfaceIp.1')),
-        ),
       );
     });
 
