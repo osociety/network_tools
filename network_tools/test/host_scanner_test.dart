@@ -34,8 +34,8 @@ void main() {
       expectLater(
         HostScanner.scanDevicesForSinglePort(
           interfaceIp,
-          22,
-        ), //mysql should be running at least
+          22, //ssh should be running at least in any host
+        ), // hence some host will be emitted
         emits(isA<ActiveHost>()),
       );
     });
