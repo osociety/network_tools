@@ -34,7 +34,7 @@ void main() {
       expectLater(
         HostScanner.scanDevicesForSinglePort(
           interfaceIp,
-          443,
+          22,
         ), //mysql should be running at least
         emits(isA<ActiveHost>()),
       );
