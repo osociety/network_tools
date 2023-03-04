@@ -33,12 +33,12 @@ void main() {
       expectLater(
         HostScanner.scanDevicesForSinglePort(
           interfaceIp,
-          3306,
-        ), //mysql should be running at least
+          22,
+        ), //ssh should be running at least
         emits(isA<ActiveHost>()),
       );
       expectLater(
-        HostScanner.scanDevicesForSinglePort(interfaceIp, 3306),
+        HostScanner.scanDevicesForSinglePort(interfaceIp, 22),
         emitsThrough(
           // hoping should always return first host address
           ActiveHost(internetAddress: InternetAddress('$interfaceIp.1')),
