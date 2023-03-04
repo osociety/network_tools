@@ -33,12 +33,12 @@ void main() {
       expectLater(
         HostScanner.scanDevicesForSinglePort(
           interfaceIp,
-          53,
-        ), //DNS should be running at least
+          80,
+        ), //http should be running at least
         emits(isA<ActiveHost>()),
       );
       expectLater(
-        HostScanner.scanDevicesForSinglePort(interfaceIp, 53),
+        HostScanner.scanDevicesForSinglePort(interfaceIp, 80),
         emitsThrough(
           // hoping should always return first host address
           ActiveHost(internetAddress: InternetAddress('$interfaceIp.1')),
