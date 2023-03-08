@@ -82,7 +82,7 @@ void main() {
 
   group('Testing Port Scanner', () {
     String interfaceIp = "127.0.0";
-    String myOwnHost = "127.0.0.1";
+    final List<ActiveHost> hostsWithOpenPort = [];
     // Fetching interfaceIp and hostIp
     setUp(() async {
       final interfaceList =
@@ -94,53 +94,72 @@ void main() {
           final address = localInterface.addresses
               .elementAt(0)
               .address; //gives IP address of GHA local machine.
-          myOwnHost = address;
           interfaceIp = address.substring(0, address.lastIndexOf('.'));
         }
+      }
+      //ssh should be running at least in any host
+      await for (final host
+          in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
+        hostsWithOpenPort.add(host);
       }
     });
 
     test('Running scanPortsForSingleDevice tests', () {
-      expectLater(
-        PortScanner.scanPortsForSingleDevice('$interfaceIp.1'),
-        emits(isA<ActiveHost>()),
-      );
-    });
-    test('Running connectToPort tests', () {
-      expectLater(
-        PortScanner.connectToPort(
-          address: '$interfaceIp.1',
-          port: port,
-          timeout: const Duration(seconds: 5),
-          activeHostsController: StreamController<ActiveHost>(),
-        ),
-        completion(
-          isA<ActiveHost>().having(
-            (p0) => p0.openPort.elementAt(0).port,
-            'Should have same port',
-            equals(port),
+      for (final activeHost in hostsWithOpenPort) {
+        expectLater(
+          PortScanner.scanPortsForSingleDevice(activeHost.address),
+          emits(
+            isA<ActiveHost>().having(
+              (p0) => p0.openPorts.contains(OpenPort(port)),
+              "Should match host having same open port",
+              equals(true),
+            ),
           ),
-        ),
-      );
+        );
+      }
+    });
+
+    test('Running connectToPort tests', () {
+      for (final activeHost in hostsWithOpenPort) {
+        expectLater(
+          PortScanner.connectToPort(
+            address: activeHost.address,
+            port: port,
+            timeout: const Duration(seconds: 5),
+            activeHostsController: StreamController<ActiveHost>(),
+          ),
+          completion(
+            isA<ActiveHost>().having(
+              (p0) => p0.openPorts.contains(OpenPort(port)),
+              "Should match host having same open port",
+              equals(true),
+            ),
+          ),
+        );
+      }
     });
     test('Running customDiscover tests', () {
-      expectLater(
-        PortScanner.customDiscover('$interfaceIp.1'),
-        emits(isA<ActiveHost>()),
-      );
+      for (final activeHost in hostsWithOpenPort) {
+        expectLater(
+          PortScanner.customDiscover(activeHost.address),
+          emits(isA<ActiveHost>()),
+        );
+      }
     });
 
     test('Running customDiscover tests', () {
-      expectLater(
-        PortScanner.isOpen('$interfaceIp.1', port),
-        completion(
-          isA<ActiveHost>().having(
-            (p0) => p0.openPort.elementAt(0).port,
-            'Should have same port',
-            equals(port),
+      for (final activeHost in hostsWithOpenPort) {
+        expectLater(
+          PortScanner.isOpen(activeHost.address, port),
+          completion(
+            isA<ActiveHost>().having(
+              (p0) => p0.openPorts.contains(OpenPort(port)),
+              "Should match host having same open port",
+              equals(true),
+            ),
           ),
-        ),
-      );
+        );
+      }
     });
   });
 }
