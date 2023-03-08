@@ -95,6 +95,8 @@ class HostScanner {
     return min(lastHostId, maxEnd);
   }
 
+  /// Works same as [getAllPingableDevices] but does everything inside
+  /// isolate out of the box.
   static Stream<ActiveHost> getAllPingableDevicesAsync(
     String subnet, {
     int firstHostId = 1,
@@ -229,6 +231,8 @@ class HostScanner {
   static const classASubnets = 16777216;
   static const classBSubnets = 65536;
   static const classCSubnets = 256;
+
+  /// returns the max number of hosts a subnet can have excluding network Id and broadcast Id
   static int getMaxHost(String subnet) {
     if (subnet.isEmpty) {
       throw ArgumentError('Invalid subnet address, address can not be empty.');
