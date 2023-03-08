@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
+import 'package:isolate_manager/isolate_manager.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
+import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:network_tools/src/port_scanner.dart';
 
 /// Scans for all hosts in a subnet.
@@ -22,16 +24,8 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    final int maxEnd = getMaxHost(subnet);
-    if (firstHostId > lastHostId ||
-        firstHostId < 1 ||
-        lastHostId < 1 ||
-        firstHostId > maxEnd ||
-        lastHostId > maxEnd) {
-      throw 'Invalid subnet range or firstHostId < lastHostId is not true';
-    }
-    final int lastValidSubnet = min(lastHostId, maxEnd);
-
+    final int lastValidSubnet =
+        _validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
     final List<Future<ActiveHost?>> activeHostsFuture = [];
     final StreamController<ActiveHost> activeHostsController =
         StreamController<ActiveHost>();
@@ -88,6 +82,104 @@ class HostScanner {
     return null;
   }
 
+  static int _validateAndGetLastValidSubnet(
+      String subnet, int firstHostId, int lastHostId) {
+    final int maxEnd = getMaxHost(subnet);
+    if (firstHostId > lastHostId ||
+        firstHostId < 1 ||
+        lastHostId < 1 ||
+        firstHostId > maxEnd ||
+        lastHostId > maxEnd) {
+      throw 'Invalid subnet range or firstHostId < lastHostId is not true';
+    }
+    return min(lastHostId, maxEnd);
+  }
+
+  /// Works same as [getAllPingableDevices] but does everything inside
+  /// isolate out of the box.
+  static Stream<ActiveHost> getAllPingableDevicesAsync(
+    String subnet, {
+    int firstHostId = 1,
+    int lastHostId = 254,
+    int timeoutInSeconds = 1,
+    ProgressCallback? progressCallback,
+    bool resultsInAddressAscendingOrder = true,
+  }) {
+    final StreamController<ActiveHost> activeHostsController =
+        StreamController<ActiveHost>();
+
+    const int scanRangeForIsolate = 51;
+    final int lastValidSubnet =
+        _validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
+    for (int i = firstHostId;
+        i <= lastValidSubnet;
+        i += scanRangeForIsolate + 1) {
+      final isolateManager =
+          IsolateManager.createOwnIsolate(_startSearchingDevices);
+      final limit = min(i + scanRangeForIsolate, lastValidSubnet);
+      log.fine('Scanning from $i to $limit');
+      isolateManager.sendMessage(<String>[
+        subnet,
+        i.toString(),
+        limit.toString(),
+        timeoutInSeconds.toString(),
+        resultsInAddressAscendingOrder.toString(),
+      ]);
+
+      isolateManager.onMessage.listen((message) {
+        if (message is ActiveHost) {
+          progressCallback
+              ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
+          activeHostsController.add(message);
+        } else if (message is String && message == 'Done') {
+          isolateManager.stop();
+        }
+      });
+    }
+    return activeHostsController.stream;
+  }
+
+  /// Will search devices in the network inside new isolate
+  static Future<void> _startSearchingDevices(dynamic params) async {
+    final channel = IsolateManagerController(params);
+    channel.onIsolateMessage.listen((message) async {
+      List<String> paramsListString = [];
+      if (message is List<String>) {
+        paramsListString = message;
+      } else {
+        return;
+      }
+
+      final String subnetIsolate = paramsListString[0];
+      final int firstSubnetIsolate = int.parse(paramsListString[1]);
+      final int lastSubnetIsolate = int.parse(paramsListString[2]);
+      final int timeoutInSeconds = int.parse(paramsListString[3]);
+      final bool resultsInAddressAscendingOrder = paramsListString[4] == "true";
+
+      /// Will contain all the hosts that got discovered in the network, will
+      /// be use inorder to cancel on dispose of the page.
+      final Stream<ActiveHost> hostsDiscoveredInNetwork =
+          HostScanner.getAllPingableDevices(
+        subnetIsolate,
+        firstHostId: firstSubnetIsolate,
+        lastHostId: lastSubnetIsolate,
+        timeoutInSeconds: timeoutInSeconds,
+        resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+      );
+
+      await for (final ActiveHost activeHostFound in hostsDiscoveredInNetwork) {
+        activeHostFound.deviceName.then((value) {
+          activeHostFound.mdnsInfo.then((value) {
+            activeHostFound.hostName.then((value) {
+              channel.sendResult(activeHostFound);
+            });
+          });
+        });
+      }
+      channel.sendResult('Done');
+    });
+  }
+
   /// Scans for all hosts that have the specific port that was given.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
@@ -100,15 +192,8 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    final int maxEnd = getMaxHost(subnet);
-    if (firstHostId > lastHostId ||
-        firstHostId < 1 ||
-        lastHostId < 1 ||
-        firstHostId > maxEnd ||
-        lastHostId > maxEnd) {
-      throw 'Invalid subnet range or firstHostId < lastHostId is not true';
-    }
-    final int lastValidSubnet = min(lastHostId, maxEnd);
+    final int lastValidSubnet =
+        _validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
     final List<Future<ActiveHost?>> activeHostOpenPortList = [];
     final StreamController<ActiveHost> activeHostsController =
         StreamController<ActiveHost>();
@@ -146,21 +231,35 @@ class HostScanner {
   static const classASubnets = 16777216;
   static const classBSubnets = 65536;
   static const classCSubnets = 256;
+
+  /// returns the max number of hosts a subnet can have excluding network Id and broadcast Id
   static int getMaxHost(String subnet) {
-    final List<String> lastHostIdStr = subnet.split('.');
-    if (lastHostIdStr.isEmpty) {
-      throw 'Invalid subnet Address';
+    if (subnet.isEmpty) {
+      throw ArgumentError('Invalid subnet address, address can not be empty.');
+    }
+    final List<String> firstOctetStr = subnet.split('.');
+    if (firstOctetStr.isEmpty) {
+      throw ArgumentError(
+        'Invalid subnet address, address should be in IPv4 format x.x.x',
+      );
     }
 
-    final int lastHostId = int.parse(lastHostIdStr[0]);
+    final int firstOctet = int.parse(firstOctetStr[0]);
 
-    if (lastHostId < 128) {
+    if (firstOctet > 0 && firstOctet < 128) {
       return classASubnets;
-    } else if (lastHostId >= 128 && lastHostId < 192) {
+    } else if (firstOctet >= 128 && firstOctet < 192) {
       return classBSubnets;
-    } else if (lastHostId >= 192 && lastHostId < 224) {
+    } else if (firstOctet >= 192 && firstOctet < 224) {
       return classCSubnets;
     }
-    return classCSubnets;
+    // Out of range for first octet
+    throw RangeError.range(
+      firstOctet,
+      1,
+      223,
+      'subnet',
+      'Out of range for first octet',
+    );
   }
 }

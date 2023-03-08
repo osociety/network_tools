@@ -12,6 +12,8 @@ dependencies:
   dart_ping: ^8.0.1
   # Deal with internationalized/localized messages and more.
   intl: ^0.18.0
+  # Easy to create multiple isolates for a function, keep it active and communicate with it.
+  isolate_manager: ^2.2.0+2
   # Debugging and error logging.
   logging: ^1.1.1
   # Performing mDNS queries (e.g. Bonjour, Avahi).
