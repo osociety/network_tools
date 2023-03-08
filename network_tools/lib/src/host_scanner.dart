@@ -83,7 +83,10 @@ class HostScanner {
   }
 
   static int _validateAndGetLastValidSubnet(
-      String subnet, int firstHostId, int lastHostId) {
+    String subnet,
+    int firstHostId,
+    int lastHostId,
+  ) {
     final int maxEnd = getMaxHost(subnet);
     if (firstHostId > lastHostId ||
         firstHostId < 1 ||

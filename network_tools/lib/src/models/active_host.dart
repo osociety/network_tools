@@ -9,6 +9,7 @@ import 'package:universal_io/io.dart';
 class ActiveHost extends Comparable<ActiveHost> {
   ActiveHost({
     required this.internetAddress,
+    // ignore: deprecated_consistency
     this.openPort = const [],
     PingData? pingData,
     MdnsInfo? mdnsInfoVar,
