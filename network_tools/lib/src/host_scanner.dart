@@ -5,8 +5,8 @@ import 'package:dart_ping/dart_ping.dart';
 import 'package:isolate_manager/isolate_manager.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
+import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:network_tools/src/port_scanner.dart';
-import 'netowrk_tools_utils.dart';
 
 /// Scans for all hosts in a subnet.
 class HostScanner {
@@ -113,7 +113,7 @@ class HostScanner {
         i <= lastValidSubnet;
         i += scanRangeForIsolate + 1) {
       final isolateManager =
-          IsolateManager.createOwnIsolate(startSearchingDevices);
+          IsolateManager.createOwnIsolate(_startSearchingDevices);
       final limit = min(i + scanRangeForIsolate, lastValidSubnet);
       log.fine('Scanning from $i to $limit');
       isolateManager.sendMessage(<String>[
@@ -138,7 +138,7 @@ class HostScanner {
   }
 
   /// Will search devices in the network inside new isolate
-  static Future<void> startSearchingDevices(dynamic params) async {
+  static Future<void> _startSearchingDevices(dynamic params) async {
     final channel = IsolateManagerController(params);
     channel.onIsolateMessage.listen((message) async {
       List<String> paramsListString = [];
