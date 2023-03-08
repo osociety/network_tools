@@ -1,15 +1,12 @@
-import 'dart:async';
-
 import 'package:network_tools/network_tools.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
-void main() {
-  const port = 22;
+import 'network_tools_test.dart';
 
+void main() {
   String interfaceIp = "127.0.0";
   String myOwnHost = "127.0.0.1";
-  final List<ActiveHost> hostsWithOpenPort = [];
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
     final interfaceList =
@@ -25,11 +22,6 @@ void main() {
         interfaceIp = address.substring(0, address.lastIndexOf('.'));
       }
     }
-    //ssh should be running at least in any host
-    await for (final host
-        in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
-      hostsWithOpenPort.add(host);
-    }
   });
 
   group('Testing Host Scanner', () {
@@ -42,6 +34,19 @@ void main() {
       expectLater(
         //Should emit at least our own local machine when pinging all hosts.
         HostScanner.getAllPingableDevices(interfaceIp),
+        emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
+      );
+    });
+
+    test('Running getAllPingableDevicesAsync tests', () {
+      expectLater(
+        //There should be at least one device pingable in network
+        HostScanner.getAllPingableDevicesAsync(interfaceIp),
+        emits(isA<ActiveHost>()),
+      );
+      expectLater(
+        //Should emit at least our own local machine when pinging all hosts.
+        HostScanner.getAllPingableDevicesAsync(interfaceIp),
         emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
       );
     });
@@ -83,66 +88,6 @@ void main() {
             .contains(HostScanner.getMaxHost("200.0.0.0")),
         true,
       );
-    });
-  });
-
-  group('Testing Port Scanner', () {
-    test('Running scanPortsForSingleDevice tests', () {
-      for (final activeHost in hostsWithOpenPort) {
-        expectLater(
-          PortScanner.scanPortsForSingleDevice(activeHost.address),
-          emits(
-            isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
-              "Should match host having same open port",
-              equals(true),
-            ),
-          ),
-        );
-      }
-    });
-
-    test('Running connectToPort tests', () {
-      for (final activeHost in hostsWithOpenPort) {
-        expectLater(
-          PortScanner.connectToPort(
-            address: activeHost.address,
-            port: port,
-            timeout: const Duration(seconds: 5),
-            activeHostsController: StreamController<ActiveHost>(),
-          ),
-          completion(
-            isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
-              "Should match host having same open port",
-              equals(true),
-            ),
-          ),
-        );
-      }
-    });
-    test('Running customDiscover tests', () {
-      for (final activeHost in hostsWithOpenPort) {
-        expectLater(
-          PortScanner.customDiscover(activeHost.address),
-          emits(isA<ActiveHost>()),
-        );
-      }
-    });
-
-    test('Running customDiscover tests', () {
-      for (final activeHost in hostsWithOpenPort) {
-        expectLater(
-          PortScanner.isOpen(activeHost.address, port),
-          completion(
-            isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
-              "Should match host having same open port",
-              equals(true),
-            ),
-          ),
-        );
-      }
     });
   });
 }
