@@ -80,7 +80,10 @@ class ActiveHost extends Comparable<ActiveHost> {
   late Future<MdnsInfo?> mdnsInfo;
 
   /// List of all the open port of this device
+  @Deprecated("Grammar is wrong for variable, please use [openPorts]")
   List<OpenPort> openPort;
+
+  List<OpenPort> get openPorts => openPort;
 
   /// This device name does not following any guideline and is just some name
   /// that we can show for the device.
@@ -106,7 +109,7 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   @override
   String toString() {
-    return 'Address: $address, HostId: $hostId, Time: ${responseTime?.inMilliseconds}ms';
+    return 'Address: $address, HostId: $hostId, Time: ${responseTime?.inMilliseconds}ms, port: ${openPorts.join(",")}';
   }
 
   Future<String> toStringFull() async {
