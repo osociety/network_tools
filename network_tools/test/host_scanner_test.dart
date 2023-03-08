@@ -7,26 +7,32 @@ import 'package:universal_io/io.dart';
 void main() {
   const port = 22;
 
-  group('Testing Host Scanner', () {
-    String interfaceIp = "127.0.0";
-    String myOwnHost = "127.0.0.1";
-    // Fetching interfaceIp and hostIp
-    setUp(() async {
-      final interfaceList =
-          await NetworkInterface.list(); //will give interface list
-      if (interfaceList.isNotEmpty) {
-        final localInterface =
-            interfaceList.elementAt(0); //fetching first interface like en0/eth0
-        if (localInterface.addresses.isNotEmpty) {
-          final address = localInterface.addresses
-              .elementAt(0)
-              .address; //gives IP address of GHA local machine.
-          myOwnHost = address;
-          interfaceIp = address.substring(0, address.lastIndexOf('.'));
-        }
+  String interfaceIp = "127.0.0";
+  String myOwnHost = "127.0.0.1";
+  final List<ActiveHost> hostsWithOpenPort = [];
+  // Fetching interfaceIp and hostIp
+  setUpAll(() async {
+    final interfaceList =
+        await NetworkInterface.list(); //will give interface list
+    if (interfaceList.isNotEmpty) {
+      final localInterface =
+          interfaceList.elementAt(0); //fetching first interface like en0/eth0
+      if (localInterface.addresses.isNotEmpty) {
+        final address = localInterface.addresses
+            .elementAt(0)
+            .address; //gives IP address of GHA local machine.
+        myOwnHost = address;
+        interfaceIp = address.substring(0, address.lastIndexOf('.'));
       }
-    });
+    }
+    //ssh should be running at least in any host
+    await for (final host
+        in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
+      hostsWithOpenPort.add(host);
+    }
+  });
 
+  group('Testing Host Scanner', () {
     test('Running getAllPingableDevices tests', () {
       expectLater(
         //There should be at least one device pingable in network
@@ -81,29 +87,6 @@ void main() {
   });
 
   group('Testing Port Scanner', () {
-    String interfaceIp = "127.0.0";
-    final List<ActiveHost> hostsWithOpenPort = [];
-    // Fetching interfaceIp and hostIp
-    setUp(() async {
-      final interfaceList =
-          await NetworkInterface.list(); //will give interface list
-      if (interfaceList.isNotEmpty) {
-        final localInterface =
-            interfaceList.elementAt(0); //fetching first interface like en0/eth0
-        if (localInterface.addresses.isNotEmpty) {
-          final address = localInterface.addresses
-              .elementAt(0)
-              .address; //gives IP address of GHA local machine.
-          interfaceIp = address.substring(0, address.lastIndexOf('.'));
-        }
-      }
-      //ssh should be running at least in any host
-      await for (final host
-          in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
-        hostsWithOpenPort.add(host);
-      }
-    });
-
     test('Running scanPortsForSingleDevice tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
