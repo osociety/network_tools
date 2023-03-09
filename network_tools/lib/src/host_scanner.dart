@@ -10,6 +10,12 @@ import 'package:network_tools/src/port_scanner.dart';
 
 /// Scans for all hosts in a subnet.
 class HostScanner {
+  /// Devices scan will start from this integer Id
+  static const int defaultFirstHostId = 1;
+
+  /// Devices scan will stop at this integer id
+  static const int defaultLastHostId = 254;
+
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   /// Set maxHost to higher value if you are not getting results.
   /// It won't firstHostId again unless previous scan is completed due to heavy
@@ -18,8 +24,8 @@ class HostScanner {
   /// ascending order and without [progressCallback].
   static Stream<ActiveHost> getAllPingableDevices(
     String subnet, {
-    int firstHostId = 1,
-    int lastHostId = 254,
+    int firstHostId = defaultFirstHostId,
+    int lastHostId = defaultLastHostId,
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -89,8 +95,8 @@ class HostScanner {
   ) {
     final int maxEnd = getMaxHost(subnet);
     if (firstHostId > lastHostId ||
-        firstHostId < 1 ||
-        lastHostId < 1 ||
+        firstHostId < defaultFirstHostId ||
+        lastHostId < defaultFirstHostId ||
         firstHostId > maxEnd ||
         lastHostId > maxEnd) {
       throw 'Invalid subnet range or firstHostId < lastHostId is not true';
@@ -102,8 +108,8 @@ class HostScanner {
   /// isolate out of the box.
   static Stream<ActiveHost> getAllPingableDevicesAsync(
     String subnet, {
-    int firstHostId = 1,
-    int lastHostId = 254,
+    int firstHostId = defaultFirstHostId,
+    int lastHostId = defaultLastHostId,
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -189,8 +195,8 @@ class HostScanner {
   static Stream<ActiveHost> scanDevicesForSinglePort(
     String subnet,
     int port, {
-    int firstHostId = 1,
-    int lastHostId = 254,
+    int firstHostId = defaultFirstHostId,
+    int lastHostId = defaultLastHostId,
     Duration timeout = const Duration(milliseconds: 2000),
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -231,9 +237,20 @@ class HostScanner {
     }
   }
 
+  /// Defines total number of subnets in class A network
   static const classASubnets = 16777216;
+
+  /// Defines total number of subnets in class B network
   static const classBSubnets = 65536;
+
+  /// Defines total number of subnets in class C network
   static const classCSubnets = 256;
+
+  /// Minimum value of first octet in IPv4 address used by [getMaxHost]
+  static const int minNetworkId = 1;
+
+  /// Maximum value of first octect in IPv4 address used by [getMaxHost]
+  static const int maxNetworkId = 223;
 
   /// returns the max number of hosts a subnet can have excluding network Id and broadcast Id
   static int getMaxHost(String subnet) {
@@ -249,18 +266,18 @@ class HostScanner {
 
     final int firstOctet = int.parse(firstOctetStr[0]);
 
-    if (firstOctet > 0 && firstOctet < 128) {
+    if (firstOctet >= minNetworkId && firstOctet < 128) {
       return classASubnets;
     } else if (firstOctet >= 128 && firstOctet < 192) {
       return classBSubnets;
-    } else if (firstOctet >= 192 && firstOctet < 224) {
+    } else if (firstOctet >= 192 && firstOctet <= maxNetworkId) {
       return classCSubnets;
     }
     // Out of range for first octet
     throw RangeError.range(
       firstOctet,
-      1,
-      223,
+      minNetworkId,
+      maxNetworkId,
       'subnet',
       'Out of range for first octet',
     );

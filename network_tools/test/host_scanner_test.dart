@@ -51,24 +51,47 @@ void main() {
       );
     });
 
+    //todo: this test is not working on windows, not matter what.
     test('Running scanDevicesForSinglePort tests', () {
       expectLater(
         HostScanner.scanDevicesForSinglePort(
           interfaceIp, port, //ssh should be running at least in any host
           timeout: timeout,
+          lastHostId: lastHostId,
         ), // hence some host will be emitted
         emits(isA<ActiveHost>()),
       );
     });
 
     test('Running getMaxHost tests', () {
+      //Error thrown cases
       expect(() => HostScanner.getMaxHost(""), throwsArgumentError);
       expect(() => HostScanner.getMaxHost("x"), throwsFormatException);
       expect(() => HostScanner.getMaxHost("x.x.x"), throwsFormatException);
-      expect(() => HostScanner.getMaxHost("0"), throwsRangeError);
-      expect(() => HostScanner.getMaxHost("0.0.0.0"), throwsRangeError);
       expect(() => HostScanner.getMaxHost("256.0.0.0"), throwsRangeError);
+      expect(
+        () => HostScanner.getMaxHost(
+          (HostScanner.minNetworkId - 1).toString(),
+        ),
+        throwsRangeError,
+      );
 
+      expect(
+        () => HostScanner.getMaxHost(
+          (HostScanner.maxNetworkId + 1).toString(),
+        ),
+        throwsRangeError,
+      );
+
+      //Normally returned cases
+      expect(
+        HostScanner.getMaxHost(HostScanner.minNetworkId.toString()),
+        HostScanner.classASubnets,
+      );
+      expect(
+        HostScanner.getMaxHost(HostScanner.maxNetworkId.toString()),
+        HostScanner.classCSubnets,
+      );
       expect(HostScanner.getMaxHost("10.0.0.0"), HostScanner.classASubnets);
       expect(HostScanner.getMaxHost("164.0.0.0"), HostScanner.classBSubnets);
       expect(HostScanner.getMaxHost("200.0.0.0"), HostScanner.classCSubnets);
