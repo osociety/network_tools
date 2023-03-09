@@ -12,6 +12,7 @@ analyzer:
     missing_required_param: error
     missing_return: error
     must_be_immutable: error
+    deprecated_member_use_from_same_package: ignore
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
