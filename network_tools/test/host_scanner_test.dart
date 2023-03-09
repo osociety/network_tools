@@ -54,8 +54,8 @@ void main() {
     test('Running scanDevicesForSinglePort tests', () {
       expectLater(
         HostScanner.scanDevicesForSinglePort(
-          interfaceIp,
-          port, //ssh should be running at least in any host
+          interfaceIp, port, //ssh should be running at least in any host
+          timeout: timeout,
         ), // hence some host will be emitted
         emits(isA<ActiveHost>()),
       );
