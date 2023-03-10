@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
-
-import 'network_tools_test.dart';
 
 void main() {
   final List<ActiveHost> hostsWithOpenPort = [];
@@ -22,7 +21,7 @@ void main() {
         final interfaceIp = address.substring(0, address.lastIndexOf('.'));
         //ssh should be running at least in any host
         await for (final host
-            in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
+            in HostScanner.scanDevicesForSinglePort(interfaceIp, testPort)) {
           hostsWithOpenPort.add(host);
         }
       }
@@ -36,7 +35,7 @@ void main() {
           PortScanner.scanPortsForSingleDevice(activeHost.address),
           emits(
             isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
+              (p0) => p0.openPorts.contains(OpenPort(testPort)),
               "Should match host having same open port",
               equals(true),
             ),
@@ -50,13 +49,13 @@ void main() {
         expectLater(
           PortScanner.connectToPort(
             address: activeHost.address,
-            port: port,
+            port: testPort,
             timeout: const Duration(seconds: 5),
             activeHostsController: StreamController<ActiveHost>(),
           ),
           completion(
             isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
+              (p0) => p0.openPorts.contains(OpenPort(testPort)),
               "Should match host having same open port",
               equals(true),
             ),
@@ -76,10 +75,10 @@ void main() {
     test('Running customDiscover tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
-          PortScanner.isOpen(activeHost.address, port),
+          PortScanner.isOpen(activeHost.address, testPort),
           completion(
             isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
+              (p0) => p0.openPorts.contains(OpenPort(testPort)),
               "Should match host having same open port",
               equals(true),
             ),
