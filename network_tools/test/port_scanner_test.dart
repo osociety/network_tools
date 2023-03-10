@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:network_tools/network_tools.dart';
-import 'package:network_tools/src/netowrk_tools_utils.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
+
+import 'network_tools_test_util.dart';
 
 void main() {
   final List<ActiveHost> hostsWithOpenPort = [];

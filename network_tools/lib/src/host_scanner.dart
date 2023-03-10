@@ -5,7 +5,7 @@ import 'package:dart_ping/dart_ping.dart';
 import 'package:isolate_manager/isolate_manager.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
-import 'package:network_tools/src/netowrk_tools_utils.dart';
+import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/port_scanner.dart';
 
 /// Scans for all hosts in a subnet.

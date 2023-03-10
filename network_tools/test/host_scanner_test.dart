@@ -1,5 +1,5 @@
 import 'package:network_tools/network_tools.dart';
-import 'package:network_tools/src/netowrk_tools_utils.dart';
+// import '../test/network_tools_test_util.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
@@ -56,7 +56,7 @@ void main() {
     //     HostScanner.scanDevicesForSinglePort(
     //       interfaceIp, testPort, //ssh should be running at least in any host
     //       timeout: testTimeout,
-    //       lastHostId: testLastHostId(interfaceIp) ~/ 4,
+    //       lastHostId: testLastHostId(interfaceIp),
     //     ), // hence some host will be emitted
     //     emits(isA<ActiveHost>()),
     //   );
