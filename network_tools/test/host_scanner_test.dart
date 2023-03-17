@@ -1,13 +1,18 @@
 import 'package:network_tools/network_tools.dart';
-// import '../test/network_tools_test_util.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
 void main() {
+  const port = 550;
   String interfaceIp = "127.0.0";
   String myOwnHost = "127.0.0.1";
+  late ServerSocket server;
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
+    //open a port in shared way because of portscanner using same,
+    //if passed false then two hosts come up in search and breaks test.
+    server =
+        await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
     final interfaceList =
         await NetworkInterface.list(); //will give interface list
     if (interfaceList.isNotEmpty) {
@@ -51,16 +56,14 @@ void main() {
     });
 
     //todo: this test is not working on windows, not matter what.
-    // test('Running scanDevicesForSinglePort tests', () {
-    //   expectLater(
-    //     HostScanner.scanDevicesForSinglePort(
-    //       interfaceIp, testPort, //ssh should be running at least in any host
-    //       timeout: testTimeout,
-    //       lastHostId: testLastHostId(interfaceIp),
-    //     ), // hence some host will be emitted
-    //     emits(isA<ActiveHost>()),
-    //   );
-    // });
+    test('Running scanDevicesForSinglePort tests', () {
+      expectLater(
+        HostScanner.scanDevicesForSinglePort(
+          interfaceIp, port, //ssh should be running at least in any host
+        ), // hence some host will be emitted
+        emits(isA<ActiveHost>()),
+      );
+    });
 
     test('Running getMaxHost tests', () {
       //Error thrown cases
@@ -111,5 +114,9 @@ void main() {
         true,
       );
     });
+  });
+
+  tearDownAll(() {
+    server.close();
   });
 }

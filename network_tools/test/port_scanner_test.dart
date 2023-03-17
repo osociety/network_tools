@@ -4,12 +4,16 @@ import 'package:network_tools/network_tools.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
-import 'network_tools_test_util.dart';
-
 void main() {
+  const port = 550; // keep this value between 1-2034
   final List<ActiveHost> hostsWithOpenPort = [];
+  late ServerSocket server;
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
+    //open a port in shared way because of hostscanner using same,
+    //if passed false then two hosts come up in search and breaks test.
+    server =
+        await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
     final interfaceList =
         await NetworkInterface.list(); //will give interface list
     if (interfaceList.isNotEmpty) {
@@ -22,7 +26,7 @@ void main() {
         final interfaceIp = address.substring(0, address.lastIndexOf('.'));
         //ssh should be running at least in any host
         await for (final host
-            in HostScanner.scanDevicesForSinglePort(interfaceIp, testPort)) {
+            in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
           hostsWithOpenPort.add(host);
         }
       }
@@ -36,7 +40,7 @@ void main() {
           PortScanner.scanPortsForSingleDevice(activeHost.address),
           emits(
             isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(testPort)),
+              (p0) => p0.openPorts.contains(OpenPort(port)),
               "Should match host having same open port",
               equals(true),
             ),
@@ -50,13 +54,13 @@ void main() {
         expectLater(
           PortScanner.connectToPort(
             address: activeHost.address,
-            port: testPort,
+            port: port,
             timeout: const Duration(seconds: 5),
             activeHostsController: StreamController<ActiveHost>(),
           ),
           completion(
             isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(testPort)),
+              (p0) => p0.openPorts.contains(OpenPort(port)),
               "Should match host having same open port",
               equals(true),
             ),
@@ -67,7 +71,7 @@ void main() {
     test('Running customDiscover tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
-          PortScanner.customDiscover(activeHost.address),
+          PortScanner.customDiscover(activeHost.address, portList: [port]),
           emits(isA<ActiveHost>()),
         );
       }
@@ -76,10 +80,10 @@ void main() {
     test('Running customDiscover tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
-          PortScanner.isOpen(activeHost.address, testPort),
+          PortScanner.isOpen(activeHost.address, port),
           completion(
             isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(testPort)),
+              (p0) => p0.openPorts.contains(OpenPort(port)),
               "Should match host having same open port",
               equals(true),
             ),
@@ -87,5 +91,9 @@ void main() {
         );
       }
     });
+  });
+
+  tearDownAll(() {
+    server.close();
   });
 }

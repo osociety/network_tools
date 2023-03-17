@@ -93,7 +93,7 @@ class HostScanner {
     int firstHostId,
     int lastHostId,
   ) {
-    final int maxEnd = getMaxHost(subnet);
+    final int maxEnd = maxHost;
     if (firstHostId > lastHostId ||
         firstHostId < defaultFirstHostId ||
         lastHostId < defaultFirstHostId ||
@@ -253,6 +253,9 @@ class HostScanner {
   static const int maxNetworkId = 223;
 
   /// returns the max number of hosts a subnet can have excluding network Id and broadcast Id
+  @Deprecated(
+    "Implementation is wrong, since we only append in last octet, max host can only be 254. Use maxHost getter",
+  )
   static int getMaxHost(String subnet) {
     if (subnet.isEmpty) {
       throw ArgumentError('Invalid subnet address, address can not be empty.');
@@ -282,4 +285,6 @@ class HostScanner {
       'Out of range for first octet',
     );
   }
+
+  static int get maxHost => defaultLastHostId;
 }
