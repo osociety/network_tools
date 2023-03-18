@@ -2,7 +2,7 @@ import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
 import 'package:network_tools/src/mdns_scanner/list_of_srv_records.dart';
-import 'package:network_tools/src/netowrk_tools_utils.dart';
+import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
 class MdnsScanner {

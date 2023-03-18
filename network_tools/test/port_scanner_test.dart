@@ -4,12 +4,17 @@ import 'package:network_tools/network_tools.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
-import 'network_tools_test.dart';
-
 void main() {
+  int port = 0; // keep this value between 1-2034
   final List<ActiveHost> hostsWithOpenPort = [];
+  late ServerSocket server;
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
+    //open a port in shared way because of hostscanner using same,
+    //if passed false then two hosts come up in search and breaks test.
+    server =
+        await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
+    port = server.port;
     final interfaceList =
         await NetworkInterface.list(); //will give interface list
     if (interfaceList.isNotEmpty) {
@@ -32,9 +37,14 @@ void main() {
   group('Testing Port Scanner', () {
     test('Running scanPortsForSingleDevice tests', () {
       for (final activeHost in hostsWithOpenPort) {
+        final port = activeHost.openPorts.elementAt(0).port;
         expectLater(
-          PortScanner.scanPortsForSingleDevice(activeHost.address),
-          emits(
+          PortScanner.scanPortsForSingleDevice(
+            activeHost.address,
+            startPort: port - 1,
+            endPort: port,
+          ),
+          emitsThrough(
             isA<ActiveHost>().having(
               (p0) => p0.openPorts.contains(OpenPort(port)),
               "Should match host having same open port",
@@ -67,7 +77,7 @@ void main() {
     test('Running customDiscover tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
-          PortScanner.customDiscover(activeHost.address),
+          PortScanner.customDiscover(activeHost.address, portList: [port]),
           emits(isA<ActiveHost>()),
         );
       }
@@ -87,5 +97,9 @@ void main() {
         );
       }
     });
+  });
+
+  tearDownAll(() {
+    server.close();
   });
 }
