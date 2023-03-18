@@ -4,15 +4,15 @@ import 'package:universal_io/io.dart';
 
 void main() {
   const port = 550;
-  String interfaceIp = "127.0.0";
-  String myOwnHost = "127.0.0.1";
+
+  String myOwnHost = "0.0.0.0";
+  String interfaceIp = myOwnHost.substring(0, myOwnHost.lastIndexOf('.'));
   late ServerSocket server;
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
     //open a port in shared way because of portscanner using same,
     //if passed false then two hosts come up in search and breaks test.
-    server =
-        await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
+    server = await ServerSocket.bind(myOwnHost, port, shared: true);
     final interfaceList =
         await NetworkInterface.list(); //will give interface list
     if (interfaceList.isNotEmpty) {
