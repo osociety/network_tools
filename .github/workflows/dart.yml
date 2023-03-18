@@ -59,8 +59,7 @@ jobs:
 
       - name: Upload Coverage to CodeCov
         uses: codecov/codecov-action@v3
-        working-directory: ./network_tools
         with:
           token: ${{secrets.CODECOV_TOKEN}}
-          file: coverage/coverage.lcov
+          file: ./network_tools/coverage/coverage.lcov
 
