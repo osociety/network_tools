@@ -48,13 +48,16 @@ jobs:
         working-directory: ./network_tools
 
       - name: Install coverage tools
+        if: ${{ matrix.os=='ubuntu-latest' }}
         run: dart pub global activate coverage
 
       - name: Format Coverage
+        if: ${{ matrix.os=='ubuntu-latest' }}
         run: $HOME/.pub-cache/bin/format_coverage --lcov --in=coverage --out=coverage/coverage.lcov --report-on=lib
         working-directory: ./network_tools
 
       - name: Upload Coverage to CodeCov
+        if: ${{ matrix.os=='ubuntu-latest' }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
