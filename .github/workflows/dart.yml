@@ -50,11 +50,8 @@ jobs:
       - name: Install coverage tools
         run: dart pub global activate coverage
 
-      - name: Install coverage tools
-        run: export PATH="$PATH":"$HOME/.pub-cache/bin"
-      
       - name: Format Coverage
-        run: format_coverage --lcov --in=coverage --out=coverage/coverage.lcov --report-on=lib
+        run: $HOME/.pub-cache/bin/format_coverage --lcov --in=coverage --out=coverage/coverage.lcov --report-on=lib
         working-directory: ./network_tools
 
       - name: Upload Coverage to CodeCov
