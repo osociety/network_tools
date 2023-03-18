@@ -6,7 +6,6 @@ import 'package:universal_io/io.dart';
 
 void main() {
   int port = 0; // keep this value between 1-2034
-  late InternetAddress address;
   final List<ActiveHost> hostsWithOpenPort = [];
   late ServerSocket server;
   // Fetching interfaceIp and hostIp
@@ -16,7 +15,6 @@ void main() {
     server =
         await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
     port = server.port;
-    address = server.address;
     final interfaceList =
         await NetworkInterface.list(); //will give interface list
     if (interfaceList.isNotEmpty) {

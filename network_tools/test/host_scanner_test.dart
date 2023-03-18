@@ -46,8 +46,10 @@ void main() {
     test('Running getAllPingableDevicesAsync tests', () {
       expectLater(
         //There should be at least one device pingable in network
-        HostScanner.getAllPingableDevicesAsync(interfaceIp,
-            timeoutInSeconds: 3),
+        HostScanner.getAllPingableDevicesAsync(
+          interfaceIp,
+          timeoutInSeconds: 3,
+        ),
         emits(isA<ActiveHost>()),
       );
       expectLater(
