@@ -16,7 +16,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: [ubuntu-latest, windows-latest, macos-latest]    
+            os: [ubuntu-latest
+            # , windows-latest, macos-latest # commenting for codecov test, uncomment later.
+            ]    
 
     steps:
       - uses: actions/checkout@v3
@@ -44,12 +46,23 @@ jobs:
       # package:test for this step to succeed. Note that Flutter projects will
       # want to change this to 'flutter test'.
       - name: Run tests
-        run: dart test --coverage=coverage
+        run: dart test --coverage="coverage"
+        working-directory: ./network_tools
+
+      - name: Install coverage tools
+        run: dart pub global activate coverage
+
+      - name: Install coverage tools
+        run: export PATH="$PATH":"$HOME/.pub-cache/bin"
+      
+      - name: Format Coverage
+        run: format_coverage --lcov --in=coverage --out=coverage/coverage.lcov --report-on=lib
         working-directory: ./network_tools
 
       - name: Upload Coverage to CodeCov
         uses: codecov/codecov-action@v3
+        working-directory: ./network_tools
         with:
           token: ${{secrets.CODECOV_TOKEN}}
-          file: ./network_tools/coverage/test/network_tools_test.dart.vm.json
+          file: coverage/coverage.lcov
 
