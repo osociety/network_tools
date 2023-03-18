@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-import 'package:network_tools/src/netowrk_tools_utils.dart';
+import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:process_run/shell.dart';
 
 class SrvListLinux {
