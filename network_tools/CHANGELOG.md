@@ -1,5 +1,10 @@
 # Change Log
 
+## 3.2.1
+
+1. Now GHA runs tests against 3 platforms windows, ubuntu, macos
+2. Code coverage is fixed so that it's visible in codecov portal.
+
 ## 3.2.0
 
 1. getAllPingableDevicesAsync runs inside isolate to find all devices in a network.
