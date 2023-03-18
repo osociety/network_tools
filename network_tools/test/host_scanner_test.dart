@@ -33,12 +33,12 @@ void main() {
     test('Running getAllPingableDevices tests', () {
       expectLater(
         //There should be at least one device pingable in network
-        HostScanner.getAllPingableDevices(interfaceIp),
+        HostScanner.getAllPingableDevices(interfaceIp, timeoutInSeconds: 3),
         emits(isA<ActiveHost>()),
       );
       expectLater(
         //Should emit at least our own local machine when pinging all hosts.
-        HostScanner.getAllPingableDevices(interfaceIp),
+        HostScanner.getAllPingableDevices(interfaceIp, timeoutInSeconds: 3),
         emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
       );
     });
@@ -46,12 +46,16 @@ void main() {
     test('Running getAllPingableDevicesAsync tests', () {
       expectLater(
         //There should be at least one device pingable in network
-        HostScanner.getAllPingableDevicesAsync(interfaceIp),
+        HostScanner.getAllPingableDevicesAsync(interfaceIp,
+            timeoutInSeconds: 3),
         emits(isA<ActiveHost>()),
       );
       expectLater(
         //Should emit at least our own local machine when pinging all hosts.
-        HostScanner.getAllPingableDevicesAsync(interfaceIp),
+        HostScanner.getAllPingableDevicesAsync(
+          interfaceIp,
+          timeoutInSeconds: 3,
+        ),
         emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
       );
     });

@@ -38,20 +38,23 @@ void main() {
 
   group('Testing Port Scanner', () {
     test('Running scanPortsForSingleDevice tests', () {
-      expectLater(
-        PortScanner.scanPortsForSingleDevice(
-          address.address,
-          startPort: port - 1,
-          endPort: port,
-        ),
-        emitsThrough(
-          isA<ActiveHost>().having(
-            (p0) => p0.openPorts.contains(OpenPort(port)),
-            "Should match host having same open port",
-            equals(true),
+      for (final activeHost in hostsWithOpenPort) {
+        final port = activeHost.openPorts.elementAt(0).port;
+        expectLater(
+          PortScanner.scanPortsForSingleDevice(
+            activeHost.address,
+            startPort: port - 1,
+            endPort: port,
           ),
-        ),
-      );
+          emitsThrough(
+            isA<ActiveHost>().having(
+              (p0) => p0.openPorts.contains(OpenPort(port)),
+              "Should match host having same open port",
+              equals(true),
+            ),
+          ),
+        );
+      }
     });
 
     test('Running connectToPort tests', () {
