@@ -18,7 +18,14 @@ jobs:
       # https://github.com/dart-lang/setup-dart/blob/main/README.md
       - uses: dart-lang/setup-dart@v1.4
       # - uses: dart-lang/setup-dart@9a04e6d73cca37bd455e0608d7e5092f881fd603
-      
+
+      - name: Install dependencies
+        run: dart pub get
+        working-directory: ./network_tools
+  
+      - name: Install coverage tools
+        run: dart pub global activate coverage
+
       - name: Analyze project source
         run: dart analyze --fatal-infos 
         working-directory: ./network_tools
@@ -26,13 +33,6 @@ jobs:
       - name: Run tests
         run: dart test --coverage="coverage"
         working-directory: ./network_tools
-
-      - name: Install dependencies
-        run: dart pub get
-        working-directory: ./network_tools
-
-      - name: Install coverage tools
-        run: dart pub global activate coverage
 
       - name: Format Coverage
         run: $HOME/.pub-cache/bin/format_coverage --lcov --in=coverage --out=coverage/coverage.lcov --report-on=lib
