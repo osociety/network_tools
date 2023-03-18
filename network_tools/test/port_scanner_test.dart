@@ -5,15 +5,18 @@ import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
 void main() {
-  const port = 550; // keep this value between 1-2034
-  const myOwnHost = "0.0.0.0";
+  int port = 0; // keep this value between 1-2034
+  late InternetAddress address;
   final List<ActiveHost> hostsWithOpenPort = [];
   late ServerSocket server;
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
     //open a port in shared way because of hostscanner using same,
     //if passed false then two hosts come up in search and breaks test.
-    server = await ServerSocket.bind(myOwnHost, port, shared: true);
+    server =
+        await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
+    port = server.port;
+    address = server.address;
     final interfaceList =
         await NetworkInterface.list(); //will give interface list
     if (interfaceList.isNotEmpty) {
@@ -35,18 +38,20 @@ void main() {
 
   group('Testing Port Scanner', () {
     test('Running scanPortsForSingleDevice tests', () {
-      for (final activeHost in hostsWithOpenPort) {
-        expectLater(
-          PortScanner.scanPortsForSingleDevice(activeHost.address),
-          emits(
-            isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
-              "Should match host having same open port",
-              equals(true),
-            ),
+      expectLater(
+        PortScanner.scanPortsForSingleDevice(
+          address.address,
+          startPort: port - 1,
+          endPort: port,
+        ),
+        emitsThrough(
+          isA<ActiveHost>().having(
+            (p0) => p0.openPorts.contains(OpenPort(port)),
+            "Should match host having same open port",
+            equals(true),
           ),
-        );
-      }
+        ),
+      );
     });
 
     test('Running connectToPort tests', () {
