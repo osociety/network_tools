@@ -162,7 +162,7 @@ class PortScanner {
       s.destroy();
       final ActiveHost activeHost = ActiveHost.buildWithAddress(
         address: address,
-        openPort: [OpenPort(port)],
+        openPorts: [OpenPort(port)],
       );
       activeHostsController.add(activeHost);
 

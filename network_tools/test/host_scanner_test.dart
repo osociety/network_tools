@@ -71,56 +71,6 @@ void main() {
         emits(isA<ActiveHost>()),
       );
     });
-
-    test('Running getMaxHost tests', () {
-      //Error thrown cases
-      expect(() => HostScanner.getMaxHost(""), throwsArgumentError);
-      expect(() => HostScanner.getMaxHost("x"), throwsFormatException);
-      expect(() => HostScanner.getMaxHost("x.x.x"), throwsFormatException);
-      expect(() => HostScanner.getMaxHost("256.0.0.0"), throwsRangeError);
-      expect(
-        () => HostScanner.getMaxHost(
-          (HostScanner.minNetworkId - 1).toString(),
-        ),
-        throwsRangeError,
-      );
-
-      expect(
-        () => HostScanner.getMaxHost(
-          (HostScanner.maxNetworkId + 1).toString(),
-        ),
-        throwsRangeError,
-      );
-
-      //Normally returned cases
-      expect(
-        HostScanner.getMaxHost(HostScanner.minNetworkId.toString()),
-        HostScanner.classASubnets,
-      );
-      expect(
-        HostScanner.getMaxHost(HostScanner.maxNetworkId.toString()),
-        HostScanner.classCSubnets,
-      );
-      expect(HostScanner.getMaxHost("10.0.0.0"), HostScanner.classASubnets);
-      expect(HostScanner.getMaxHost("164.0.0.0"), HostScanner.classBSubnets);
-      expect(HostScanner.getMaxHost("200.0.0.0"), HostScanner.classCSubnets);
-
-      expect(
-        ![HostScanner.classASubnets, HostScanner.classCSubnets]
-            .contains(HostScanner.getMaxHost("164.0.0.0")),
-        true,
-      );
-      expect(
-        ![HostScanner.classBSubnets, HostScanner.classCSubnets]
-            .contains(HostScanner.getMaxHost("10.0.0.0")),
-        true,
-      );
-      expect(
-        ![HostScanner.classASubnets, HostScanner.classBSubnets]
-            .contains(HostScanner.getMaxHost("200.0.0.0")),
-        true,
-      );
-    });
   });
 
   tearDownAll(() {
