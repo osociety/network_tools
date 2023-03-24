@@ -78,27 +78,30 @@ void main() {
       expect(() => HostScanner.getMaxHost("x"), throwsFormatException);
       expect(() => HostScanner.getMaxHost("x.x.x"), throwsFormatException);
       expect(() => HostScanner.getMaxHost("256.0.0.0"), throwsRangeError);
+
+      const int minNetworkId = 1;
+      const int maxNetworkId = 223;
       expect(
         () => HostScanner.getMaxHost(
-          (HostScanner.minNetworkId - 1).toString(),
+          (minNetworkId - 1).toString(),
         ),
         throwsRangeError,
       );
 
       expect(
         () => HostScanner.getMaxHost(
-          (HostScanner.maxNetworkId + 1).toString(),
+          (maxNetworkId + 1).toString(),
         ),
         throwsRangeError,
       );
 
       //Normally returned cases
       expect(
-        HostScanner.getMaxHost(HostScanner.minNetworkId.toString()),
+        HostScanner.getMaxHost(minNetworkId.toString()),
         HostScanner.classASubnets,
       );
       expect(
-        HostScanner.getMaxHost(HostScanner.maxNetworkId.toString()),
+        HostScanner.getMaxHost(maxNetworkId.toString()),
         HostScanner.classCSubnets,
       );
       expect(HostScanner.getMaxHost("10.0.0.0"), HostScanner.classASubnets);

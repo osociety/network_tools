@@ -246,12 +246,6 @@ class HostScanner {
   /// Defines total number of subnets in class C network
   static const classCSubnets = 256;
 
-  /// Minimum value of first octet in IPv4 address used by [getMaxHost]
-  static const int minNetworkId = 1;
-
-  /// Maximum value of first octect in IPv4 address used by [getMaxHost]
-  static const int maxNetworkId = 223;
-
   /// returns the max number of hosts a subnet can have excluding network Id and broadcast Id
   @Deprecated(
     "Implementation is wrong, since we only append in last octet, max host can only be 254. Use maxHost getter",
@@ -266,6 +260,12 @@ class HostScanner {
         'Invalid subnet address, address should be in IPv4 format x.x.x',
       );
     }
+
+    /// Minimum value of first octet in IPv4
+    const int minNetworkId = 1;
+
+    /// Maximum value of first octet in IPv4
+    const int maxNetworkId = 223;
 
     final int firstOctet = int.parse(firstOctetStr[0]);
 
