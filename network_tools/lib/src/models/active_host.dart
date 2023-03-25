@@ -68,6 +68,9 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   static const generic = 'Generic Device';
   InternetAddress internetAddress;
+
+  /// The device specific number in the ip address. In IPv4 numbers after the
+  /// last dot, in IPv6 the numbers after the last colon
   late String hostId;
 
   /// Host name of the device, not to be confused with deviceName which does
