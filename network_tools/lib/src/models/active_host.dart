@@ -9,8 +9,7 @@ import 'package:universal_io/io.dart';
 class ActiveHost extends Comparable<ActiveHost> {
   ActiveHost({
     required this.internetAddress,
-    // ignore: deprecated_consistency
-    this.openPort = const [],
+    this.openPorts = const [],
     PingData? pingData,
     MdnsInfo? mdnsInfoVar,
   }) {
@@ -50,7 +49,7 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   factory ActiveHost.buildWithAddress({
     required String address,
-    List<OpenPort> openPort = const [],
+    List<OpenPort> openPorts = const [],
     PingData? pingData,
     MdnsInfo? mdnsInfo,
   }) {
@@ -61,7 +60,7 @@ class ActiveHost extends Comparable<ActiveHost> {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
-      openPort: openPort,
+      openPorts: openPorts,
       pingData: pingData,
       mdnsInfoVar: mdnsInfo,
     );
@@ -69,6 +68,9 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   static const generic = 'Generic Device';
   InternetAddress internetAddress;
+
+  /// The device specific number in the ip address. In IPv4 numbers after the
+  /// last dot, in IPv6 the numbers after the last colon
   late String hostId;
 
   /// Host name of the device, not to be confused with deviceName which does
@@ -81,10 +83,7 @@ class ActiveHost extends Comparable<ActiveHost> {
   late Future<MdnsInfo?> mdnsInfo;
 
   /// List of all the open port of this device
-  @Deprecated("Grammar is wrong for variable, please use [openPorts]")
-  List<OpenPort> openPort;
-
-  List<OpenPort> get openPorts => openPort;
+  List<OpenPort> openPorts;
 
   /// This device name does not following any guideline and is just some name
   /// that we can show for the device.
