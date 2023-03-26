@@ -149,6 +149,7 @@ class HostScanner {
   }
 
   /// Will search devices in the network inside new isolate
+  @pragma('vm:entry-point')
   static Future<void> _startSearchingDevices(dynamic params) async {
     final channel = IsolateManagerController(params);
     channel.onIsolateMessage.listen((message) async {
