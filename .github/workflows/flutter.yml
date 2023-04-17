@@ -63,9 +63,6 @@ jobs:
       - name: Download pub dependencies
         run: flutter pub get
         working-directory: ./network_tools_flutter
-      - name: Run build_runner
-        run: flutter pub run build_runner build --delete-conflicting-outputs
-        working-directory: ./network_tools_flutter
       - name: Run analyzer
         run: flutter analyze
         working-directory: ./network_tools_flutter
