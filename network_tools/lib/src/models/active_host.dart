@@ -46,7 +46,6 @@ class ActiveHost extends Comparable<ActiveHost> {
 
     deviceName = setDeviceName();
   }
-
   factory ActiveHost.buildWithAddress({
     required String address,
     List<OpenPort> openPorts = const [],
@@ -95,26 +94,6 @@ class ActiveHost extends Comparable<ActiveHost> {
   PingData get pingData => _pingData;
   Duration? get responseTime => _pingData.response?.time;
   String get address => internetAddress.address;
-
-  @override
-  int get hashCode => address.hashCode;
-
-  @override
-  bool operator ==(Object o) => o is ActiveHost && address == o.address;
-
-  @override
-  int compareTo(ActiveHost other) {
-    return hostId.compareTo(other.hostId);
-  }
-
-  @override
-  String toString() {
-    return 'Address: $address, HostId: $hostId, Time: ${responseTime?.inMilliseconds}ms, port: ${openPorts.join(",")}';
-  }
-
-  Future<String> toStringFull() async {
-    return 'Address: $address, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
-  }
 
   static PingData getPingData(String host) {
     const int timeoutInSeconds = 1;
@@ -181,5 +160,25 @@ class ActiveHost extends Comparable<ActiveHost> {
       return mdnsTemp.getOnlyTheStartOfMdnsName();
     }
     return generic;
+  }
+
+  @override
+  int get hashCode => address.hashCode;
+
+  @override
+  bool operator ==(Object o) => o is ActiveHost && address == o.address;
+
+  @override
+  int compareTo(ActiveHost other) {
+    return hostId.compareTo(other.hostId);
+  }
+
+  @override
+  String toString() {
+    return 'Address: $address, HostId: $hostId, Time: ${responseTime?.inMilliseconds}ms, port: ${openPorts.join(",")}';
+  }
+
+  Future<String> toStringFull() async {
+    return 'Address: $address, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
   }
 }

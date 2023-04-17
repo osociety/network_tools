@@ -1,7 +1,9 @@
 name: network_tools_flutter
-description: A new Flutter package project.
+description: Extended features of network_tools for flutter framework.
 version: 0.0.1
-homepage:
+issue_tracker: https://github.com/osociety/network_tools/issues
+repository: https://github.com/osociety/network_tools/tree/main/network_tools_flutter
+publish_to: none
 
 environment:
   sdk: ">=2.17.6 <3.0.0"
@@ -10,8 +12,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  network_tools: ^3.2.1
+  network_tools:
+    path: ../network_tools
   dart_ping_ios: ^3.0.0
+  universal_io: ^2.2.0
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,6 @@
-# Features
+# Network Tools Flutter
+
+## Features
 
 This package will add support for flutter only features in network_tools, network_tools will still be required to be added in pubspec.yaml.  
 

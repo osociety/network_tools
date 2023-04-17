@@ -1,3 +1,3 @@
 library network_tools_flutter;
 
-export 'network_tools.dart';
+export 'src/host_scanner_flutter.dart';
