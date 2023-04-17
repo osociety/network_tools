@@ -3,8 +3,6 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:dart_ping_ios/dart_ping_ios.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:network_tools/network_tools.dart';
 
 /// Scans for all hosts in a subnet.
@@ -35,8 +33,6 @@ class HostScannerFlutter {
       final receivePort = ReceivePort();
       final isolate = await Isolate.spawn(
           HostScannerFlutter._startSearchingDevices, receivePort.sendPort);
-
-      debugPrint('Scanning from $i to $limit');
 
       receivePort.listen((message) {
         if (message is SendPort) {

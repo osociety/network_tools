@@ -32,10 +32,10 @@ void main() {
   });
 
   group('Testing Host Scanner', () {
-    test('Running getAllPingableDevicesAsync tests', () {
+    test('Running getAllPingableDevicesAsync tests', () async {
       expectLater(
         //There should be at least one device pingable in network
-        HostScannerFlutter.getAllPingableDevices(
+        await HostScannerFlutter.getAllPingableDevices(
           interfaceIp,
           timeoutInSeconds: 3,
         ),
@@ -43,7 +43,7 @@ void main() {
       );
       expectLater(
         //Should emit at least our own local machine when pinging all hosts.
-        HostScannerFlutter.getAllPingableDevices(
+        await HostScannerFlutter.getAllPingableDevices(
           interfaceIp,
           timeoutInSeconds: 3,
         ),
