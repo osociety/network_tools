@@ -31,7 +31,7 @@ class HostScanner {
     bool resultsInAddressAscendingOrder = true,
   }) async* {
     final int lastValidSubnet =
-        _validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
+        validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
     final List<Future<ActiveHost?>> activeHostsFuture = [];
     final StreamController<ActiveHost> activeHostsController =
         StreamController<ActiveHost>();
@@ -88,7 +88,7 @@ class HostScanner {
     return null;
   }
 
-  static int _validateAndGetLastValidSubnet(
+  static int validateAndGetLastValidSubnet(
     String subnet,
     int firstHostId,
     int lastHostId,
@@ -119,7 +119,7 @@ class HostScanner {
 
     const int scanRangeForIsolate = 51;
     final int lastValidSubnet =
-        _validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
+        validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
     for (int i = firstHostId;
         i <= lastValidSubnet;
         i += scanRangeForIsolate + 1) {
@@ -149,6 +149,7 @@ class HostScanner {
   }
 
   /// Will search devices in the network inside new isolate
+  @pragma('vm:entry-point')
   static Future<void> _startSearchingDevices(dynamic params) async {
     final channel = IsolateManagerController(params);
     channel.onIsolateMessage.listen((message) async {
@@ -202,7 +203,7 @@ class HostScanner {
     bool resultsInAddressAscendingOrder = true,
   }) async* {
     final int lastValidSubnet =
-        _validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
+        validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
     final List<Future<ActiveHost?>> activeHostOpenPortList = [];
     final StreamController<ActiveHost> activeHostsController =
         StreamController<ActiveHost>();
