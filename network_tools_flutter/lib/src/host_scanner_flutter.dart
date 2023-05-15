@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:math';
 
-import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:network_tools/network_tools.dart';
 
 /// Scans for all hosts in a subnet.
@@ -12,6 +11,8 @@ class HostScannerFlutter {
   /// It won't firstHostId again unless previous scan is completed due to heavy
   /// resource consumption.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
+  /// TODO: this should run for ios but currently blocked by
+  /// https://github.com/point-source/dart_ping/issues/48
   static Future<Stream<ActiveHost>> getAllPingableDevices(
     String subnet, {
     int firstHostId = HostScanner.defaultFirstHostId,
@@ -48,6 +49,7 @@ class HostScannerFlutter {
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
           activeHostsController.add(message);
         } else if (message is String && message == 'Done') {
+          activeHostsController.close();
           isolate.kill();
         }
       });
@@ -58,7 +60,6 @@ class HostScannerFlutter {
   /// Will search devices in the network inside new isolate
   // @pragma('vm:entry-point')
   static Future<void> _startSearchingDevices(SendPort sendPort) async {
-    DartPingIOS.register();
     final port = ReceivePort();
     sendPort.send(port.sendPort);
 

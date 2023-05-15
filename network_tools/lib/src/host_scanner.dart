@@ -141,6 +141,7 @@ class HostScanner {
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
           activeHostsController.add(message);
         } else if (message is String && message == 'Done') {
+          activeHostsController.close();
           isolateManager.stop();
         }
       });
