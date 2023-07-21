@@ -93,7 +93,7 @@ Add this code to your `main.dart` file
     Logger.root.level = Level.FINE; //set to finest for detailed log
       Logger.root.onRecord.listen((record) {
         print(
-            '''${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}');
+            '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}');
       });
 ```
 
