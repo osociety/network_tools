@@ -30,7 +30,7 @@ import 'package:network_tools/network_tools.dart';
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
   final String subnet = address.substring(0, address.lastIndexOf('.'));
-  final stream = HostScanner.discover(subnet, firstHostId: 1, lastHostId: 50,
+  final stream = HostScanner.getAllPingableDevices(subnet, firstHostId: 1, lastHostId: 50,
       progressCallback: (progress) {
     print('Progress for host discovery : $progress');
   });
@@ -38,43 +38,45 @@ import 'package:network_tools/network_tools.dart';
   stream.listen((host) {
     //Same host can be emitted multiple times
     //Use Set<ActiveHost> instead of List<ActiveHost>
-    print('Found device: ${host}');
+    print('Found device: $host');
   }, onDone: () {
     print('Scan completed');
   }); // Don't forget to cancel the stream when not in use.
-
 ```
 
 ### Port Scanner
 
 ```dart
-    //1. Range
-    String target = '192.168.1.1';
-    PortScanner.discover(target, startPort: 1, endPort: 1024,
+  //1. Range
+  String target = '192.168.1.1';
+  PortScanner.scanPortsForSingleDevice(target, startPort: 1, endPort: 1024,
       progressCallback: (progress) {
     print('Progress for port discovery : $progress');
-    }).listen((event) {
-    if (event.isOpen) {
-      print('Found open port : $event');
+  }).listen((ActiveHost event) {
+    if (event.openPorts.isNotEmpty) {
+      print('Found open ports : ${event.openPorts}');
     }
-    }, onDone: () {
+  }, onDone: () {
     print('Scan completed');
-    });
-    //2. Single
-    bool isOpen = PortScanner.isOpen(target,80);
-    //3. Custom
-    PortScanner.customDiscover(target, portList : const [22, 80, 139]);
+  });
+  //2. Single
+  bool isOpen = (await PortScanner.isOpen(target, 80)) == null;
+  //3. Custom
+  PortScanner.customDiscover(target, portList: const [22, 80, 139]);
 ```
 
 ### Mdns Scanner
 
 ```dart
-    for (final ActiveHost activeHost in await MdnsScanner.searchMdnsDevices()) {
-      final MdnsInfo? mdnsInfo = activeHost.mdnsInfo;
-      print(
-        'Address: ${activeHost.address}, Port: ${mdnsInfo!.mdnsPort}, ServiceType: ${mdnsInfo.mdnsServiceType}, MdnsName: ${mdnsInfo.getOnlyTheStartOfMdnsName()}',
-      );
-    }
+  for (final ActiveHost activeHost in await MdnsScanner.searchMdnsDevices()) {
+    final MdnsInfo? mdnsInfo = await activeHost.mdnsInfo;
+    print('''
+    Address: ${activeHost.address}
+    Port: ${mdnsInfo!.mdnsPort}
+    ServiceType: ${mdnsInfo.mdnsServiceType}
+    MdnsName: ${mdnsInfo.getOnlyTheStartOfMdnsName()}
+    ''');
+  }
 ```
 
 ### Run examples
