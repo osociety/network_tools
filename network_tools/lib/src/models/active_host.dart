@@ -1,6 +1,7 @@
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/src/models/mdns_info.dart';
 import 'package:network_tools/src/models/open_port.dart';
+import 'package:network_tools/src/models/sendable_active_host.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
@@ -9,8 +10,7 @@ import 'package:universal_io/io.dart';
 class ActiveHost extends Comparable<ActiveHost> {
   ActiveHost({
     required this.internetAddress,
-    // ignore: deprecated_consistency
-    this.openPort = const [],
+    this.openPorts = const [],
     PingData? pingData,
     MdnsInfo? mdnsInfoVar,
   }) {
@@ -47,10 +47,9 @@ class ActiveHost extends Comparable<ActiveHost> {
 
     deviceName = setDeviceName();
   }
-
   factory ActiveHost.buildWithAddress({
     required String address,
-    List<OpenPort> openPort = const [],
+    List<OpenPort> openPorts = const [],
     PingData? pingData,
     MdnsInfo? mdnsInfo,
   }) {
@@ -61,14 +60,41 @@ class ActiveHost extends Comparable<ActiveHost> {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
-      openPort: openPort,
+      openPorts: openPorts,
       pingData: pingData,
       mdnsInfoVar: mdnsInfo,
     );
   }
 
+  factory ActiveHost.fromSendableActiveHost({
+    required SendableActiveHost sendableActiveHost,
+    List<OpenPort> openPorts = const [],
+    MdnsInfo? mdnsInfo,
+  }) {
+    final InternetAddress? internetAddressTemp =
+        InternetAddress.tryParse(sendableActiveHost.address);
+    if (internetAddressTemp == null) {
+      throw 'Cant parse address ${sendableActiveHost.address} to InternetAddress';
+    }
+    return ActiveHost(
+      internetAddress: internetAddressTemp,
+      openPorts: openPorts,
+      pingData: sendableActiveHost.pingData,
+      mdnsInfoVar: mdnsInfo,
+    );
+  }
+
+  Future<void> resolveInfo() async {
+    await deviceName;
+    await mdnsInfo;
+    await hostName;
+  }
+
   static const generic = 'Generic Device';
   InternetAddress internetAddress;
+
+  /// The device specific number in the ip address. In IPv4 numbers after the
+  /// last dot, in IPv6 the numbers after the last colon
   late String hostId;
 
   /// Host name of the device, not to be confused with deviceName which does
@@ -81,10 +107,7 @@ class ActiveHost extends Comparable<ActiveHost> {
   late Future<MdnsInfo?> mdnsInfo;
 
   /// List of all the open port of this device
-  @Deprecated("Grammar is wrong for variable, please use [openPorts]")
-  List<OpenPort> openPort;
-
-  List<OpenPort> get openPorts => openPort;
+  List<OpenPort> openPorts;
 
   /// This device name does not following any guideline and is just some name
   /// that we can show for the device.
@@ -96,26 +119,6 @@ class ActiveHost extends Comparable<ActiveHost> {
   PingData get pingData => _pingData;
   Duration? get responseTime => _pingData.response?.time;
   String get address => internetAddress.address;
-
-  @override
-  int get hashCode => address.hashCode;
-
-  @override
-  bool operator ==(Object o) => o is ActiveHost && address == o.address;
-
-  @override
-  int compareTo(ActiveHost other) {
-    return hostId.compareTo(other.hostId);
-  }
-
-  @override
-  String toString() {
-    return 'Address: $address, HostId: $hostId, Time: ${responseTime?.inMilliseconds}ms, port: ${openPorts.join(",")}';
-  }
-
-  Future<String> toStringFull() async {
-    return 'Address: $address, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
-  }
 
   static PingData getPingData(String host) {
     const int timeoutInSeconds = 1;
@@ -182,5 +185,25 @@ class ActiveHost extends Comparable<ActiveHost> {
       return mdnsTemp.getOnlyTheStartOfMdnsName();
     }
     return generic;
+  }
+
+  @override
+  int get hashCode => address.hashCode;
+
+  @override
+  bool operator ==(Object o) => o is ActiveHost && address == o.address;
+
+  @override
+  int compareTo(ActiveHost other) {
+    return hostId.compareTo(other.hostId);
+  }
+
+  @override
+  String toString() {
+    return 'Address: $address, HostId: $hostId, Time: ${responseTime?.inMilliseconds}ms, port: ${openPorts.join(",")}';
+  }
+
+  Future<String> toStringFull() async {
+    return 'Address: $address, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
   }
 }

@@ -1,6 +1,6 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 3.2.1
+version: 3.2.2
 issue_tracker: https://github.com/osociety/network_tools/issues
 repository: https://github.com/osociety/network_tools/tree/main/network_tools
 

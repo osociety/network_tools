@@ -8,8 +8,14 @@ name: Dart
 on:
   push:
     branches: [ "main" ]
+    paths: ['network_tools/**']
   pull_request:
     branches: [ "main", "dev" ]
+    paths: ['network_tools/**']
+
+concurrency: 
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -46,5 +52,3 @@ jobs:
       - name: Run tests
         run: dart test
         working-directory: ./network_tools
-        
-

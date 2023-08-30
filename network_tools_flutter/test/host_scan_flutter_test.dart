@@ -1,8 +1,10 @@
 import 'package:network_tools/network_tools.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:network_tools_flutter/network_tools_flutter.dart';
 import 'package:universal_io/io.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   int port = 0;
   String myOwnHost = "0.0.0.0";
   String interfaceIp = myOwnHost.substring(0, myOwnHost.lastIndexOf('.'));
@@ -30,23 +32,10 @@ void main() {
   });
 
   group('Testing Host Scanner', () {
-    test('Running getAllPingableDevices tests', () {
+    test('Running getAllPingableDevicesAsync tests', () async {
       expectLater(
         //There should be at least one device pingable in network
-        HostScanner.getAllPingableDevices(interfaceIp, timeoutInSeconds: 3),
-        emits(isA<ActiveHost>()),
-      );
-      expectLater(
-        //Should emit at least our own local machine when pinging all hosts.
-        HostScanner.getAllPingableDevices(interfaceIp, timeoutInSeconds: 3),
-        emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
-      );
-    });
-
-    test('Running getAllPingableDevicesAsync tests', () {
-      expectLater(
-        //There should be at least one device pingable in network
-        HostScanner.getAllPingableDevicesAsync(
+         HostScannerFlutter.getAllPingableDevices(
           interfaceIp,
           timeoutInSeconds: 3,
         ),
@@ -54,21 +43,11 @@ void main() {
       );
       expectLater(
         //Should emit at least our own local machine when pinging all hosts.
-        HostScanner.getAllPingableDevicesAsync(
+         HostScannerFlutter.getAllPingableDevices(
           interfaceIp,
           timeoutInSeconds: 3,
         ),
         emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
-      );
-    });
-
-    //todo: this test is not working on windows, not matter what.
-    test('Running scanDevicesForSinglePort tests', () {
-      expectLater(
-        HostScanner.scanDevicesForSinglePort(
-          interfaceIp, port, //ssh should be running at least in any host
-        ), // hence some host will be emitted
-        emits(isA<ActiveHost>()),
       );
     });
   });

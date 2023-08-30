@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.2.2
+
+1. Supporting changes for network_tools_flutter
+
 ## 3.2.1
 
 1. Now GHA runs tests against 3 platforms windows, ubuntu, macos
