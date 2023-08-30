@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:network_tools/network_tools.dart';
 
 /// Scans for all hosts in a subnet.
@@ -57,6 +58,7 @@ class HostScannerFlutter {
   /// Will search devices in the network inside new isolate
   // @pragma('vm:entry-point')
   static Future<void> _startSearchingDevices(SendPort sendPort) async {
+    DartPingIOS.register();
     final port = ReceivePort();
     sendPort.send(port.sendPort);
 
