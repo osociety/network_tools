@@ -5,6 +5,7 @@ import 'package:dart_ping/dart_ping.dart';
 import 'package:isolate_manager/isolate_manager.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
+import 'package:network_tools/src/models/sendable_active_host.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/port_scanner.dart';
 
@@ -22,7 +23,7 @@ class HostScanner {
   /// resource consumption.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<ActiveHost> getAllPingableDevices(
+  static Stream<SendableActivateHost> _getAllSendablePingableDevices(
     String subnet, {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
@@ -32,9 +33,9 @@ class HostScanner {
   }) async* {
     final int lastValidSubnet =
         validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
-    final List<Future<ActiveHost?>> activeHostsFuture = [];
-    final StreamController<ActiveHost> activeHostsController =
-        StreamController<ActiveHost>();
+    final List<Future<SendableActivateHost?>> activeHostsFuture = [];
+    final StreamController<SendableActivateHost> activeHostsController =
+        StreamController<SendableActivateHost>();
 
     for (int i = firstHostId; i <= lastValidSubnet; i++) {
       activeHostsFuture.add(
@@ -52,9 +53,9 @@ class HostScanner {
     }
 
     int i = 0;
-    for (final Future<ActiveHost?> host in activeHostsFuture) {
+    for (final Future<SendableActivateHost?> host in activeHostsFuture) {
       i++;
-      final ActiveHost? tempHost = await host;
+      final SendableActivateHost? tempHost = await host;
 
       progressCallback
           ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
@@ -66,10 +67,29 @@ class HostScanner {
     }
   }
 
-  static Future<ActiveHost?> _getHostFromPing({
+  static Stream<ActiveHost> getAllPingableDevices(
+    String subnet, {
+    int firstHostId = defaultFirstHostId,
+    int lastHostId = defaultLastHostId,
+    int timeoutInSeconds = 1,
+    ProgressCallback? progressCallback,
+    bool resultsInAddressAscendingOrder = true,
+  }) async* {
+    final stream = _getAllSendablePingableDevices(subnet, firstHostId: firstHostId, lastHostId: lastHostId, 
+   timeoutInSeconds: timeoutInSeconds, progressCallback: progressCallback, resultsInAddressAscendingOrder: resultsInAddressAscendingOrder);
+   await for (final sendableActivateHost in stream){
+    final activeHost = ActiveHost.fromSendableActiveHost(sendableActivateHost: sendableActivateHost);
+
+    await activeHost.resolveInfo();
+         
+    yield activeHost; 
+   }
+  }
+
+  static Future<SendableActivateHost?> _getHostFromPing({
     required String host,
     required int i,
-    required StreamController<ActiveHost> activeHostsController,
+    required StreamController<SendableActivateHost> activeHostsController,
     int timeoutInSeconds = 1,
   }) async {
     await for (final PingData pingData
@@ -78,10 +98,9 @@ class HostScanner {
       if (response != null) {
         final Duration? time = response.time;
         if (time != null) {
-          final ActiveHost tempActiveHost =
-              ActiveHost.buildWithAddress(address: host, pingData: pingData);
-          activeHostsController.add(tempActiveHost);
-          return tempActiveHost;
+          final tempSendableActivateHost = SendableActivateHost(host, pingData);
+          activeHostsController.add(tempSendableActivateHost);
+          return tempSendableActivateHost;
         }
       }
     }
@@ -113,9 +132,7 @@ class HostScanner {
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
-  }) {
-    final StreamController<ActiveHost> activeHostsController =
-        StreamController<ActiveHost>();
+  }) async* {
 
     const int scanRangeForIsolate = 51;
     final int lastValidSubnet =
@@ -134,19 +151,19 @@ class HostScanner {
         timeoutInSeconds.toString(),
         resultsInAddressAscendingOrder.toString(),
       ]);
-
-      isolateManager.onMessage.listen((message) {
-        if (message is ActiveHost) {
+      await for (final message in  isolateManager.onMessage.asBroadcastStream()){
+        if (message is SendableActivateHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-          activeHostsController.add(message);
+          
+         final activeHostFound = ActiveHost.fromSendableActiveHost(sendableActivateHost: message);
+         await activeHostFound.resolveInfo(); 
+         yield activeHostFound;
         } else if (message is String && message == 'Done') {
-          activeHostsController.close();
           isolateManager.stop();
         }
-      });
+      } 
     }
-    return activeHostsController.stream;
   }
 
   /// Will search devices in the network inside new isolate
@@ -169,8 +186,8 @@ class HostScanner {
 
       /// Will contain all the hosts that got discovered in the network, will
       /// be use inorder to cancel on dispose of the page.
-      final Stream<ActiveHost> hostsDiscoveredInNetwork =
-          HostScanner.getAllPingableDevices(
+      final Stream<SendableActivateHost> hostsDiscoveredInNetwork =
+          HostScanner._getAllSendablePingableDevices(
         subnetIsolate,
         firstHostId: firstSubnetIsolate,
         lastHostId: lastSubnetIsolate,
@@ -178,14 +195,8 @@ class HostScanner {
         resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
       );
 
-      await for (final ActiveHost activeHostFound in hostsDiscoveredInNetwork) {
-        activeHostFound.deviceName.then((value) {
-          activeHostFound.mdnsInfo.then((value) {
-            activeHostFound.hostName.then((value) {
-              channel.sendResult(activeHostFound);
-            });
-          });
-        });
+      await for (final SendableActivateHost activeHostFound in hostsDiscoveredInNetwork) {
+        channel.sendResult(activeHostFound);
       }
       channel.sendResult('Done');
     });

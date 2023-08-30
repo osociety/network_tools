@@ -11,8 +11,6 @@ class HostScannerFlutter {
   /// It won't firstHostId again unless previous scan is completed due to heavy
   /// resource consumption.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
-  /// TODO: this should run for ios but currently blocked by
-  /// https://github.com/point-source/dart_ping/issues/48
   static Future<Stream<ActiveHost>> getAllPingableDevices(
     String subnet, {
     int firstHostId = HostScanner.defaultFirstHostId,
@@ -49,7 +47,6 @@ class HostScannerFlutter {
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
           activeHostsController.add(message);
         } else if (message is String && message == 'Done') {
-          activeHostsController.close();
           isolate.kill();
         }
       });
