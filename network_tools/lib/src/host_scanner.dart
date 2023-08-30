@@ -23,7 +23,26 @@ class HostScanner {
   /// resource consumption.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<SendableActivateHost> _getAllSendablePingableDevices(
+  static Stream<ActiveHost> getAllPingableDevices(
+    String subnet, {
+    int firstHostId = defaultFirstHostId,
+    int lastHostId = defaultLastHostId,
+    int timeoutInSeconds = 1,
+    ProgressCallback? progressCallback,
+    bool resultsInAddressAscendingOrder = true,
+  }) async* {
+    final stream = getAllSendablePingableDevices(subnet, firstHostId: firstHostId, lastHostId: lastHostId, 
+   timeoutInSeconds: timeoutInSeconds, progressCallback: progressCallback, resultsInAddressAscendingOrder: resultsInAddressAscendingOrder);
+   await for (final sendableActivateHost in stream){
+    final activeHost = ActiveHost.fromSendableActiveHost(sendableActivateHost: sendableActivateHost);
+
+    await activeHost.resolveInfo();
+         
+    yield activeHost; 
+   }
+  }
+
+  static Stream<SendableActivateHost> getAllSendablePingableDevices(
     String subnet, {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
@@ -66,27 +85,7 @@ class HostScanner {
       yield tempHost;
     }
   }
-
-  static Stream<ActiveHost> getAllPingableDevices(
-    String subnet, {
-    int firstHostId = defaultFirstHostId,
-    int lastHostId = defaultLastHostId,
-    int timeoutInSeconds = 1,
-    ProgressCallback? progressCallback,
-    bool resultsInAddressAscendingOrder = true,
-  }) async* {
-    final stream = _getAllSendablePingableDevices(subnet, firstHostId: firstHostId, lastHostId: lastHostId, 
-   timeoutInSeconds: timeoutInSeconds, progressCallback: progressCallback, resultsInAddressAscendingOrder: resultsInAddressAscendingOrder);
-   await for (final sendableActivateHost in stream){
-    final activeHost = ActiveHost.fromSendableActiveHost(sendableActivateHost: sendableActivateHost);
-
-    await activeHost.resolveInfo();
-         
-    yield activeHost; 
-   }
-  }
-
-  static Future<SendableActivateHost?> _getHostFromPing({
+    static Future<SendableActivateHost?> _getHostFromPing({
     required String host,
     required int i,
     required StreamController<SendableActivateHost> activeHostsController,
@@ -106,6 +105,7 @@ class HostScanner {
     }
     return null;
   }
+
 
   static int validateAndGetLastValidSubnet(
     String subnet,
@@ -187,7 +187,7 @@ class HostScanner {
       /// Will contain all the hosts that got discovered in the network, will
       /// be use inorder to cancel on dispose of the page.
       final Stream<SendableActivateHost> hostsDiscoveredInNetwork =
-          HostScanner._getAllSendablePingableDevices(
+          HostScanner.getAllSendablePingableDevices(
         subnetIsolate,
         firstHostId: firstSubnetIsolate,
         lastHostId: lastSubnetIsolate,

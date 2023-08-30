@@ -12,17 +12,15 @@ class HostScannerFlutter {
   /// It won't firstHostId again unless previous scan is completed due to heavy
   /// resource consumption.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
-  static Future<Stream<ActiveHost>> getAllPingableDevices(
+  static Stream<ActiveHost> getAllPingableDevices(
     String subnet, {
     int firstHostId = HostScanner.defaultFirstHostId,
     int lastHostId = HostScanner.defaultLastHostId,
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
-  }) async {
+  }) async* {
     const int scanRangeForIsolate = 51;
-    final StreamController<ActiveHost> activeHostsController =
-        StreamController<ActiveHost>();
     final int lastValidSubnet = HostScanner.validateAndGetLastValidSubnet(
         subnet, firstHostId, lastHostId);
 
@@ -33,8 +31,7 @@ class HostScannerFlutter {
       final receivePort = ReceivePort();
       final isolate = await Isolate.spawn(
           HostScannerFlutter._startSearchingDevices, receivePort.sendPort);
-
-      receivePort.listen((message) {
+      await for (final message in  receivePort.asBroadcastStream()){
         if (message is SendPort) {
           message.send([
             subnet,
@@ -43,20 +40,21 @@ class HostScannerFlutter {
             timeoutInSeconds.toString(),
             resultsInAddressAscendingOrder.toString()
           ]);
-        } else if (message is ActiveHost) {
+        } else if (message is SendableActivateHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-          activeHostsController.add(message);
+           final activeHostFound = ActiveHost.fromSendableActiveHost(sendableActivateHost: message);
+         await activeHostFound.resolveInfo(); 
+         yield activeHostFound;
         } else if (message is String && message == 'Done') {
           isolate.kill();
         }
-      });
+      }
     }
-    return activeHostsController.stream;
   }
 
   /// Will search devices in the network inside new isolate
-  // @pragma('vm:entry-point')
+  @pragma('vm:entry-point')
   static Future<void> _startSearchingDevices(SendPort sendPort) async {
     DartPingIOS.register();
     final port = ReceivePort();
@@ -71,8 +69,8 @@ class HostScannerFlutter {
 
       /// Will contain all the hosts that got discovered in the network, will
       /// be use inorder to cancel on dispose of the page.
-      final Stream<ActiveHost> hostsDiscoveredInNetwork =
-          HostScanner.getAllPingableDevices(
+      final Stream<SendableActivateHost> hostsDiscoveredInNetwork =
+          HostScanner.getAllSendablePingableDevices(
         subnetIsolate,
         firstHostId: firstSubnetIsolate,
         lastHostId: lastSubnetIsolate,
@@ -80,14 +78,8 @@ class HostScannerFlutter {
         resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
       );
 
-      await for (final ActiveHost activeHostFound in hostsDiscoveredInNetwork) {
-        activeHostFound.deviceName.then((value) {
-          activeHostFound.mdnsInfo.then((value) {
-            activeHostFound.hostName.then((value) {
-              sendPort.send(activeHostFound);
-            });
-          });
-        });
+      await for (final SendableActivateHost activeHostFound in hostsDiscoveredInNetwork) {
+        sendPort.send(activeHostFound);
       }
       sendPort.send('Done');
     }

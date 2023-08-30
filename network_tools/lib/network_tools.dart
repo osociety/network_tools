@@ -8,4 +8,5 @@ export 'src/models/active_host.dart';
 export 'src/models/callbacks.dart';
 export 'src/models/mdns_info.dart';
 export 'src/models/open_port.dart';
+export 'src/models/sendable_active_host.dart';
 export 'src/port_scanner.dart';
