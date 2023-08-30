@@ -32,7 +32,7 @@ class HostScanner {
     bool resultsInAddressAscendingOrder = true,
   }) async* {
     final stream = getAllSendablePingableDevices(subnet, firstHostId: firstHostId, lastHostId: lastHostId, 
-   timeoutInSeconds: timeoutInSeconds, progressCallback: progressCallback, resultsInAddressAscendingOrder: resultsInAddressAscendingOrder);
+   timeoutInSeconds: timeoutInSeconds, progressCallback: progressCallback, resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,);
    await for (final sendableActivateHost in stream){
     final activeHost = ActiveHost.fromSendableActiveHost(sendableActivateHost: sendableActivateHost);
 
