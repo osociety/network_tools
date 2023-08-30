@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
     paths: ['network_tools_flutter/**']
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev-flutter" ]
     paths: ['network_tools_flutter/**']
 
 concurrency: 
