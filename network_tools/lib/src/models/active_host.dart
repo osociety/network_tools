@@ -1,6 +1,7 @@
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/src/models/mdns_info.dart';
 import 'package:network_tools/src/models/open_port.dart';
+import 'package:network_tools/src/models/sendable_active_host.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
@@ -63,6 +64,30 @@ class ActiveHost extends Comparable<ActiveHost> {
       pingData: pingData,
       mdnsInfoVar: mdnsInfo,
     );
+  }
+
+  factory ActiveHost.fromSendableActiveHost({
+    required SendableActiveHost sendableActiveHost,
+    List<OpenPort> openPorts = const [],
+    MdnsInfo? mdnsInfo,
+  }) {
+    final InternetAddress? internetAddressTemp =
+        InternetAddress.tryParse(sendableActiveHost.address);
+    if (internetAddressTemp == null) {
+      throw 'Cant parse address ${sendableActiveHost.address} to InternetAddress';
+    }
+    return ActiveHost(
+      internetAddress: internetAddressTemp,
+      openPorts: openPorts,
+      pingData: sendableActiveHost.pingData,
+      mdnsInfoVar: mdnsInfo,
+    );
+  }
+
+  Future<void> resolveInfo() async {
+    await deviceName;
+    await mdnsInfo;
+    await hostName;
   }
 
   static const generic = 'Generic Device';

@@ -34,7 +34,7 @@ class PortScanner {
     443,
     989,
     990,
-    3389
+    3389,
   ];
 
   /// Checks if the single [port] is open or not for the [target].

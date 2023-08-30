@@ -14,8 +14,11 @@ dependencies:
     sdk: flutter
   network_tools:
     path: ../network_tools
+  # Multi-platform network ping utility.
+  dart_ping: ^8.0.1
   dart_ping_ios: ^3.0.0
   universal_io: ^2.2.0
+  flutter_isolate: ^2.0.4
 
 dev_dependencies:
   flutter_test:

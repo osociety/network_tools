@@ -3,14 +3,14 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Dart
+name: Flutter
 
 on:
   push:
     branches: [ "main" ]
     paths: ['network_tools_flutter/**']
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev-flutter" ]
     paths: ['network_tools_flutter/**']
 
 concurrency: 
