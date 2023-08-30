@@ -67,20 +67,19 @@ class ActiveHost extends Comparable<ActiveHost> {
   }
 
   factory ActiveHost.fromSendableActiveHost({
-    required SendableActivateHost sendableActivateHost,
+    required SendableActiveHost sendableActiveHost,
     List<OpenPort> openPorts = const [],
-    PingData? pingData,
     MdnsInfo? mdnsInfo,
   }) {
     final InternetAddress? internetAddressTemp =
-        InternetAddress.tryParse(sendableActivateHost.address);
+        InternetAddress.tryParse(sendableActiveHost.address);
     if (internetAddressTemp == null) {
-      throw 'Cant parse address ${sendableActivateHost.address} to InternetAddress';
+      throw 'Cant parse address ${sendableActiveHost.address} to InternetAddress';
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
       openPorts: openPorts,
-      pingData: pingData,
+      pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
     );
   }
@@ -90,7 +89,6 @@ class ActiveHost extends Comparable<ActiveHost> {
     await mdnsInfo;
     await hostName;
   }
-
 
   static const generic = 'Generic Device';
   InternetAddress internetAddress;

@@ -33,16 +33,16 @@ class HostScanner {
   }) async* {
     final stream = getAllSendablePingableDevices(subnet, firstHostId: firstHostId, lastHostId: lastHostId, 
    timeoutInSeconds: timeoutInSeconds, progressCallback: progressCallback, resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,);
-   await for (final sendableActivateHost in stream){
-    final activeHost = ActiveHost.fromSendableActiveHost(sendableActivateHost: sendableActivateHost);
+   await for (final sendableActiveHost in stream){
+    final activeHost = ActiveHost.fromSendableActiveHost(sendableActiveHost: sendableActiveHost);
 
     await activeHost.resolveInfo();
          
     yield activeHost; 
    }
   }
-
-  static Stream<SendableActivateHost> getAllSendablePingableDevices(
+  /// Same as [getAllPingableDevices] but can be called or run inside isolate.
+  static Stream<SendableActiveHost> getAllSendablePingableDevices(
     String subnet, {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
@@ -52,9 +52,9 @@ class HostScanner {
   }) async* {
     final int lastValidSubnet =
         validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
-    final List<Future<SendableActivateHost?>> activeHostsFuture = [];
-    final StreamController<SendableActivateHost> activeHostsController =
-        StreamController<SendableActivateHost>();
+    final List<Future<SendableActiveHost?>> activeHostsFuture = [];
+    final StreamController<SendableActiveHost> activeHostsController =
+        StreamController<SendableActiveHost>();
 
     for (int i = firstHostId; i <= lastValidSubnet; i++) {
       activeHostsFuture.add(
@@ -72,9 +72,9 @@ class HostScanner {
     }
 
     int i = 0;
-    for (final Future<SendableActivateHost?> host in activeHostsFuture) {
+    for (final Future<SendableActiveHost?> host in activeHostsFuture) {
       i++;
-      final SendableActivateHost? tempHost = await host;
+      final SendableActiveHost? tempHost = await host;
 
       progressCallback
           ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
@@ -85,10 +85,10 @@ class HostScanner {
       yield tempHost;
     }
   }
-    static Future<SendableActivateHost?> _getHostFromPing({
+    static Future<SendableActiveHost?> _getHostFromPing({
     required String host,
     required int i,
-    required StreamController<SendableActivateHost> activeHostsController,
+    required StreamController<SendableActiveHost> activeHostsController,
     int timeoutInSeconds = 1,
   }) async {
     await for (final PingData pingData
@@ -97,7 +97,7 @@ class HostScanner {
       if (response != null) {
         final Duration? time = response.time;
         if (time != null) {
-          final tempSendableActivateHost = SendableActivateHost(host, pingData);
+          final tempSendableActivateHost = SendableActiveHost(host, pingData);
           activeHostsController.add(tempSendableActivateHost);
           return tempSendableActivateHost;
         }
@@ -152,11 +152,11 @@ class HostScanner {
         resultsInAddressAscendingOrder.toString(),
       ]);
       await for (final message in  isolateManager.onMessage.asBroadcastStream()){
-        if (message is SendableActivateHost) {
+        if (message is SendableActiveHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
           
-         final activeHostFound = ActiveHost.fromSendableActiveHost(sendableActivateHost: message);
+         final activeHostFound = ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
          await activeHostFound.resolveInfo(); 
          yield activeHostFound;
         } else if (message is String && message == 'Done') {
@@ -186,7 +186,7 @@ class HostScanner {
 
       /// Will contain all the hosts that got discovered in the network, will
       /// be use inorder to cancel on dispose of the page.
-      final Stream<SendableActivateHost> hostsDiscoveredInNetwork =
+      final Stream<SendableActiveHost> hostsDiscoveredInNetwork =
           HostScanner.getAllSendablePingableDevices(
         subnetIsolate,
         firstHostId: firstSubnetIsolate,
@@ -195,7 +195,7 @@ class HostScanner {
         resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
       );
 
-      await for (final SendableActivateHost activeHostFound in hostsDiscoveredInNetwork) {
+      await for (final SendableActiveHost activeHostFound in hostsDiscoveredInNetwork) {
         channel.sendResult(activeHostFound);
       }
       channel.sendResult('Done');
