@@ -20,22 +20,18 @@ jobs:
 
       - name: Install dependencies
         run: dart pub get
-        working-directory: ./network_tools
-  
-      - name: Install coverage tools
-        run: dart pub global activate coverage
-
+      
       - name: Analyze project source
         run: dart analyze --fatal-infos 
-        working-directory: ./network_tools
 
       - name: Run tests
         run: dart test --coverage="coverage"
-        working-directory: ./network_tools
+
+      - name: Install coverage tools
+        run: dart pub global activate coverage
 
       - name: Format Coverage
         run: $HOME/.pub-cache/bin/format_coverage --lcov --in=coverage --out=coverage/coverage.lcov --report-on=lib
-        working-directory: ./network_tools
 
       - name: Setup Pub Credentials
         shell: bash
@@ -49,15 +45,13 @@ jobs:
 
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
-        working-directory: ./network_tools
 
       - name: Publish Package
         run: dart pub publish -f
-        working-directory: ./network_tools
       
       - name: Upload Coverage to CodeCov
         uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
-          file: ./network_tools/coverage/coverage.lcov
+          file: ./coverage/coverage.lcov
           
