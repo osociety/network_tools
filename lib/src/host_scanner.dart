@@ -41,7 +41,8 @@ class HostScanner {
     );
     await for (final sendableActiveHost in stream) {
       final activeHost = ActiveHost.fromSendableActiveHost(
-          sendableActiveHost: sendableActiveHost);
+        sendableActiveHost: sendableActiveHost,
+      );
 
       await activeHost.resolveInfo();
 
