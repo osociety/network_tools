@@ -2,7 +2,7 @@
 
 ## 3.2.3
 
-1. Upgraded dependencies and improved pub score.
+1. Upgraded dependencies and improved pub score, moved network_tools_flutter to new repo
 
 ## 3.2.2
 
