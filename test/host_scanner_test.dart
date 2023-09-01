@@ -1,10 +1,21 @@
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
 void main() {
+  final log = Logger("host_scan_test");
+  Logger.root.level = Level.FINE;
+  Logger.root.onRecord.listen((record) {
+    print(
+      '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
+    );
+  });
+
   int port = 0;
   String myOwnHost = "0.0.0.0";
+
   String interfaceIp = myOwnHost.substring(0, myOwnHost.lastIndexOf('.'));
   late ServerSocket server;
   // Fetching interfaceIp and hostIp
@@ -14,6 +25,7 @@ void main() {
     server =
         await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
     port = server.port;
+    log.fine("Opened port in this machine at $port");
     final interfaceList =
         await NetworkInterface.list(); //will give interface list
     if (interfaceList.isNotEmpty) {
@@ -25,6 +37,9 @@ void main() {
             .address; //gives IP address of GHA local machine.
         myOwnHost = address;
         interfaceIp = address.substring(0, address.lastIndexOf('.'));
+        log.fine(
+          'Fetched own host as $myOwnHost and interface address as $interfaceIp',
+        );
       }
     }
   });

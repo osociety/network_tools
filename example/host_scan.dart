@@ -15,6 +15,7 @@ void main() {
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
   final String subnet = address.substring(0, address.lastIndexOf('.'));
+  log.fine("Starting scan on subnet $subnet");
 
   // You can set [firstHostId] and scan will start from this host in the network.
   // Similarly set [lastHostId] and scan will end at this host in the network.
