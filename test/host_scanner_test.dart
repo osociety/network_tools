@@ -42,6 +42,7 @@ void main() {
         final hostId = int.parse(
           address.substring(address.lastIndexOf('.') + 1, address.length),
         );
+        // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
         firstHostId = hostId <= 1 ? hostId : hostId - 1;
         lastHostId = hostId >= 254 ? hostId : hostId + 1;
         log.fine(
@@ -60,7 +61,6 @@ void main() {
           HostScanner.getAllPingableDevices(
             interfaceIp,
             timeoutInSeconds: 3,
-            // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
             firstHostId: firstHostId,
             lastHostId: lastHostId,
           ),
@@ -71,7 +71,6 @@ void main() {
           HostScanner.getAllPingableDevices(
             interfaceIp,
             timeoutInSeconds: 3,
-            // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
             firstHostId: firstHostId,
             lastHostId: lastHostId,
           ),
@@ -88,7 +87,6 @@ void main() {
           HostScanner.getAllPingableDevicesAsync(
             interfaceIp,
             timeoutInSeconds: 3,
-            // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
             firstHostId: firstHostId,
             lastHostId: lastHostId,
           ),
@@ -99,7 +97,6 @@ void main() {
           HostScanner.getAllPingableDevicesAsync(
             interfaceIp,
             timeoutInSeconds: 3,
-            // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
             firstHostId: firstHostId,
             lastHostId: lastHostId,
           ),
@@ -116,7 +113,6 @@ void main() {
           HostScanner.scanDevicesForSinglePort(
             interfaceIp,
             port,
-            // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
             firstHostId: firstHostId,
             lastHostId: lastHostId,
           ), // hence some host will be emitted
