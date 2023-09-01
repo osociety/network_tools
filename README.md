@@ -15,6 +15,10 @@ Partly Work:
 
 1. Mdns Scanner
 
+## Network Tools Flutter package
+
+Please check [network_tools_flutter](https://github.com/osociety/network_tools_flutter) package for extensive support to features on different platforms.
+
 ## Import package in your app
 
 ```dart

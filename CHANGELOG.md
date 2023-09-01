@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.2.3
+
+1. Upgraded dependencies and improved pub score.
+
 ## 3.2.2
 
 1. Supporting changes for network_tools_flutter

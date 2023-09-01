@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
-import 'package:isolate_manager/isolate_manager.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
 import 'package:network_tools/src/models/sendable_active_host.dart';
@@ -31,16 +31,25 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    final stream = getAllSendablePingableDevices(subnet, firstHostId: firstHostId, lastHostId: lastHostId, 
-   timeoutInSeconds: timeoutInSeconds, progressCallback: progressCallback, resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,);
-   await for (final sendableActiveHost in stream){
-    final activeHost = ActiveHost.fromSendableActiveHost(sendableActiveHost: sendableActiveHost);
+    final stream = getAllSendablePingableDevices(
+      subnet,
+      firstHostId: firstHostId,
+      lastHostId: lastHostId,
+      timeoutInSeconds: timeoutInSeconds,
+      progressCallback: progressCallback,
+      resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+    );
+    await for (final sendableActiveHost in stream) {
+      final activeHost = ActiveHost.fromSendableActiveHost(
+        sendableActiveHost: sendableActiveHost,
+      );
 
-    await activeHost.resolveInfo();
-         
-    yield activeHost; 
-   }
+      await activeHost.resolveInfo();
+
+      yield activeHost;
+    }
   }
+
   /// Same as [getAllPingableDevices] but can be called or run inside isolate.
   static Stream<SendableActiveHost> getAllSendablePingableDevices(
     String subnet, {
@@ -85,7 +94,8 @@ class HostScanner {
       yield tempHost;
     }
   }
-    static Future<SendableActiveHost?> _getHostFromPing({
+
+  static Future<SendableActiveHost?> _getHostFromPing({
     required String host,
     required int i,
     required StreamController<SendableActiveHost> activeHostsController,
@@ -105,7 +115,6 @@ class HostScanner {
     }
     return null;
   }
-
 
   static int validateAndGetLastValidSubnet(
     String subnet,
@@ -133,73 +142,75 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-
     const int scanRangeForIsolate = 51;
     final int lastValidSubnet =
         validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
     for (int i = firstHostId;
         i <= lastValidSubnet;
         i += scanRangeForIsolate + 1) {
-      final isolateManager =
-          IsolateManager.createOwnIsolate(_startSearchingDevices);
       final limit = min(i + scanRangeForIsolate, lastValidSubnet);
       log.fine('Scanning from $i to $limit');
-      isolateManager.sendMessage(<String>[
-        subnet,
-        i.toString(),
-        limit.toString(),
-        timeoutInSeconds.toString(),
-        resultsInAddressAscendingOrder.toString(),
-      ]);
-      await for (final message in  isolateManager.onMessage.asBroadcastStream()){
-        if (message is SendableActiveHost) {
+
+      final receivePort = ReceivePort();
+      final isolate =
+          await Isolate.spawn(_startSearchingDevices, receivePort.sendPort);
+
+      await for (final message in receivePort.asBroadcastStream()) {
+        if (message is SendPort) {
+          message.send(<String>[
+            subnet,
+            i.toString(),
+            limit.toString(),
+            timeoutInSeconds.toString(),
+            resultsInAddressAscendingOrder.toString(),
+          ]);
+        } else if (message is SendableActiveHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-          
-         final activeHostFound = ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
-         await activeHostFound.resolveInfo(); 
-         yield activeHostFound;
+
+          final activeHostFound =
+              ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
+          await activeHostFound.resolveInfo();
+          yield activeHostFound;
         } else if (message is String && message == 'Done') {
-          isolateManager.stop();
+          isolate.kill();
         }
-      } 
+      }
     }
   }
 
   /// Will search devices in the network inside new isolate
   @pragma('vm:entry-point')
-  static Future<void> _startSearchingDevices(dynamic params) async {
-    final channel = IsolateManagerController(params);
-    channel.onIsolateMessage.listen((message) async {
-      List<String> paramsListString = [];
+  static Future<void> _startSearchingDevices(SendPort sendPort) async {
+    final port = ReceivePort();
+    sendPort.send(port.sendPort);
+
+    await for (final message in port.asBroadcastStream()) {
       if (message is List<String>) {
-        paramsListString = message;
-      } else {
-        return;
+        final String subnetIsolate = message[0];
+        final int firstSubnetIsolate = int.parse(message[1]);
+        final int lastSubnetIsolate = int.parse(message[2]);
+        final int timeoutInSeconds = int.parse(message[3]);
+        final bool resultsInAddressAscendingOrder = message[4] == "true";
+
+        /// Will contain all the hosts that got discovered in the network, will
+        /// be use inorder to cancel on dispose of the page.
+        final Stream<SendableActiveHost> hostsDiscoveredInNetwork =
+            HostScanner.getAllSendablePingableDevices(
+          subnetIsolate,
+          firstHostId: firstSubnetIsolate,
+          lastHostId: lastSubnetIsolate,
+          timeoutInSeconds: timeoutInSeconds,
+          resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+        );
+
+        await for (final SendableActiveHost activeHostFound
+            in hostsDiscoveredInNetwork) {
+          sendPort.send(activeHostFound);
+        }
+        sendPort.send('Done');
       }
-
-      final String subnetIsolate = paramsListString[0];
-      final int firstSubnetIsolate = int.parse(paramsListString[1]);
-      final int lastSubnetIsolate = int.parse(paramsListString[2]);
-      final int timeoutInSeconds = int.parse(paramsListString[3]);
-      final bool resultsInAddressAscendingOrder = paramsListString[4] == "true";
-
-      /// Will contain all the hosts that got discovered in the network, will
-      /// be use inorder to cancel on dispose of the page.
-      final Stream<SendableActiveHost> hostsDiscoveredInNetwork =
-          HostScanner.getAllSendablePingableDevices(
-        subnetIsolate,
-        firstHostId: firstSubnetIsolate,
-        lastHostId: lastSubnetIsolate,
-        timeoutInSeconds: timeoutInSeconds,
-        resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
-      );
-
-      await for (final SendableActiveHost activeHostFound in hostsDiscoveredInNetwork) {
-        channel.sendResult(activeHostFound);
-      }
-      channel.sendResult('Done');
-    });
+    }
   }
 
   /// Scans for all hosts that have the specific port that was given.
