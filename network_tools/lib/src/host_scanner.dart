@@ -31,16 +31,24 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    final stream = getAllSendablePingableDevices(subnet, firstHostId: firstHostId, lastHostId: lastHostId, 
-   timeoutInSeconds: timeoutInSeconds, progressCallback: progressCallback, resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,);
-   await for (final sendableActiveHost in stream){
-    final activeHost = ActiveHost.fromSendableActiveHost(sendableActiveHost: sendableActiveHost);
+    final stream = getAllSendablePingableDevices(
+      subnet,
+      firstHostId: firstHostId,
+      lastHostId: lastHostId,
+      timeoutInSeconds: timeoutInSeconds,
+      progressCallback: progressCallback,
+      resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+    );
+    await for (final sendableActiveHost in stream) {
+      final activeHost = ActiveHost.fromSendableActiveHost(
+          sendableActiveHost: sendableActiveHost);
 
-    await activeHost.resolveInfo();
-         
-    yield activeHost; 
-   }
+      await activeHost.resolveInfo();
+
+      yield activeHost;
+    }
   }
+
   /// Same as [getAllPingableDevices] but can be called or run inside isolate.
   static Stream<SendableActiveHost> getAllSendablePingableDevices(
     String subnet, {
@@ -85,7 +93,8 @@ class HostScanner {
       yield tempHost;
     }
   }
-    static Future<SendableActiveHost?> _getHostFromPing({
+
+  static Future<SendableActiveHost?> _getHostFromPing({
     required String host,
     required int i,
     required StreamController<SendableActiveHost> activeHostsController,
@@ -105,7 +114,6 @@ class HostScanner {
     }
     return null;
   }
-
 
   static int validateAndGetLastValidSubnet(
     String subnet,
@@ -133,7 +141,6 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-
     const int scanRangeForIsolate = 51;
     final int lastValidSubnet =
         validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
@@ -151,18 +158,20 @@ class HostScanner {
         timeoutInSeconds.toString(),
         resultsInAddressAscendingOrder.toString(),
       ]);
-      await for (final message in  isolateManager.onMessage.asBroadcastStream()){
+      await for (final message
+          in isolateManager.onMessage.asBroadcastStream()) {
         if (message is SendableActiveHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-          
-         final activeHostFound = ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
-         await activeHostFound.resolveInfo(); 
-         yield activeHostFound;
+
+          final activeHostFound =
+              ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
+          await activeHostFound.resolveInfo();
+          yield activeHostFound;
         } else if (message is String && message == 'Done') {
           isolateManager.stop();
         }
-      } 
+      }
     }
   }
 
@@ -195,7 +204,8 @@ class HostScanner {
         resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
       );
 
-      await for (final SendableActiveHost activeHostFound in hostsDiscoveredInNetwork) {
+      await for (final SendableActiveHost activeHostFound
+          in hostsDiscoveredInNetwork) {
         channel.sendResult(activeHostFound);
       }
       channel.sendResult('Done');
