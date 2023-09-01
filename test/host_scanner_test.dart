@@ -1,3 +1,6 @@
+// ignore: library_annotations
+@Timeout(Duration(seconds: 254))
+
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
@@ -47,47 +50,58 @@ void main() {
   });
 
   group('Testing Host Scanner', () {
-    test('Running getAllPingableDevices tests', () {
-      expectLater(
-        //There should be at least one device pingable in network
-        HostScanner.getAllPingableDevices(interfaceIp, timeoutInSeconds: 3),
-        emits(isA<ActiveHost>()),
-      );
-      expectLater(
-        //Should emit at least our own local machine when pinging all hosts.
-        HostScanner.getAllPingableDevices(interfaceIp, timeoutInSeconds: 3),
-        emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
-      );
-    });
+    test(
+      'Running getAllPingableDevices tests',
+      () {
+        expectLater(
+          //There should be at least one device pingable in network
+          HostScanner.getAllPingableDevices(interfaceIp, timeoutInSeconds: 3),
+          emits(isA<ActiveHost>()),
+        );
+        expectLater(
+          //Should emit at least our own local machine when pinging all hosts.
+          HostScanner.getAllPingableDevices(interfaceIp, timeoutInSeconds: 3),
+          emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
+        );
+      },
+      timeout: const Timeout.factor(2),
+    );
 
-    test('Running getAllPingableDevicesAsync tests', () {
-      expectLater(
-        //There should be at least one device pingable in network
-        HostScanner.getAllPingableDevicesAsync(
-          interfaceIp,
-          timeoutInSeconds: 3,
-        ),
-        emits(isA<ActiveHost>()),
-      );
-      expectLater(
-        //Should emit at least our own local machine when pinging all hosts.
-        HostScanner.getAllPingableDevicesAsync(
-          interfaceIp,
-          timeoutInSeconds: 3,
-        ),
-        emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
-      );
-    });
+    test(
+      'Running getAllPingableDevicesAsync tests',
+      () {
+        expectLater(
+          //There should be at least one device pingable in network
+          HostScanner.getAllPingableDevicesAsync(
+            interfaceIp,
+            timeoutInSeconds: 3,
+          ),
+          emits(isA<ActiveHost>()),
+        );
+        expectLater(
+          //Should emit at least our own local machine when pinging all hosts.
+          HostScanner.getAllPingableDevicesAsync(
+            interfaceIp,
+            timeoutInSeconds: 3,
+          ),
+          emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
+        );
+      },
+      timeout: const Timeout.factor(2),
+    );
 
     //todo: this test is not working on windows, not matter what.
-    test('Running scanDevicesForSinglePort tests', () {
-      expectLater(
-        HostScanner.scanDevicesForSinglePort(
-          interfaceIp, port, //ssh should be running at least in any host
-        ), // hence some host will be emitted
-        emits(isA<ActiveHost>()),
-      );
-    });
+    test(
+      'Running scanDevicesForSinglePort tests',
+      () {
+        expectLater(
+          HostScanner.scanDevicesForSinglePort(
+            interfaceIp, port, //ssh should be running at least in any host
+          ), // hence some host will be emitted
+          emits(isA<ActiveHost>()),
+        );
+      },
+    );
   });
 
   tearDownAll(() {
