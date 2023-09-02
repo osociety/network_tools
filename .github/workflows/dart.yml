@@ -7,7 +7,7 @@ name: Dart
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
   pull_request:
     branches: [ "main", "dev" ]
 
@@ -48,6 +48,11 @@ jobs:
       - name: Run tests
         run: dart test --coverage="coverage"
 
+  coverage:
+    needs: build
+    if: contains(github.ref, 'dev') || contains(github.ref, 'main')
+    runs-on: ubuntu-latest
+    steps:
       - name: Install coverage tools
         run: dart pub global activate coverage
       
