@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.2.4
+
+1. Bug fixes and improvements. Better code coverage reports.
+
 ## 3.2.3
 
 1. Upgraded dependencies and improved pub score, moved network_tools_flutter to new repo
