@@ -105,7 +105,6 @@ void main() {
       },
     );
 
-    //todo: this test is not working on windows, not matter what.
     test(
       'Running scanDevicesForSinglePort tests',
       () {
