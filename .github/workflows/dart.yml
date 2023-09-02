@@ -51,14 +51,14 @@ jobs:
       - name: Install coverage tools
         if: contains(github.ref, 'dev') || contains(github.ref, 'main')
         run: dart pub global activate coverage
-      
+        
       - name: Format Coverage
         if: contains(github.ref, 'dev') || contains(github.ref, 'main')
         run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/lcov.info -i ./coverage
-        
+          
       - name: Upload Coverage to CodeCov
-        uses: codecov/codecov-action@v3
         if: contains(github.ref, 'dev') || contains(github.ref, 'main')
+        uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: coverage/coverage.lcov
