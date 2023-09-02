@@ -48,18 +48,16 @@ jobs:
       - name: Run tests
         run: dart test --coverage="coverage"
 
-  coverage:
-    needs: build
-    if: contains(github.ref, 'dev') || contains(github.ref, 'main')
-    runs-on: ubuntu-latest
-    steps:
       - name: Install coverage tools
+        if: contains(github.ref, 'dev') || contains(github.ref, 'main')
         run: dart pub global activate coverage
-      
+        
       - name: Format Coverage
+        if: contains(github.ref, 'dev') || contains(github.ref, 'main')
         run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/lcov.info -i ./coverage
         
       - name: Upload Coverage to CodeCov
+        if: contains(github.ref, 'dev') || contains(github.ref, 'main')
         uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
