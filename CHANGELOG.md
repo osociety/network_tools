@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.2.5
+
+1. Bug fix for iOS listing all results in HostScanner
+
 ## 3.2.4
 
 1. Bug fixes and improvements. Better code coverage reports.
