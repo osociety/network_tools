@@ -104,7 +104,8 @@ class HostScanner {
     await for (final PingData pingData
         in Ping(host, count: 1, timeout: timeoutInSeconds).stream) {
       final PingResponse? response = pingData.response;
-      if (response != null) {
+      final PingError? pingError = pingData.error;
+      if (response != null && pingError == null) {
         final Duration? time = response.time;
         if (time != null) {
           final tempSendableActivateHost = SendableActiveHost(host, pingData);

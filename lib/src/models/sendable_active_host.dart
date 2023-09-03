@@ -4,4 +4,9 @@ class SendableActiveHost {
   SendableActiveHost(this.address, this.pingData);
   final String address;
   final PingData pingData;
+
+  @override
+  String toString() {
+    return 'Address: $address, pingData: $pingData';
+  }
 }
