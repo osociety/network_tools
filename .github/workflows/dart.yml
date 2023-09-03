@@ -44,18 +44,15 @@ jobs:
       # package:test for this step to succeed. Note that Flutter projects will
       # want to change this to 'flutter test'.
       - name: Run tests
-        run: dart test --coverage="coverage"
+        run: dart test --coverage="./coverage"
 
       - name: Install coverage tools
-        if: contains(github.ref, 'dev') || contains(github.ref, 'main')
         run: dart pub global activate coverage
         
       - name: Format Coverage
-        if: contains(github.ref, 'dev') || contains(github.ref, 'main')
-        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/lcov.info -i ./coverage
+        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
         
       - name: Upload Coverage to CodeCov
-        if: contains(github.ref, 'dev') || contains(github.ref, 'main')
         uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
