@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:test/test.dart';
@@ -10,9 +9,9 @@ void main() {
 
   // Logger.root.level = Level.FINE;
   // Logger.root.onRecord.listen((record) {
-  //   print(
-  //     '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
-  //   );
+  //   // print(
+  //   //   '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
+  //   // );
   // });
 
   int port = 0;
