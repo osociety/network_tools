@@ -13,6 +13,7 @@ class ARPTable {
     if (resolved) return arpTable[address];
     final result = await Process.run('arp', ['-a']);
     final entries = const LineSplitter().convert(result.stdout.toString());
+    arpLogger.fine(entries);
     RegExp? pattern;
     if (Platform.isMacOS) {
       pattern = RegExp(
