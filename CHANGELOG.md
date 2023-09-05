@@ -1,6 +1,6 @@
 # Change Log
 
-## 3.2.5
+## 3.2.6
 
 1. Added mac address support on Desktop (Linux, macOS, and Windows)
 
