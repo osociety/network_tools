@@ -5,9 +5,12 @@
 Network Tools Supported
 
 1. Host Scanner
+   1. Search all devices on subnet
+   2. Get mac address of devices on Linux, macOS and Windows.
+   3. Search devices for a specific port open.
 
 2. Port Scanner
-   1. Single
+   1. Single Port scan
    2. Range
    3. Custom
 
