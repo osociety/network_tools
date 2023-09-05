@@ -218,6 +218,6 @@ class ActiveHost extends Comparable<ActiveHost> {
   }
 
   Future<String> toStringFull() async {
-    return 'Address: $address, MAC: ${(await arpData)!.macAddress}, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
+    return 'Address: $address, MAC: ${(await arpData)?.macAddress}, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
   }
 }
