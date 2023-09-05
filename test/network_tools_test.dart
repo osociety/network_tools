@@ -9,7 +9,6 @@ void main() {
 
   // Logger.root.level = Level.FINE;
   // Logger.root.onRecord.listen((record) {
-  //   // ignore: avoid_print
   //   // print(
   //   //   '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
   //   // );
