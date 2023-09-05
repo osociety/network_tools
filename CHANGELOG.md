@@ -2,6 +2,10 @@
 
 ## 3.2.5
 
+1. Added mac address support on Desktop (Linux, macOS, and Windows)
+
+## 3.2.5
+
 1. Bug fix for iOS listing all results in HostScanner
 
 ## 3.2.4
