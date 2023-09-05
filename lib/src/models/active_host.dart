@@ -1,4 +1,6 @@
 import 'package:dart_ping/dart_ping.dart';
+import 'package:network_tools/src/models/arp_data.dart';
+import 'package:network_tools/src/models/arp_table.dart';
 import 'package:network_tools/src/models/mdns_info.dart';
 import 'package:network_tools/src/models/open_port.dart';
 import 'package:network_tools/src/models/sendable_active_host.dart';
@@ -46,6 +48,8 @@ class ActiveHost extends Comparable<ActiveHost> {
     }
 
     deviceName = setDeviceName();
+    // fetch entry from in memory arp table
+    arpData = setARPData();
   }
   factory ActiveHost.buildWithAddress({
     required String address,
@@ -84,13 +88,8 @@ class ActiveHost extends Comparable<ActiveHost> {
     );
   }
 
-  Future<void> resolveInfo() async {
-    await deviceName;
-    await mdnsInfo;
-    await hostName;
-  }
-
   static const generic = 'Generic Device';
+
   InternetAddress internetAddress;
 
   /// The device specific number in the ip address. In IPv4 numbers after the
@@ -105,6 +104,10 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   /// Mdns information of this device
   late Future<MdnsInfo?> mdnsInfo;
+
+  /// Resolve ARP data for this host.
+  /// only supported on Linux, Macos and Windows otherwise null
+  late Future<ARPData?> arpData;
 
   /// List of all the open port of this device
   List<OpenPort> openPorts;
@@ -165,6 +168,17 @@ class ActiveHost extends Comparable<ActiveHost> {
     return null;
   }
 
+  Future<void> resolveInfo() async {
+    await deviceName;
+    await mdnsInfo;
+    await hostName;
+    await arpData;
+  }
+
+  Future<ARPData?> setARPData() async {
+    return ARPTable.entryFor(address);
+  }
+
   /// Try to find the mdns name of this device, if not exist mdns name will
   /// be null
   /// TODO: search mdns name for each device
@@ -204,6 +218,6 @@ class ActiveHost extends Comparable<ActiveHost> {
   }
 
   Future<String> toStringFull() async {
-    return 'Address: $address, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
+    return 'Address: $address, MAC: ${(await arpData)!.macAddress}, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
   }
 }

@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:test/test.dart';
@@ -8,12 +8,12 @@ import 'package:universal_io/io.dart';
 void main() {
   final log = Logger("host_scan_test");
 
-  // Logger.root.level = Level.FINE;
-  // Logger.root.onRecord.listen((record) {
-  //   print(
-  //     '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
-  //   );
-  // });
+  Logger.root.level = Level.FINE;
+  Logger.root.onRecord.listen((record) {
+    print(
+      '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
+    );
+  });
 
   int port = 0;
   int firstHostId = 0;
