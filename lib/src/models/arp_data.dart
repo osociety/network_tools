@@ -17,10 +17,13 @@ class ARPData {
 
   @override
   String toString() {
-    //TODO: add platform specific format
     if (Platform.isMacOS) {
       return '$host ($iPAddress) at $macAddress on $interfaceName ifscope [$interfaceType]';
+    } else if (Platform.isLinux) {
+      return '$host ($iPAddress) at $macAddress [$interfaceType] on $interfaceName';
+    } else if (Platform.isWindows) {
+      return 'Internet Address: $iPAddress, Physical Address: $macAddress, Type: $interfaceType';
     }
-    return '$host ($iPAddress) at $macAddress on $interfaceName ifscope [$interfaceType]';
+    return '$host ($iPAddress) at $macAddress on $interfaceName type [$interfaceType]';
   }
 }

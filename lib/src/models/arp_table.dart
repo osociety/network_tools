@@ -13,7 +13,6 @@ class ARPTable {
     if (resolved) return arpTable[address];
     final result = await Process.run('arp', ['-a']);
     final entries = const LineSplitter().convert(result.stdout.toString());
-    arpLogger.fine(entries);
     RegExp? pattern;
     if (Platform.isMacOS) {
       pattern = RegExp(
@@ -24,23 +23,26 @@ class ARPTable {
         r'(?<host>[\w.?]*)\s\((?<ip>.*)\)\sat\s(?<mac>.*)\s\[(?<typ>.*)\]\son\s(?<intf>\w+)',
       );
     } else {
-      //todo: implement windows regex
-      return null;
+      pattern = RegExp(r'(?<ip>.*)\s(?<mac>.*)\s(?<typ>.*)');
     }
+
     for (final entry in entries) {
-      arpLogger.fine("Found entry: $entry");
       final match = pattern.firstMatch(entry);
       if (match != null) {
         final arpData = ARPData(
-          host: match.namedGroup("host"),
+          host: match.groupNames.contains('host')
+              ? match.namedGroup("host")
+              : null,
           iPAddress: match.namedGroup("ip"),
           macAddress: match.namedGroup("mac"),
-          interfaceName: match.namedGroup("intf"),
+          interfaceName: match.groupNames.contains('intf')
+              ? match.namedGroup("intf")
+              : null,
           interfaceType: match.namedGroup("typ"),
         );
         final key = arpData.iPAddress;
         if (key != null) {
-          arpLogger.fine("Adding entry to table -> $entry");
+          arpLogger.fine("Adding entry to table -> $arpData");
           arpTable[key] = arpData;
         }
       }
