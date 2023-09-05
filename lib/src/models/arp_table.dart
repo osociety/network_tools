@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:logging/logging.dart';
 import 'package:network_tools/src/models/arp_data.dart';
 
 class ARPTable {
+  static final arpLogger = Logger("arp-table-logger");
   static final arpTable = <String, ARPData>{};
   static bool resolved = false;
 
@@ -25,6 +27,7 @@ class ARPTable {
       return null;
     }
     for (final entry in entries) {
+      arpLogger.fine("Found entry: $entry");
       final match = pattern.firstMatch(entry);
       if (match != null) {
         final arpData = ARPData(
@@ -36,6 +39,7 @@ class ARPTable {
         );
         final key = arpData.iPAddress;
         if (key != null) {
+          arpLogger.fine("Adding entry to table -> $entry");
           arpTable[key] = arpData;
         }
       }
