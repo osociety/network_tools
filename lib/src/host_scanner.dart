@@ -156,7 +156,7 @@ class HostScanner {
       final isolate =
           await Isolate.spawn(_startSearchingDevices, receivePort.sendPort);
 
-      await for (final message in receivePort.asBroadcastStream()) {
+      await for (final message in receivePort) {
         if (message is SendPort) {
           message.send(<String>[
             subnet,
@@ -168,14 +168,14 @@ class HostScanner {
         } else if (message is SendableActiveHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-
+          // print('Sendable host: ${message.address}');
           final activeHostFound =
               ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
           await activeHostFound.resolveInfo();
-          log.fine("Found host: ${await activeHostFound.toStringFull()}");
           yield activeHostFound;
         } else if (message is String && message == 'Done') {
           isolate.kill();
+          break;
         }
       }
     }
@@ -187,7 +187,7 @@ class HostScanner {
     final port = ReceivePort();
     sendPort.send(port.sendPort);
 
-    await for (final message in port.asBroadcastStream()) {
+    await for (final message in port) {
       if (message is List<String>) {
         final String subnetIsolate = message[0];
         final int firstSubnetIsolate = int.parse(message[1]);
