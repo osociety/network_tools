@@ -10,8 +10,6 @@ environment:
 dependencies:
   # Multi-platform network ping utility.
   dart_ping: ^9.0.0
-  # Deal with internationalized/localized messages and more.
-  intl: ^0.18.0
   # Debugging and error logging.
   logging: ^1.2.0
   # Performing mDNS queries (e.g. Bonjour, Avahi).

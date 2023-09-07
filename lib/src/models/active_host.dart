@@ -157,7 +157,7 @@ class ActiveHost extends Comparable<ActiveHost> {
     } catch (e) {
       if (e is SocketException &&
           e.osError != null &&
-          e.osError!.message == 'Name or service not known') {
+          (e.osError!.message == 'Name or service not known')) {
         // Some devices does not have host name and the reverse search will just
         // throw exception.
         // We don't need to print this crash as it is by design.
@@ -169,10 +169,10 @@ class ActiveHost extends Comparable<ActiveHost> {
   }
 
   Future<void> resolveInfo() async {
+    await arpData;
     await deviceName;
     await mdnsInfo;
     await hostName;
-    await arpData;
   }
 
   Future<ARPData?> setARPData() async {
