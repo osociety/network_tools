@@ -168,7 +168,6 @@ class HostScanner {
         } else if (message is SendableActiveHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-          // print('Sendable host: ${message.address}');
           final activeHostFound =
               ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
           await activeHostFound.resolveInfo();
