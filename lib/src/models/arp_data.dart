@@ -1,5 +1,9 @@
 import 'dart:io';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'arp_data.g.dart';
+
+@JsonSerializable()
 class ARPData {
   ARPData({
     required this.host,
@@ -8,12 +12,16 @@ class ARPData {
     required this.interfaceName,
     required this.interfaceType,
   });
+  factory ARPData.fromJson(Map<String, dynamic> json) =>
+      _$ARPDataFromJson(json);
 
   final String? host;
   final String? iPAddress;
   final String? macAddress;
   final String? interfaceName;
   final String? interfaceType;
+
+  Map<String, dynamic> toJson() => _$ARPDataToJson(this);
 
   @override
   String toString() {

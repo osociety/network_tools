@@ -1,7 +1,5 @@
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/network_tools.dart';
-import 'package:network_tools/src/models/arp_data.dart';
-import 'package:network_tools/src/models/arp_table.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
@@ -29,7 +27,6 @@ class ActiveHost extends Comparable<ActiveHost> {
     } else {
       hostId = '-1';
     }
-
     pingData ??= getPingData(tempAddress);
     _pingData = pingData;
 
@@ -46,6 +43,7 @@ class ActiveHost extends Comparable<ActiveHost> {
     }
 
     deviceName = setDeviceName();
+
     // fetch entry from in memory arp table
     arpData = setARPData();
 
@@ -73,7 +71,6 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   factory ActiveHost.fromSendableActiveHost({
     required SendableActiveHost sendableActiveHost,
-    List<OpenPort> openPorts = const [],
     MdnsInfo? mdnsInfo,
   }) {
     final InternetAddress? internetAddressTemp =
@@ -83,7 +80,7 @@ class ActiveHost extends Comparable<ActiveHost> {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
-      openPorts: openPorts,
+      openPorts: [],
       pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
     );

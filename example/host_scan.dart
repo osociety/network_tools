@@ -10,7 +10,9 @@ void main() {
   });
   final log = Logger("host_scan_example");
 
-  const String address = '192.168.1.1';
+  const String address = '192.168.0.1';
+  final interface = await NetInterface.firstInterface();
+  address = interface.networkId;
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
   final String subnet = address.substring(0, address.lastIndexOf('.'));
