@@ -1,5 +1,10 @@
 # Change Log
 
+## 3.2.7
+
+1. Removed example folder and added pubignore.
+2. Added vendor details but database looks old. 
+
 ## 3.2.6
 
 1. Added mac address support on Desktop (Linux, macOS, and Windows)
