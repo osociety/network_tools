@@ -1,13 +1,26 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 3.2.6
+version: 3.2.7
 issue_tracker: https://github.com/osociety/network_tools/issues
 repository: https://github.com/osociety/network_tools
 
 environment:
   sdk: ">=2.17.6 <4.0.0"
 
+topics:
+  - network
+  - ping
+  - arp
+  - port
+  - scanner
+
+funding:
+  - https://liberapay.com/OpenSociety/donate
+  - https://ko-fi.com/fs0c13ty
+  
 dependencies:
+  # A dart csv to list converter.
+  csv: ^5.0.2
   # Multi-platform network ping utility.
   dart_ping: ^9.0.0
   # Debugging and error logging.

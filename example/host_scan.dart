@@ -1,5 +1,5 @@
 import 'package:logging/logging.dart';
-import 'package:network_tools/network_tools.dart';
+import '../lib/network_tools.dart';
 
 void main() {
   Logger.root.level = Level.FINE;
@@ -28,7 +28,7 @@ void main() {
   );
 
   stream.listen(
-    (ActiveHost host) async {
+    (final host) async {
       //Same host can be emitted multiple times
       //Use Set<ActiveHost> instead of List<ActiveHost>
       log.fine('Found device: ${await host.toStringFull()}');
