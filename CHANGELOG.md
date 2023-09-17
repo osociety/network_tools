@@ -7,8 +7,6 @@
 
 ## 3.2.6
 
-## 3.2.6
-
 1. Added mac address support on Desktop (Linux, macOS, and Windows)
 
 ## 3.2.5
