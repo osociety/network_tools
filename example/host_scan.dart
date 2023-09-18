@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
 import '../lib/network_tools.dart';
 
-void main() {
+void main() async {
   Logger.root.level = Level.FINE;
   Logger.root.onRecord.listen((record) {
     print(
@@ -10,12 +10,16 @@ void main() {
   });
   final log = Logger("host_scan_example");
 
-  const String address = '192.168.0.1';
-  final interface = await NetInterface.firstInterface();
-  address = interface.networkId;
+  String subnet = '192.168.0'; //Default network id for home networks
+
+  final interface = await NetInterface.localInterface();
+  final netId = interface?.networkId;
+  if (netId != null) {
+    subnet = netId;
+  }
+
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
-  final String subnet = address.substring(0, address.lastIndexOf('.'));
   log.fine("Starting scan on subnet $subnet");
 
   // You can set [firstHostId] and scan will start from this host in the network.
