@@ -1,20 +1,25 @@
-import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
-import 'package:network_tools/network_tools.dart';
+import '../lib/network_tools.dart';
 
-void main() {
+void main() async {
   Logger.root.level = Level.FINE;
   Logger.root.onRecord.listen((record) {
     print(
-      '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
+      '${record.time.toLocal()}: ${record.level.name}: ${record.loggerName}: ${record.message}',
     );
   });
   final log = Logger("host_scan_example");
 
-  const String address = '192.168.1.1';
+  String subnet = '192.168.0'; //Default network id for home networks
+
+  final interface = await NetInterface.localInterface();
+  final netId = interface?.networkId;
+  if (netId != null) {
+    subnet = netId;
+  }
+
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
-  final String subnet = address.substring(0, address.lastIndexOf('.'));
   log.fine("Starting scan on subnet $subnet");
 
   // You can set [firstHostId] and scan will start from this host in the network.
@@ -29,7 +34,7 @@ void main() {
   );
 
   stream.listen(
-    (ActiveHost host) async {
+    (final host) async {
       //Same host can be emitted multiple times
       //Use Set<ActiveHost> instead of List<ActiveHost>
       log.fine('Found device: ${await host.toStringFull()}');

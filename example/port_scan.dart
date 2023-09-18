@@ -1,12 +1,12 @@
-import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
 
 void main() {
+  final log = Logger("port-scan");
   Logger.root.level = Level.FINE;
   Logger.root.onRecord.listen((record) {
     print(
-      '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
+      '${record.time.toLocal()}: ${record.level.name}: ${record.loggerName}: ${record.message}',
     );
   });
 
@@ -30,7 +30,7 @@ void main() {
 
   stream2.listen(
     (activeHost) {
-      final OpenPort deviceWithOpenPort = activeHost.openPort[0];
+      final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
       if (deviceWithOpenPort.isOpen) {
         log.fine(
           'Found open port: ${deviceWithOpenPort.port} on ${activeHost.address}',
@@ -53,7 +53,7 @@ void main() {
     },
   ).listen(
     (activeHost) {
-      final OpenPort deviceWithOpenPort = activeHost.openPort[0];
+      final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
 
       if (deviceWithOpenPort.isOpen) {
         log.fine('Found open port: ${deviceWithOpenPort.port}');

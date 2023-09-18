@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
+import 'package:network_tools/src/device_info/arp_table.dart';
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
 import 'package:network_tools/src/models/sendable_active_host.dart';
@@ -31,6 +32,7 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
+    await ARPTable.buildTable();
     final stream = getAllSendablePingableDevices(
       subnet,
       firstHostId: firstHostId,
@@ -70,7 +72,6 @@ class HostScanner {
         _getHostFromPing(
           activeHostsController: activeHostsController,
           host: '$subnet.$i',
-          i: i,
           timeoutInSeconds: timeoutInSeconds,
         ),
       );
@@ -97,24 +98,35 @@ class HostScanner {
 
   static Future<SendableActiveHost?> _getHostFromPing({
     required String host,
-    required int i,
     required StreamController<SendableActiveHost> activeHostsController,
     int timeoutInSeconds = 1,
   }) async {
+    SendableActiveHost? tempSendableActivateHost;
     await for (final PingData pingData
         in Ping(host, count: 1, timeout: timeoutInSeconds).stream) {
       final PingResponse? response = pingData.response;
       final PingError? pingError = pingData.error;
-      if (response != null && pingError == null) {
-        final Duration? time = response.time;
-        if (time != null) {
-          final tempSendableActivateHost = SendableActiveHost(host, pingData);
-          activeHostsController.add(tempSendableActivateHost);
-          return tempSendableActivateHost;
+      if (response != null) {
+        // Check if ping succeeded
+        if (pingError == null) {
+          final Duration? time = response.time;
+          if (time != null) {
+            tempSendableActivateHost = SendableActiveHost(host, pingData);
+          }
         }
       }
+      if (tempSendableActivateHost == null) {
+        // Check if it's there in arp table
+        final data = await ARPTable.entryFor(host);
+        if (data != null) {
+          tempSendableActivateHost = SendableActiveHost(host, pingData);
+        }
+      }
+      if (tempSendableActivateHost != null) {
+        activeHostsController.add(tempSendableActivateHost);
+      }
     }
-    return null;
+    return tempSendableActivateHost;
   }
 
   static int validateAndGetLastValidSubnet(
@@ -143,6 +155,7 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
+    await ARPTable.buildTable();
     const int scanRangeForIsolate = 51;
     final int lastValidSubnet =
         validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
@@ -156,7 +169,7 @@ class HostScanner {
       final isolate =
           await Isolate.spawn(_startSearchingDevices, receivePort.sendPort);
 
-      await for (final message in receivePort.asBroadcastStream()) {
+      await for (final message in receivePort) {
         if (message is SendPort) {
           message.send(<String>[
             subnet,
@@ -168,14 +181,14 @@ class HostScanner {
         } else if (message is SendableActiveHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-
+          // print('Address ${message.address}');
           final activeHostFound =
               ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
           await activeHostFound.resolveInfo();
-          log.fine("Found host: ${await activeHostFound.toStringFull()}");
           yield activeHostFound;
         } else if (message is String && message == 'Done') {
           isolate.kill();
+          break;
         }
       }
     }
@@ -187,7 +200,7 @@ class HostScanner {
     final port = ReceivePort();
     sendPort.send(port.sendPort);
 
-    await for (final message in port.asBroadcastStream()) {
+    await for (final message in port) {
       if (message is List<String>) {
         final String subnetIsolate = message[0];
         final int firstSubnetIsolate = int.parse(message[1]);

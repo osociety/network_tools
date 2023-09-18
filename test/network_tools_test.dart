@@ -31,37 +31,28 @@ void main() {
         await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
     port = server.port;
     log.fine("Opened port in this machine at $port");
-    final interfaceList =
-        await NetworkInterface.list(); //will give interface list
-    if (interfaceList.isNotEmpty) {
-      final localInterface =
-          interfaceList.elementAt(0); //fetching first interface like en0/eth0
-      if (localInterface.addresses.isNotEmpty) {
-        final address = localInterface.addresses
-            .elementAt(0)
-            .address; //gives IP address of GHA local machine.
-        myOwnHost = address;
-        interfaceIp = address.substring(0, address.lastIndexOf('.'));
-        final hostId = int.parse(
-          address.substring(address.lastIndexOf('.') + 1, address.length),
-        );
-        // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
-        firstHostId = hostId <= 1 ? hostId : hostId - 1;
-        lastHostId = hostId >= 254 ? hostId : hostId + 1;
-        await for (final host
-            in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
-          hostsWithOpenPort.add(host);
-          for (final tempOpenPort in host.openPorts) {
-            if (tempOpenPort.port == port) {
-              openPort = tempOpenPort;
-              break;
-            }
+
+    final interface = await NetInterface.localInterface();
+    if (interface != null) {
+      final hostId = interface.hostId;
+      interfaceIp = interface.networkId;
+      myOwnHost = interface.ipAddress;
+      // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
+      firstHostId = hostId <= 1 ? hostId : hostId - 1;
+      lastHostId = hostId >= 254 ? hostId : hostId + 1;
+      await for (final host
+          in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
+        hostsWithOpenPort.add(host);
+        for (final tempOpenPort in host.openPorts) {
+          if (tempOpenPort.port == port) {
+            openPort = tempOpenPort;
+            break;
           }
         }
-        log.fine(
-          'Fetched own host as $myOwnHost and interface address as $interfaceIp',
-        );
       }
+      log.fine(
+        'Fetched own host as $myOwnHost and interface address as $interfaceIp',
+      );
     }
   });
 
@@ -102,7 +93,11 @@ void main() {
             firstHostId: firstHostId,
             lastHostId: lastHostId,
           ),
-          emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
+          emitsThrough(
+            ActiveHost(
+              internetAddress: InternetAddress(myOwnHost),
+            ),
+          ),
         );
       },
     );
@@ -128,7 +123,11 @@ void main() {
             firstHostId: firstHostId,
             lastHostId: lastHostId,
           ),
-          emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
+          emitsThrough(
+            ActiveHost(
+              internetAddress: InternetAddress(myOwnHost),
+            ),
+          ),
         );
       },
     );

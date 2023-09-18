@@ -32,3 +32,5 @@
 **/coverage/
 **/build/
 
+# Generated sources
+*.g.dart

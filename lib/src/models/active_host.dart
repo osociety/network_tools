@@ -1,9 +1,5 @@
 import 'package:dart_ping/dart_ping.dart';
-import 'package:network_tools/src/models/arp_data.dart';
-import 'package:network_tools/src/models/arp_table.dart';
-import 'package:network_tools/src/models/mdns_info.dart';
-import 'package:network_tools/src/models/open_port.dart';
-import 'package:network_tools/src/models/sendable_active_host.dart';
+import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
@@ -31,7 +27,6 @@ class ActiveHost extends Comparable<ActiveHost> {
     } else {
       hostId = '-1';
     }
-
     pingData ??= getPingData(tempAddress);
     _pingData = pingData;
 
@@ -48,8 +43,12 @@ class ActiveHost extends Comparable<ActiveHost> {
     }
 
     deviceName = setDeviceName();
+
     // fetch entry from in memory arp table
     arpData = setARPData();
+
+    // fetch vendor from in memory vendor table
+    vendor = setVendor();
   }
   factory ActiveHost.buildWithAddress({
     required String address,
@@ -72,7 +71,6 @@ class ActiveHost extends Comparable<ActiveHost> {
 
   factory ActiveHost.fromSendableActiveHost({
     required SendableActiveHost sendableActiveHost,
-    List<OpenPort> openPorts = const [],
     MdnsInfo? mdnsInfo,
   }) {
     final InternetAddress? internetAddressTemp =
@@ -82,7 +80,7 @@ class ActiveHost extends Comparable<ActiveHost> {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
-      openPorts: openPorts,
+      openPorts: [],
       pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
     );
@@ -108,6 +106,9 @@ class ActiveHost extends Comparable<ActiveHost> {
   /// Resolve ARP data for this host.
   /// only supported on Linux, Macos and Windows otherwise null
   late Future<ARPData?> arpData;
+
+  /// Only works if arpData is not null and have valid mac address.
+  late Future<Vendor?> vendor;
 
   /// List of all the open port of this device
   List<OpenPort> openPorts;
@@ -157,7 +158,7 @@ class ActiveHost extends Comparable<ActiveHost> {
     } catch (e) {
       if (e is SocketException &&
           e.osError != null &&
-          e.osError!.message == 'Name or service not known') {
+          (e.osError!.message == 'Name or service not known')) {
         // Some devices does not have host name and the reverse search will just
         // throw exception.
         // We don't need to print this crash as it is by design.
@@ -169,14 +170,19 @@ class ActiveHost extends Comparable<ActiveHost> {
   }
 
   Future<void> resolveInfo() async {
+    await arpData;
+    await vendor;
     await deviceName;
     await mdnsInfo;
     await hostName;
-    await arpData;
   }
 
   Future<ARPData?> setARPData() async {
     return ARPTable.entryFor(address);
+  }
+
+  Future<Vendor?> setVendor() async {
+    return VendorTable.getVendor(arpData);
   }
 
   /// Try to find the mdns name of this device, if not exist mdns name will
@@ -218,6 +224,6 @@ class ActiveHost extends Comparable<ActiveHost> {
   }
 
   Future<String> toStringFull() async {
-    return 'Address: $address, MAC: ${(await arpData)?.macAddress}, HostId: $hostId Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
+    return 'Address: $address, MAC: ${(await arpData)?.macAddress}, HostId: $hostId, Vendor: ${(await vendor)?.vendorName} Time: ${responseTime?.inMilliseconds}ms, DeviceName: ${await deviceName}, HostName: ${await hostName}, MdnsInfo: ${await mdnsInfo}';
   }
 }
