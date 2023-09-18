@@ -33,7 +33,7 @@ class VendorTable {
   }
 
   static Future<void> _fetchVendorTable(SendPort sendPort) async {
-    final input = File('lib/assets/mac-vendors-export.csv').openRead();
+    final input = File('./lib/assets/mac-vendors-export.csv').openRead();
 
     List<List<dynamic>> fields = await input
         .transform(utf8.decoder)
