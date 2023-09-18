@@ -4,6 +4,7 @@
 
 1. Removed example folder and added pubignore.
 2. Added vendor details but database looks old. 
+3. More results are added using ARP on Lin/Mac/Win.
 
 ## 3.2.6
 
