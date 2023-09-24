@@ -22,10 +22,20 @@ Partly Work:
 
 Please check [network_tools_flutter](https://github.com/osociety/network_tools_flutter) package for extensive support to features on different platforms.
 
-## Import package in your app
+## Import package in your app 
 
 ```dart
 import 'package:network_tools/network_tools.dart';
+
+```
+
+## Configure network tools in main function
+
+```dart
+Future<void> main() async {
+  await configureNetworkTools(enableDebugging: true);
+  runApp(const MyApp());
+}
 ```
 
 ## Usage
