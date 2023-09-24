@@ -34,3 +34,6 @@
 
 # Generated sources
 *.g.dart
+
+# Downloaded files
+mac-vendors-export.csv

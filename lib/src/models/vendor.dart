@@ -1,4 +1,8 @@
+import 'package:json_annotation/json_annotation.dart';
+part 'vendor.g.dart';
+
 /// Gives vendor details matching as prefix of mac address
+@JsonSerializable()
 class Vendor {
   Vendor({
     required this.macPrefix,
@@ -17,6 +21,9 @@ class Vendor {
       lastUpdate: csvField[4] as String,
     );
   }
+  factory Vendor.fromJson(Map<String, dynamic> json) => _$VendorFromJson(json);
+
+  Map<String, dynamic> toJson() => _$VendorToJson(this);
 
   final String macPrefix;
   final String vendorName;
