@@ -180,15 +180,17 @@ class HostScanner {
 
       await for (final message in receivePort) {
         if (message is SendPort) {
-          message.send(<String>[
-            subnet,
-            i.toString(),
-            limit.toString(),
-            timeoutInSeconds.toString(),
-            resultsInAddressAscendingOrder.toString(),
-            dbDirectory,
-            enableDebugging.toString()
-          ]);
+          message.send(
+            <String>[
+              subnet,
+              i.toString(),
+              limit.toString(),
+              timeoutInSeconds.toString(),
+              resultsInAddressAscendingOrder.toString(),
+              dbDirectory,
+              enableDebugging.toString(),
+            ],
+          );
         } else if (message is SendableActiveHost) {
           progressCallback
               ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
