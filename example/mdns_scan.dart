@@ -1,7 +1,7 @@
 import 'package:network_tools/network_tools.dart';
 
 Future<void> main() async {
-  await configureNetworkTools();
+  await configureNetworkTools('build');
   for (final ActiveHost activeHost in await MdnsScanner.searchMdnsDevices()) {
     final MdnsInfo? mdnsInfo = await activeHost.mdnsInfo;
     print(

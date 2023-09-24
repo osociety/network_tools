@@ -186,6 +186,8 @@ class HostScanner {
             limit.toString(),
             timeoutInSeconds.toString(),
             resultsInAddressAscendingOrder.toString(),
+            dbDirectory,
+            enableDebugging.toString()
           ]);
         } else if (message is SendableActiveHost) {
           progressCallback
@@ -206,7 +208,6 @@ class HostScanner {
   /// Will search devices in the network inside new isolate
   @pragma('vm:entry-point')
   static Future<void> _startSearchingDevices(SendPort sendPort) async {
-    await configureNetworkTools();
     final port = ReceivePort();
     sendPort.send(port.sendPort);
 
@@ -217,6 +218,13 @@ class HostScanner {
         final int lastSubnetIsolate = int.parse(message[2]);
         final int timeoutInSeconds = int.parse(message[3]);
         final bool resultsInAddressAscendingOrder = message[4] == "true";
+        final String dbDirectory = message[5];
+        final bool enableDebugging = message[6] == "true";
+        // configure again
+        await configureNetworkTools(
+          dbDirectory,
+          enableDebugging: enableDebugging,
+        );
 
         /// Will contain all the hosts that got discovered in the network, will
         /// be use inorder to cancel on dispose of the page.
