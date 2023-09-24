@@ -37,4 +37,4 @@
 *.config.dart
 
 # Downloaded files
-mac-vendors-export.csv
+/mac-vendors-export.csv

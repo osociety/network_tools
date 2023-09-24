@@ -13,4 +13,5 @@
 **/test/
 **/donation/
 *.sh
+/mac-vendors-export.csv
 
