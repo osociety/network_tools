@@ -15,6 +15,7 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    - "**/*.config.dart"
     - "**/*.pb.dart"
     - "**/*.pbenum.dart"
     - "**/*.pbgrpc.dart"

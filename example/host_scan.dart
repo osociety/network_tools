@@ -1,14 +1,9 @@
 import 'package:logging/logging.dart';
 import '../lib/network_tools.dart';
+import '../lib/src/network_tools_utils.dart';
 
 void main() async {
-  Logger.root.level = Level.FINE;
-  Logger.root.onRecord.listen((record) {
-    print(
-      '${record.time.toLocal()}: ${record.level.name}: ${record.loggerName}: ${record.message}',
-    );
-  });
-  final log = Logger("host_scan_example");
+  await configureNetworkTools();
 
   String subnet = '192.168.0'; //Default network id for home networks
 

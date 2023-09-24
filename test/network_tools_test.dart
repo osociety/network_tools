@@ -1,19 +1,10 @@
 import 'dart:async';
-import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
 void main() {
-  final log = Logger("host_scan_test");
-
-  // Logger.root.level = Level.FINE;
-  // Logger.root.onRecord.listen((record) {
-  //   // print(
-  //   //   '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}',
-  //   // );
-  // });
-
   int port = 0;
   int firstHostId = 0;
   int lastHostId = 0;
@@ -25,6 +16,7 @@ void main() {
   late ServerSocket server;
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
+    await configureNetworkTools();
     //open a port in shared way because of portscanner using same,
     //if passed false then two hosts come up in search and breaks test.
     server =

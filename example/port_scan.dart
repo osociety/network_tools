@@ -1,28 +1,25 @@
 import 'package:logging/logging.dart';
+import '../lib/src/network_tools_utils.dart';
 import 'package:network_tools/network_tools.dart';
 
-void main() {
-  final log = Logger("port-scan");
-  Logger.root.level = Level.FINE;
-  Logger.root.onRecord.listen((record) {
-    print(
-      '${record.time.toLocal()}: ${record.level.name}: ${record.loggerName}: ${record.message}',
-    );
-  });
+void main() async {
+  await configureNetworkTools();
 
-  const String address = '192.168.1.1';
-  // or You can also get address using network_info_plus package
-  // final String? address = await (NetworkInfo().getWifiIP());
-  final String subnet = address.substring(0, address.lastIndexOf('.'));
+  String subnet = '192.168.0'; //Default network id for home networks
+
+  final interface = await NetInterface.localInterface();
+  final netId = interface?.networkId;
+  if (netId != null) {
+    subnet = netId;
+    log.fine('subnet id $subnet');
+  }
 
   // [New] Scan for a single open port in a subnet
   // You can set [firstHostId] and scan will start from this host in the network.
   // Similarly set [lastHostId] and scan will end at this host in the network.
   final stream2 = HostScanner.scanDevicesForSinglePort(
     subnet,
-    53,
-    // firstHostId: 1,
-    // lastHostId: 254,
+    22,
     progressCallback: (progress) {
       log.finer('Progress for port discovery on host : $progress');
     },
@@ -30,10 +27,12 @@ void main() {
 
   stream2.listen(
     (activeHost) {
+      log.fine(
+          '[scanDevicesForSinglePort]: Found device : ${activeHost.toString()}');
       final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
       if (deviceWithOpenPort.isOpen) {
         log.fine(
-          'Found open port: ${deviceWithOpenPort.port} on ${activeHost.address}',
+          '[scanDevicesForSinglePort]: Found open port: ${deviceWithOpenPort.port} on ${activeHost.address}',
         );
       }
     },
@@ -42,7 +41,13 @@ void main() {
     },
   ); // Don't forget to cancel the stream when not in use.
 
-  const String target = '192.168.1.1';
+  String target = '192.168.1.1';
+  final addr = interface?.ipAddress;
+  if (addr != null) {
+    target = addr;
+    log.fine("Target is $target");
+  }
+
   PortScanner.scanPortsForSingleDevice(
     target,
     // Scan will start from this port.
