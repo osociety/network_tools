@@ -9,6 +9,7 @@ class ARPTableHelper {
 
   static Future<List<ARPData>> buildTable() async {
     final arpEntries = <ARPData>[];
+    if (Platform.isAndroid || Platform.isIOS) return arpEntries;
     final result = await Process.run('arp', ['-a']);
     final entries = const LineSplitter().convert(result.stdout.toString());
     RegExp? pattern;

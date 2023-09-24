@@ -21,11 +21,18 @@ export 'src/models/vendor.dart';
 export 'src/port_scanner.dart';
 
 final _getIt = GetIt.instance;
-final _arpServiceFuture = _getIt<ARPService>().open();
+late bool _enableDebugging;
 
-Future<void> configureNetworkTools({
+late String _dbDirectory;
+
+String get dbDirectory => _dbDirectory;
+bool get enableDebugging => _enableDebugging;
+
+Future<void> configureNetworkTools(
+  String dbDirectory, {
   bool enableDebugging = false,
 }) async {
+  _enableDebugging = enableDebugging;
   if (enableDebugging) {
     Logger.root.level = Level.FINE;
     Logger.root.onRecord.listen((record) {
@@ -36,7 +43,8 @@ Future<void> configureNetworkTools({
     });
   }
   configureDependencies();
-
-  await (await _arpServiceFuture).buildTable();
+  _dbDirectory = dbDirectory;
+  final arpServiceFuture = await _getIt<ARPService>().open();
+  await arpServiceFuture.buildTable();
   await VendorTable.createVendorTableMap();
 }
