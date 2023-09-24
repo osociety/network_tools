@@ -31,9 +31,23 @@ import 'package:network_tools/network_tools.dart';
 
 ## Configure network tools in main function
 
+### For dart native
+
 ```dart
 Future<void> main() async {
-  await configureNetworkTools(enableDebugging: true);
+  await configureNetworkTools('build', enableDebugging: true);
+  runApp(const MyApp());
+}
+```
+
+### For flutter apps
+
+```dart
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // It's necessary to pass correct path to be able to use this library.
+  final appDocDirectory = await getApplicationDocumentsDirectory();
+  await configureNetworkTools(appDocDirectory.path, enableDebugging: true);
   runApp(const MyApp());
 }
 ```
@@ -102,17 +116,6 @@ Future<void> main() async {
 2. Run port scan : `dart example/port_scan.dart`
 3. Run mdns scan : `dart example/mdns_scan.dart`
 
-## Enable Debugging
-
-Add this code to your `main.dart` file
-
-```dart
-    Logger.root.level = Level.FINE; //set to finest for detailed log
-      Logger.root.onRecord.listen((record) {
-        print(
-            '${DateFormat.Hms().format(record.time)}: ${record.level.name}: ${record.loggerName}: ${record.message}');
-      });
-```
 
 ## Sample App
 

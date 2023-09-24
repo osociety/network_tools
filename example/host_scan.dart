@@ -3,7 +3,7 @@ import '../lib/network_tools.dart';
 import '../lib/src/network_tools_utils.dart';
 
 void main() async {
-  await configureNetworkTools();
+  await configureNetworkTools('build');
 
   String subnet = '192.168.0'; //Default network id for home networks
 

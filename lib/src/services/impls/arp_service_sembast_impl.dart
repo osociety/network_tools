@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:injectable/injectable.dart';
+import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/device_info/arp_table_helper.dart';
-import 'package:network_tools/src/models/arp_data.dart';
 import 'package:network_tools/src/services/arp_service.dart';
+import 'package:path/path.dart' as p;
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 
@@ -16,7 +17,9 @@ class ARPServiceSembastImpl extends ARPService {
   Future<void> buildTable() async {
     final entries =
         (await ARPTableHelper.buildTable()).map((e) => e.toJson()).toList();
-    await _store.addAll(_db!, entries);
+    if (entries.isNotEmpty) {
+      await _store.addAll(_db!, entries);
+    }
   }
 
   @override
@@ -55,7 +58,8 @@ class ARPServiceSembastImpl extends ARPService {
   Future<ARPService> open() async {
     if (_db != null) return Future.value(this);
     final dbFactory = databaseFactoryIo;
-    _db = await dbFactory.openDatabase('build/network_tools.db');
+    final dbPath = p.join(dbDirectory, 'network_tools.db');
+    _db = await dbFactory.openDatabase(dbPath);
     return Future.value(this);
   }
 }

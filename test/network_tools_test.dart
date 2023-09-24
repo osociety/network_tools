@@ -16,7 +16,7 @@ void main() {
   late ServerSocket server;
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
-    await configureNetworkTools();
+    await configureNetworkTools('build', enableDebugging: true);
     //open a port in shared way because of portscanner using same,
     //if passed false then two hosts come up in search and breaks test.
     server =

@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:http/http.dart' as http;
-import 'package:network_tools/src/models/arp_data.dart';
-import 'package:network_tools/src/models/vendor.dart';
+import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
+import 'package:path/path.dart' as p;
 
 class VendorTable {
   static Map<dynamic, dynamic> _vendorTableMap = {};
@@ -32,22 +32,23 @@ class VendorTable {
 
   static Future<Map<dynamic, dynamic>> _fetchVendorTable() async {
     //Download and store
-    log.fine("Downloading mac-vendors-export.csv from network_tools");
-    final directory = Directory("mac-vendors-export.csv");
-    if (!directory.existsSync()) {
+    final csvPath = p.join(dbDirectory, "mac-vendors-export.csv");
+    final file = File(csvPath);
+    if (!await file.exists()) {
+      log.fine("Downloading mac-vendors-export.csv from network_tools");
       final response = await http.get(
         Uri.https(
           "raw.githubusercontent.com",
           "osociety/network_tools/main/lib/assets/mac-vendors-export.csv",
         ),
       );
-      File(directory.path).writeAsBytesSync(response.bodyBytes);
+      file.writeAsBytesSync(response.bodyBytes);
       log.fine("Downloaded mac-vendors-export.csv successfully");
     } else {
       log.fine("File mac-vendors-export.csv already exists");
     }
 
-    final input = File(directory.path).openRead();
+    final input = file.openRead();
 
     List<List<dynamic>> fields = await input
         .transform(utf8.decoder)

@@ -1,5 +1,8 @@
 # Change Log
 
+## 4.0.1
+1. Fixex path problem for dart and flutter sdk
+
 ## 4.0.0
 ### Breaking changes
 
