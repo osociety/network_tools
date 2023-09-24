@@ -1,5 +1,11 @@
 # Change Log
 
+## 4.0.0
+### Breaking changes
+
+1. Call configureNetworkTools in your main function
+
+
 ## 3.2.7
 
 1. Removed example folder and added pubignore.

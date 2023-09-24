@@ -12,8 +12,9 @@ class NetInterface {
   final String ipAddress;
 
   static Future<NetInterface?> localInterface() async {
-    final interfaceList =
-        await NetworkInterface.list(); //will give interface list
+    final interfaceList = await NetworkInterface.list(
+      type: InternetAddressType.IPv4,
+    ); //will give interface list
     if (interfaceList.isNotEmpty) {
       final localInterface =
           interfaceList.first; //fetching first interface like en0/eth0

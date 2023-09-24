@@ -3,15 +3,17 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
-import 'package:network_tools/src/device_info/arp_table.dart';
-import 'package:network_tools/src/models/active_host.dart';
-import 'package:network_tools/src/models/callbacks.dart';
-import 'package:network_tools/src/models/sendable_active_host.dart';
+import 'package:get_it/get_it.dart';
+import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
-import 'package:network_tools/src/port_scanner.dart';
+import 'package:network_tools/src/services/arp_service.dart';
+
+final _getIt = GetIt.instance;
 
 /// Scans for all hosts in a subnet.
 class HostScanner {
+  static final arpServiceFuture = _getIt<ARPService>().open();
+
   /// Devices scan will start from this integer Id
   static const int defaultFirstHostId = 1;
 
@@ -32,7 +34,6 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    await ARPTable.buildTable();
     final stream = getAllSendablePingableDevices(
       subnet,
       firstHostId: firstHostId,
@@ -102,6 +103,7 @@ class HostScanner {
     int timeoutInSeconds = 1,
   }) async {
     SendableActiveHost? tempSendableActivateHost;
+
     await for (final PingData pingData
         in Ping(host, count: 1, timeout: timeoutInSeconds).stream) {
       final PingResponse? response = pingData.response;
@@ -111,21 +113,29 @@ class HostScanner {
         if (pingError == null) {
           final Duration? time = response.time;
           if (time != null) {
+            log.fine("Pingable device found: $host");
             tempSendableActivateHost = SendableActiveHost(host, pingData);
+          } else {
+            log.fine("Non pingable device found: $host");
           }
         }
       }
       if (tempSendableActivateHost == null) {
         // Check if it's there in arp table
-        final data = await ARPTable.entryFor(host);
+        final data = await (await arpServiceFuture).entryFor(host);
+
         if (data != null) {
+          log.fine("Successfully fetched arp entry for $host as $data");
           tempSendableActivateHost = SendableActiveHost(host, pingData);
+        } else {
+          log.fine("Problem in fetching arp entry for $host");
         }
       }
       if (tempSendableActivateHost != null) {
         activeHostsController.add(tempSendableActivateHost);
       }
     }
+
     return tempSendableActivateHost;
   }
 
@@ -155,7 +165,6 @@ class HostScanner {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    await ARPTable.buildTable();
     const int scanRangeForIsolate = 51;
     final int lastValidSubnet =
         validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
@@ -197,6 +206,7 @@ class HostScanner {
   /// Will search devices in the network inside new isolate
   @pragma('vm:entry-point')
   static Future<void> _startSearchingDevices(SendPort sendPort) async {
+    await configureNetworkTools();
     final port = ReceivePort();
     sendPort.send(port.sendPort);
 

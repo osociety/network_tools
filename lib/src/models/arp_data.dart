@@ -6,7 +6,7 @@ part 'arp_data.g.dart';
 @JsonSerializable()
 class ARPData {
   ARPData({
-    required this.host,
+    required this.hostname,
     required this.iPAddress,
     required this.macAddress,
     required this.interfaceName,
@@ -15,23 +15,32 @@ class ARPData {
   factory ARPData.fromJson(Map<String, dynamic> json) =>
       _$ARPDataFromJson(json);
 
-  final String? host;
-  final String? iPAddress;
-  final String? macAddress;
-  final String? interfaceName;
-  final String? interfaceType;
+  final String hostname;
+  final String iPAddress;
+  static const String primaryKeySembast = 'iPAddress';
+  static const String nullIPAddress = '0.0.0.0';
+  static const String nullMacAddress = 'ff:ff:ff:ff:ff:ff';
+  static const String nullInterfaceType = 'ethernet';
+
+  final String macAddress;
+  final String interfaceName;
+  final String interfaceType;
 
   Map<String, dynamic> toJson() => _$ARPDataToJson(this);
+
+  bool get notNullIPAddress => iPAddress != nullIPAddress;
+  bool get notNullMacAddress => macAddress != nullMacAddress;
+  bool get notNullInterfaceType => interfaceType != nullInterfaceType;
 
   @override
   String toString() {
     if (Platform.isMacOS) {
-      return '$host ($iPAddress) at $macAddress on $interfaceName ifscope [$interfaceType]';
+      return '$hostname ($iPAddress) at $macAddress on $interfaceName ifscope [$interfaceType]';
     } else if (Platform.isLinux) {
-      return '$host ($iPAddress) at $macAddress [$interfaceType] on $interfaceName';
+      return '$hostname ($iPAddress) at $macAddress [$interfaceType] on $interfaceName';
     } else if (Platform.isWindows) {
       return 'Internet Address: $iPAddress, Physical Address: $macAddress, Type: $interfaceType';
     }
-    return '$host ($iPAddress) at $macAddress on $interfaceName type [$interfaceType]';
+    return '$hostname ($iPAddress) at $macAddress on $interfaceName type [$interfaceType]';
   }
 }
