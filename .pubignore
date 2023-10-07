@@ -1,0 +1,17 @@
+# See https://dart.dev/tools/pub/publishing#what-files-are-published
+
+**/example
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/coverage/
+**/build/
+**/test/
+**/donation/
+*.sh
+*.csv
+

@@ -6,10 +6,12 @@
 name: Dart
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main", "dev" ]
+
+concurrency: 
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -29,7 +31,9 @@ jobs:
 
       - name: Install dependencies
         run: dart pub get
-        working-directory: ./network_tools
+      
+      - name: Run build_runner
+        run: dart run build_runner build --delete-conflicting-outputs
 
       # Uncomment this step to verify the use of 'dart format' on each commit.
       # - name: Verify formatting
@@ -38,13 +42,21 @@ jobs:
       # Consider passing '--fatal-infos' for slightly stricter analysis.
       - name: Analyze project source
         run: dart analyze --fatal-infos 
-        working-directory: ./network_tools
 
       # Your project will need to have tests in test/ and a dependency on
       # package:test for this step to succeed. Note that Flutter projects will
       # want to change this to 'flutter test'.
       - name: Run tests
-        run: dart test
-        working-directory: ./network_tools
-        
+        run: dart test --coverage="./coverage"
 
+      - name: Install coverage tools
+        run: dart pub global activate coverage
+        
+      - name: Format Coverage
+        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
+        
+      - name: Upload Coverage to CodeCov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+          file: coverage/coverage.lcov
