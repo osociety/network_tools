@@ -1,6 +1,6 @@
 import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
-import '../example/lib/example_utils.dart';
+import '../example_utils.dart';
 
 Future<void> main() async {
   enableExampleLogging();
