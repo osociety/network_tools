@@ -1,8 +1,9 @@
 import 'package:logging/logging.dart';
-import '../lib/src/network_tools_utils.dart';
 import 'package:network_tools/network_tools.dart';
+import '../example_utils.dart';
 
-void main() async {
+Future<void> main() async {
+  enableExampleLogging();
   await configureNetworkTools('build');
 
   String subnet = '192.168.0'; //Default network id for home networks
@@ -11,7 +12,7 @@ void main() async {
   final netId = interface?.networkId;
   if (netId != null) {
     subnet = netId;
-    log.fine('subnet id $subnet');
+    examplesLog.fine('subnet id $subnet');
   }
 
   // [New] Scan for a single open port in a subnet
@@ -19,25 +20,25 @@ void main() async {
   // Similarly set [lastHostId] and scan will end at this host in the network.
   final stream2 = HostScanner.scanDevicesForSinglePort(
     subnet,
-    22,
+    53,
     progressCallback: (progress) {
-      log.finer('Progress for port discovery on host : $progress');
+      examplesLog.finer('Progress for port discovery on host : $progress');
     },
   );
 
   stream2.listen(
     (activeHost) {
-      log.fine(
+      examplesLog.fine(
           '[scanDevicesForSinglePort]: Found device : ${activeHost.toString()}');
       final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
       if (deviceWithOpenPort.isOpen) {
-        log.fine(
+        examplesLog.fine(
           '[scanDevicesForSinglePort]: Found open port: ${deviceWithOpenPort.port} on ${activeHost.address}',
         );
       }
     },
     onDone: () {
-      log.fine('Port Scan completed');
+      examplesLog.fine('Port Scan completed');
     },
   ); // Don't forget to cancel the stream when not in use.
 
@@ -45,7 +46,7 @@ void main() async {
   final addr = interface?.ipAddress;
   if (addr != null) {
     target = addr;
-    log.fine("Target is $target");
+    examplesLog.fine("Target is $target");
   }
 
   PortScanner.scanPortsForSingleDevice(
@@ -54,18 +55,19 @@ void main() async {
     // startPort: 1,
     endPort: 9400,
     progressCallback: (progress) {
-      log.finer('Progress for port discovery : $progress');
+      examplesLog.finer('Progress for port discovery : $progress');
     },
   ).listen(
     (activeHost) {
       final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
 
       if (deviceWithOpenPort.isOpen) {
-        log.fine('Found open port: ${deviceWithOpenPort.port}');
+        examplesLog.fine(
+            'Found open port: ${deviceWithOpenPort.port} on device $target');
       }
     },
     onDone: () {
-      log.fine('Port Scan from 1 to 9400 completed');
+      examplesLog.fine('Port Scan from 1 to 9400 completed');
     },
   );
 }
