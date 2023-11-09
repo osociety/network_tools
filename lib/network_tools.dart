@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:logging/logging.dart';
 import 'package:network_tools/injectable.dart';
 import 'package:network_tools/src/device_info/vendor_table.dart';
+import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/services/arp_service.dart';
 
 export 'src/device_info/net_interface.dart';
@@ -36,10 +37,12 @@ Future<void> configureNetworkTools(
   if (enableDebugging) {
     Logger.root.level = Level.FINE;
     Logger.root.onRecord.listen((record) {
-      // ignore: avoid_print
-      print(
-        '${record.time.toLocal()}: ${record.level.name}: ${record.loggerName}: ${record.message}',
-      );
+      if (record.loggerName == log.name) {
+        // ignore: avoid_print
+        print(
+          '${record.time.toLocal()}: ${record.level.name}: ${record.loggerName}: ${record.message}',
+        );
+      }
     });
   }
   configureDependencies();
