@@ -34,6 +34,7 @@ Future<void> configureNetworkTools(
   bool enableDebugging = false,
 }) async {
   _enableDebugging = enableDebugging;
+  _dbDirectory = dbDirectory;
   if (enableDebugging) {
     Logger.root.level = Level.FINE;
     Logger.root.onRecord.listen((record) {
@@ -46,8 +47,7 @@ Future<void> configureNetworkTools(
     });
   }
   configureDependencies();
-  _dbDirectory = dbDirectory;
-  final arpServiceFuture = await _getIt<ARPService>().open();
-  await arpServiceFuture.buildTable();
+  final arpService = await _getIt<ARPService>().open();
+  await arpService.buildTable();
   await VendorTable.createVendorTableMap();
 }

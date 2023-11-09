@@ -2,7 +2,7 @@ import 'package:logging/logging.dart';
 import '../lib/src/network_tools_utils.dart';
 import 'package:network_tools/network_tools.dart';
 
-void main() async {
+Future<void> main() async {
   enableExampleLogging();
   await configureNetworkTools('build');
 
