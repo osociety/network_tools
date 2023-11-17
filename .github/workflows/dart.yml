@@ -8,6 +8,9 @@ name: Dart
 on:
   pull_request:
     branches: [ "main", "dev" ]
+  paths-ignore:
+    - '**/**.md'
+    - 'donation/**'
 
 concurrency: 
   group: ${{ github.head_ref || github.run_id }}
