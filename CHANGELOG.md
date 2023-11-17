@@ -1,7 +1,10 @@
 # Change Log
 
+## 4.0.2
+1. Separated logs for example and library
+
 ## 4.0.1
-1. Fixex path problem for dart and flutter sdk
+1. Fixed path problem for dart and flutter sdk
 
 ## 4.0.0
 ### Breaking changes
