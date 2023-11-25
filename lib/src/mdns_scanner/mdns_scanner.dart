@@ -51,8 +51,6 @@ class MdnsScanner {
   static Future<List<ActiveHost>> findingMdnsWithAddress(
     String serviceType,
   ) async {
-    final List<MdnsInfo> mdnsFoundList = [];
-
     final MDnsClient client = MDnsClient(
       rawDatagramSocketFactory: (
         dynamic host,
@@ -70,6 +68,7 @@ class MdnsScanner {
       },
     );
 
+    final List<ActiveHost> listOfActiveHost = [];
     await client.start();
 
     await for (final PtrResourceRecord ptr in client.lookup<PtrResourceRecord>(
@@ -79,42 +78,86 @@ class MdnsScanner {
           in client.lookup<SrvResourceRecord>(
         ResourceRecordQuery.service(ptr.domainName),
       )) {
-        final MdnsInfo mdnsFound = MdnsInfo(
-          srvResourceRecord: srv,
-          ptrResourceRecord: ptr,
+        listOfActiveHost.addAll(
+          await findAllActiveHostForSrv(
+            addressType: AddressType.ipv4,
+            client: client,
+            ptr: ptr,
+            srv: srv,
+          ),
         );
-        mdnsFoundList.add(mdnsFound);
+        listOfActiveHost.addAll(
+          await findAllActiveHostForSrv(
+            addressType: AddressType.ipv6,
+            client: client,
+            ptr: ptr,
+            srv: srv,
+          ),
+        );
       }
     }
     client.stop();
 
-    final List<ActiveHost> listOfActiveHost = [];
-    for (final MdnsInfo foundMdns in mdnsFoundList) {
-      final List<InternetAddress>? internetAddressList;
-      try {
-        internetAddressList =
-            await InternetAddress.lookup(foundMdns.mdnsSrvTarget);
-
-        // There can be multiple devices with the same name
-        for (final InternetAddress internetAddress in internetAddressList) {
-          final ActiveHost tempHost = ActiveHost(
-            internetAddress: internetAddress,
-            mdnsInfoVar: foundMdns,
-          );
-          listOfActiveHost.add(tempHost);
-        }
-      } catch (e) {
-        log.severe(
-          'Error finding ip of mdns record ${foundMdns.ptrResourceRecord.name} srv target ${foundMdns.mdnsSrvTarget}, will add it with ip 0.0.0.0\n$e',
-        );
-        final ActiveHost tempHost = ActiveHost(
-          internetAddress: InternetAddress('0.0.0.0'),
-          mdnsInfoVar: foundMdns,
-        );
-        listOfActiveHost.add(tempHost);
-      }
-    }
-
     return listOfActiveHost;
   }
+
+  static Future<List<ActiveHost>> findAllActiveHostForSrv({
+    required AddressType addressType,
+    required MDnsClient client,
+    required PtrResourceRecord ptr,
+    required SrvResourceRecord srv,
+  }) async {
+    final List<ActiveHost> listOfActiveHost = [];
+    try {
+      Stream<IPAddressResourceRecord> iPAddressResourceRecordStream;
+
+      if (addressType == AddressType.ipv4) {
+        iPAddressResourceRecordStream = client.lookup<IPAddressResourceRecord>(
+          ResourceRecordQuery.addressIPv4(srv.target),
+        );
+      } else {
+        iPAddressResourceRecordStream = client.lookup<IPAddressResourceRecord>(
+          ResourceRecordQuery.addressIPv6(srv.target),
+        );
+      }
+      await for (final IPAddressResourceRecord ip
+          in iPAddressResourceRecordStream) {
+        final ActiveHost activeHost = convertSrvToHostName(
+          internetAddress: ip.address,
+          ptr: ptr,
+          srv: srv,
+        );
+
+        listOfActiveHost.add(activeHost);
+      }
+    } catch (e) {
+      log.severe(
+        'Error finding ip of mdns record ${ptr.name} srv target ${srv.target}, will add it with ip 0.0.0.0\n$e',
+      );
+      final ActiveHost activeHost = convertSrvToHostName(
+        internetAddress: InternetAddress('0.0.0.0'),
+        srv: srv,
+        ptr: ptr,
+      );
+      listOfActiveHost.add(activeHost);
+    }
+    return listOfActiveHost;
+  }
+
+  static ActiveHost convertSrvToHostName({
+    required InternetAddress internetAddress,
+    required PtrResourceRecord ptr,
+    required SrvResourceRecord srv,
+  }) {
+    final MdnsInfo mdnsInfo = MdnsInfo(
+      srvResourceRecord: srv,
+      ptrResourceRecord: ptr,
+    );
+    return ActiveHost(
+      internetAddress: internetAddress,
+      mdnsInfoVar: mdnsInfo,
+    );
+  }
 }
+
+enum AddressType { ipv4, ipv6 }
