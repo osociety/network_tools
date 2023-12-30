@@ -1,9 +1,10 @@
 import 'package:json_annotation/json_annotation.dart';
+
 part 'open_port.g.dart';
 
 /// Represents open port for a target Address
 @JsonSerializable()
-class OpenPort extends Comparable<OpenPort> {
+class OpenPort {
   OpenPort(this.port, {this.isOpen = true});
   factory OpenPort.fromJson(Map<String, dynamic> json) =>
       _$OpenPortFromJson(json);
@@ -11,7 +12,6 @@ class OpenPort extends Comparable<OpenPort> {
   final int port;
   final bool isOpen;
 
-  @override
   int compareTo(OpenPort other) {
     return port.compareTo(other.port);
   }

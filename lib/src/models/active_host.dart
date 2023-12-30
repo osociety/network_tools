@@ -9,7 +9,7 @@ final _getIt = GetIt.instance;
 
 /// ActiveHost which implements comparable
 /// By default sort by hostId ascending
-class ActiveHost extends Comparable<ActiveHost> {
+class ActiveHost {
   ActiveHost({
     required this.internetAddress,
     this.openPorts = const [],
@@ -219,7 +219,6 @@ class ActiveHost extends Comparable<ActiveHost> {
   @override
   bool operator ==(Object o) => o is ActiveHost && address == o.address;
 
-  @override
   int compareTo(ActiveHost other) {
     return hostId.compareTo(other.hostId);
   }
