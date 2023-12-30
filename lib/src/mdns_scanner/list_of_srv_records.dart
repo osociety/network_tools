@@ -1,7 +1,7 @@
 /// Service record list that is including the protocol, mostly _tcp, _udp may
 /// not work
 List<String> tcpSrvRecordsList = [
-  '_uscan._tcp', // Any HP-compatible network scanners
+  '_scan._tcp', // Any HP-compatible network scanners
   '_uscans._tcp', // Any SSL/TLS-capable HP-compatible network scanners
   '_privet._tcp', // Any Google CloudPrint-capable printers or print services
   '_http-alt._tcp',

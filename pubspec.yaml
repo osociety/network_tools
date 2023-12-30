@@ -20,36 +20,36 @@ funding:
   
 dependencies:
   # A dart csv to list converter.
-  csv: ^5.0.2
+  csv: ^5.1.1
   # Multi-platform network ping utility.
-  dart_ping: ^9.0.0
+  dart_ping: ^9.0.1
   # Defines the annotations used by json_serializable 
-  get_it: ^7.6.0
+  get_it: ^7.6.4
   # A composable, Future-based library for making HTTP requests.
-  http: ^1.1.0
+  http: ^1.1.2
   # Injectable is a convenient code generator for get_it. 
-  injectable: ^2.2.0
+  injectable: ^2.3.2
   # Defines the annotations used by json_serializable.
   json_annotation: ^4.8.1
   # Debugging and error logging.
   logging: ^1.2.0
   # Performing mDNS queries (e.g. Bonjour, Avahi).
-  multicast_dns: ^0.3.2+2
+  multicast_dns: ^0.3.2+6
   # A comprehensive, cross-platform path manipulation library for Dart.
-  path: ^1.8.3
+  path: ^1.9.0
   # Process run helpers
-  process_run: ^0.13.1
+  process_run: ^0.13.3+1
   # Yet another NoSQL persistent store database solution for single process io apps.
   sembast: ^3.5.0+1
   # Cross-platform 'dart:io' that works in all platforms.
-  universal_io: ^2.0.4
+  universal_io: ^2.2.2
   
 
 dev_dependencies:
   # Standalone generator and watcher for Dart 
-  build_runner: ^2.4.6
+  build_runner: ^2.4.7
   # A generator for injectable library.
-  injectable_generator: ^2.4.0
+  injectable_generator: ^2.4.1
   # Provides Dart Build System builders for handling JSON.
   json_serializable: ^6.7.1
   # Set of lint rules for Dart.

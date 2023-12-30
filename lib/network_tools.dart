@@ -11,6 +11,7 @@ import 'package:network_tools/src/services/arp_service.dart';
 export 'src/device_info/net_interface.dart';
 export 'src/device_info/vendor_table.dart';
 export 'src/host_scanner.dart';
+export 'src/mdns_scanner/list_of_srv_records.dart';
 export 'src/mdns_scanner/mdns_scanner.dart';
 export 'src/models/active_host.dart';
 export 'src/models/arp_data.dart';

@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:logging/logging.dart';
 import 'package:network_tools/src/models/arp_data.dart';
+import 'package:universal_io/io.dart';
 
 class ARPTableHelper {
   static final arpLogger = Logger("arp-table-logger");
