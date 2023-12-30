@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:universal_io/io.dart';
 
 part 'arp_data.g.dart';
 
