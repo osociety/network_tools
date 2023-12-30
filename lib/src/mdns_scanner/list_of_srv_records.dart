@@ -70,8 +70,9 @@ List<String> tcpSrvRecordsList = [
   '_zwave-js-server._tcp', // "domain": "zwave_js"
   '_axis-video._tcp', // "properties": { "macaddress": "00408c*" } "properties": { "macaddress": "accc8e*" } "properties": { "macaddress": "b8a44f*" }
   '_androidtvremote2._tcp',
-  '_ewelink._tcp',
+  '_ewelink._tcp', // Ewelink devices
   '_nvstream_dbd._tcp',
+  '_smartview._tcp', // Samsung tv's
 ];
 
 List<String> udpSrvRecordsList = [

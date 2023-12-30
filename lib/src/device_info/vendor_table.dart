@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:http/http.dart' as http;
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:path/path.dart' as p;
+import 'package:universal_io/io.dart';
 
 class VendorTable {
   static Map<dynamic, dynamic> _vendorTableMap = {};
