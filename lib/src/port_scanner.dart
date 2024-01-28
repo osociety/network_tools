@@ -245,10 +245,11 @@ class PortScanner {
     int recursionCount = 0,
   }) async {
     return _connectToPort<ActiveHost>(
-        address: address,
-        port: port,
-        timeout: timeout,
-        activeHostsController: activeHostsController);
+      address: address,
+      port: port,
+      timeout: timeout,
+      activeHostsController: activeHostsController,
+    );
   }
 
   static Future<T?> _connectToPort<T>({
