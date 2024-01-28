@@ -114,7 +114,8 @@ class HostScanner {
           final Duration? time = response.time;
           if (time != null) {
             log.fine("Pingable device found: $host");
-            tempSendableActivateHost = SendableActiveHost(host, pingData);
+            tempSendableActivateHost =
+                SendableActiveHost(host, pingData: pingData);
           } else {
             log.fine("Non pingable device found: $host");
           }
@@ -126,12 +127,15 @@ class HostScanner {
 
         if (data != null) {
           log.fine("Successfully fetched arp entry for $host as $data");
-          tempSendableActivateHost = SendableActiveHost(host, pingData);
+          tempSendableActivateHost =
+              SendableActiveHost(host, pingData: pingData);
         } else {
           log.fine("Problem in fetching arp entry for $host");
         }
       }
+
       if (tempSendableActivateHost != null) {
+        log.fine("Successfully added to result $host");
         activeHostsController.add(tempSendableActivateHost);
       }
     }

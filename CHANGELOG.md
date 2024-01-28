@@ -1,5 +1,8 @@
 # Change Log
 
+## 4.0.3
+1. scanPortsForSingleDevice and customDiscover supports async mode now.
+
 ## 4.0.2
 1. Separated logs for example and library
 
