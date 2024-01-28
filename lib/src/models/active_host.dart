@@ -84,7 +84,7 @@ class ActiveHost {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
-      openPorts: [],
+      openPorts: sendableActiveHost.openPorts,
       pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
     );

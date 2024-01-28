@@ -63,7 +63,7 @@ void main() {
     });
   });
 
-  group('Testing Host Scanner', () {
+  group('Testing Host Scanner group', () {
     test(
       'Running getAllPingableDevices tests',
       () {
@@ -124,23 +124,20 @@ void main() {
       },
     );
 
-    test(
-      'Running scanDevicesForSinglePort tests',
-      () {
-        expectLater(
-          HostScanner.scanDevicesForSinglePort(
-            interfaceIp,
-            port,
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ), // hence some host will be emitted
-          emits(isA<ActiveHost>()),
-        );
-      },
-    );
+    test('Running scanDevicesForSinglePort tests', () async* {
+      expectLater(
+        HostScanner.scanDevicesForSinglePort(
+          interfaceIp,
+          port,
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ), // hence some host will be emitted
+        emits(isA<ActiveHost>()),
+      );
+    });
   });
 
-  group('Testing Port Scanner', () {
+  group('Testing Port Scanner group', () {
     test('Running scanPortsForSingleDevice tests', () {
       for (final activeHost in hostsWithOpenPort) {
         final port = activeHost.openPorts.elementAt(0).port;
@@ -157,6 +154,52 @@ void main() {
               equals(true),
             ),
           ),
+        );
+      }
+    });
+
+    test('Running scanPortsForSingleDevice Async tests', () {
+      for (final activeHost in hostsWithOpenPort) {
+        final port = activeHost.openPorts.elementAt(0).port;
+        expectLater(
+          PortScanner.scanPortsForSingleDevice(
+            activeHost.address,
+            startPort: port - 1,
+            endPort: port,
+            async: true,
+          ),
+          emitsThrough(
+            isA<ActiveHost>().having(
+              (p0) => p0.openPorts.contains(OpenPort(port)),
+              "Should match host having same open port",
+              equals(true),
+            ),
+          ),
+        );
+      }
+    });
+
+    test('Running customDiscover tests', () {
+      for (final activeHost in hostsWithOpenPort) {
+        expectLater(
+          PortScanner.customDiscover(
+            activeHost.address,
+            portList: [port],
+          ),
+          emits(isA<ActiveHost>()),
+        );
+      }
+    });
+
+    test('Running customDiscover Async tests', () {
+      for (final activeHost in hostsWithOpenPort) {
+        expectLater(
+          PortScanner.customDiscover(
+            activeHost.address,
+            portList: [port],
+            async: true,
+          ),
+          emits(isA<ActiveHost>()),
         );
       }
     });
@@ -180,16 +223,8 @@ void main() {
         );
       }
     });
-    test('Running customDiscover tests', () {
-      for (final activeHost in hostsWithOpenPort) {
-        expectLater(
-          PortScanner.customDiscover(activeHost.address, portList: [port]),
-          emits(isA<ActiveHost>()),
-        );
-      }
-    });
 
-    test('Running customDiscover tests', () {
+    test('Running isOpen tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
           PortScanner.isOpen(activeHost.address, port),
@@ -205,7 +240,7 @@ void main() {
     });
   });
 
-  group("Running mdns scanner group", () {
+  group("Testing mdns scanner group", () {
     test('Running searchMdnsDevices tests', () async {
       final mdnsDevices = await MdnsScanner.searchMdnsDevices();
       expectLater(
