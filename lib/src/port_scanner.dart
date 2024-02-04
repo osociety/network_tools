@@ -75,7 +75,8 @@ class PortScanner {
     bool resultsInAddressAscendingOrder = true,
     bool async = false,
   }) async* {
-    if (async) {
+    if (!async) {
+      // If async is false then run on main isolate
       yield* _customDiscover<ActiveHost>(
         target,
         portList: portList,
