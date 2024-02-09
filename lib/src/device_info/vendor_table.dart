@@ -16,8 +16,11 @@ class VendorTable {
       if (arpData.notNullMacAddress) {
         await createVendorTableMap();
         final pattern = arpData.macAddress.contains(':') ? ':' : '-';
-        return _vendorTableMap[
-            arpData.macAddress.split(pattern).sublist(0, 3).join()] as Vendor?;
+        return _vendorTableMap[arpData.macAddress
+            .split(pattern)
+            .sublist(0, 3)
+            .join(':')
+            .toUpperCase()] as Vendor?;
       }
     }
     return null;
