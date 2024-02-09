@@ -19,7 +19,7 @@ class VendorTable {
         return _vendorTableMap[arpData.macAddress
             .split(pattern)
             .sublist(0, 3)
-            .join(':')
+            .join()
             .toUpperCase()] as Vendor?;
       }
     }
