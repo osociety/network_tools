@@ -22,6 +22,7 @@ abstract class HostScannerService {
     String subnet, {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
+    List<int> hostIds = const [],
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -31,6 +32,7 @@ abstract class HostScannerService {
     String subnet, {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
+    List<int> hostIds = const [],
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -46,6 +48,7 @@ abstract class HostScannerService {
     String subnet, {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
+    List<int> hostIds = const [],
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
