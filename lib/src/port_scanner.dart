@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:isolate';
+import 'dart:math';
 
-import 'package:network_tools/src/models/active_host.dart';
-import 'package:network_tools/src/models/callbacks.dart';
-import 'package:network_tools/src/models/open_port.dart';
+import 'package:network_tools/network_tools.dart';
 import 'package:universal_io/io.dart';
 
 /// Scans open port for a target Address or domain.
@@ -73,19 +73,105 @@ class PortScanner {
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
+    bool async = false,
+  }) async* {
+    if (!async) {
+      // If async is false then run on main isolate
+      yield* _customDiscover<ActiveHost>(
+        target,
+        portList: portList,
+        progressCallback: progressCallback,
+        timeout: timeout,
+        resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+      );
+    } else {
+      const int scanRangeForIsolate = 1000;
+      for (int i = 0; i <= portList.length; i += scanRangeForIsolate + 1) {
+        final limit = min(i + scanRangeForIsolate, portList.length);
+        final receivePort = ReceivePort();
+        final isolate =
+            await Isolate.spawn(_startSearchingPorts, receivePort.sendPort);
+
+        await for (final message in receivePort) {
+          if (message is SendPort) {
+            message.send(
+              <dynamic>[
+                target,
+                portList.sublist(i, limit),
+                timeout,
+                resultsInAddressAscendingOrder.toString(),
+                dbDirectory,
+                enableDebugging.toString(),
+              ],
+            );
+          } else if (message is SendableActiveHost) {
+            progressCallback?.call(i * 100 / (portList.length));
+            final activeHostFound =
+                ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
+            await activeHostFound.resolveInfo();
+            yield activeHostFound;
+          } else if (message is String && message == 'Done') {
+            isolate.kill();
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  /// Will search devices in the network inside new isolate
+  @pragma('vm:entry-point')
+  static Future<void> _startSearchingPorts(SendPort sendPort) async {
+    final port = ReceivePort();
+    sendPort.send(port.sendPort);
+
+    await for (final message in port) {
+      if (message is List<dynamic>) {
+        final String target = message[0] as String;
+        final List<int> portList = message[1] as List<int>;
+        final Duration timeout = message[2] as Duration;
+        final bool resultsInAddressAscendingOrder = message[3] == "true";
+        final String dbDirectory = message[4] as String;
+        final bool enableDebugging = message[5] == "true";
+        // configure again
+        await configureNetworkTools(
+          dbDirectory,
+          enableDebugging: enableDebugging,
+        );
+        final openPortsForTarget = _customDiscover<SendableActiveHost>(
+          target,
+          portList: portList,
+          timeout: timeout,
+          resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+        );
+
+        await for (final SendableActiveHost activeHostFound
+            in openPortsForTarget) {
+          sendPort.send(activeHostFound);
+        }
+        sendPort.send('Done');
+      }
+    }
+  }
+
+  static Stream<T> _customDiscover<T>(
+    String target, {
+    List<int> portList = commonPorts,
+    ProgressCallback? progressCallback,
+    Duration timeout = const Duration(milliseconds: 2000),
+    bool resultsInAddressAscendingOrder = true,
   }) async* {
     final List<InternetAddress> address =
         await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
     if (address.isNotEmpty) {
       final String hostAddress = address[0].address;
-      final List<Future<ActiveHost?>> openPortList = [];
-      final StreamController<ActiveHost> activeHostsController =
-          StreamController<ActiveHost>();
+      final List<Future<T?>> openPortList = [];
+      final StreamController<T> activeHostsController = StreamController<T>();
 
       for (int k = 0; k < portList.length; k++) {
         if (portList[k] >= 0 && portList[k] <= 65535) {
           openPortList.add(
-            connectToPort(
+            _connectToPort<T>(
               address: hostAddress,
               port: portList[k],
               timeout: timeout,
@@ -101,8 +187,8 @@ class PortScanner {
 
       int counter = 0;
 
-      for (final Future<ActiveHost?> openPortFuture in openPortList) {
-        final ActiveHost? openPort = await openPortFuture;
+      for (final Future<T?> openPortFuture in openPortList) {
+        final T? openPort = await openPortFuture;
         if (openPort == null) {
           continue;
         }
@@ -125,6 +211,7 @@ class PortScanner {
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
+    bool async = false,
   }) async* {
     if (startPort < 0 ||
         endPort < 0 ||
@@ -147,6 +234,7 @@ class PortScanner {
       progressCallback: progressCallback,
       timeout: timeout,
       resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+      async: async,
     );
   }
 
@@ -157,16 +245,39 @@ class PortScanner {
     required StreamController<ActiveHost> activeHostsController,
     int recursionCount = 0,
   }) async {
+    return _connectToPort<ActiveHost>(
+      address: address,
+      port: port,
+      timeout: timeout,
+      activeHostsController: activeHostsController,
+    );
+  }
+
+  static Future<T?> _connectToPort<T>({
+    required String address,
+    required int port,
+    required Duration timeout,
+    required StreamController<T> activeHostsController,
+    int recursionCount = 0,
+  }) async {
     try {
       final Socket s = await Socket.connect(address, port, timeout: timeout);
       s.destroy();
+
+      if (T == SendableActiveHost) {
+        final SendableActiveHost sendableActiveHost = SendableActiveHost(
+          address,
+          openPorts: [OpenPort(port)],
+        );
+        activeHostsController.add(sendableActiveHost as T);
+        return sendableActiveHost as T;
+      }
       final ActiveHost activeHost = ActiveHost.buildWithAddress(
         address: address,
         openPorts: [OpenPort(port)],
       );
-      activeHostsController.add(activeHost);
-
-      return activeHost;
+      activeHostsController.add(activeHost as T);
+      return activeHost as T;
     } catch (e) {
       if (e is! SocketException) {
         rethrow;
@@ -187,7 +298,7 @@ class PortScanner {
 
         await Future.delayed(timeout + const Duration(milliseconds: 250));
 
-        return connectToPort(
+        return _connectToPort<T>(
           address: address,
           port: port,
           timeout: timeout,

@@ -1,5 +1,11 @@
 # Change Log
 
+## 4.0.4
+1. Bug fix for sync runs when async flag is true
+
+## 4.0.3
+1. scanPortsForSingleDevice and customDiscover supports async mode now.
+
 ## 4.0.2
 1. Separated logs for example and library
 
