@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:injectable/injectable.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/device_info/arp_table_helper.dart';
 import 'package:network_tools/src/services/arp_service.dart';
@@ -8,10 +7,9 @@ import 'package:path/path.dart' as p;
 import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 
-@Injectable(as: ARPService)
 class ARPServiceSembastImpl extends ARPService {
-  static Database? _db;
-  static final _store = stringMapStoreFactory.store('arpstore');
+  Database? _db;
+  final _store = stringMapStoreFactory.store('arpstore');
 
   @override
   Future<void> buildTable() async {

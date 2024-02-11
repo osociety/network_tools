@@ -1,12 +1,12 @@
-import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
+
 import '../example_utils.dart';
 
 Future<void> main() async {
   enableExampleLogging();
   await configureNetworkTools('build');
 
-  String subnet = '192.168.0'; //Default network id for home networks
+  String subnet = '192.168.1'; //Default network id for home networks
 
   final interface = await NetInterface.localInterface();
   final netId = interface?.networkId;
@@ -20,7 +20,7 @@ Future<void> main() async {
 
   // You can set [firstHostId] and scan will start from this host in the network.
   // Similarly set [lastHostId] and scan will end at this host in the network.
-  final stream = HostScanner.getAllPingableDevicesAsync(
+  final stream = HostScannerService.instance.getAllPingableDevicesAsync(
     subnet,
     // firstHostId: 1,
     // lastHostId: 254,
@@ -30,7 +30,7 @@ Future<void> main() async {
   );
 
   stream.listen(
-    (final host) async {
+    (host) async {
       //Same host can be emitted multiple times
       //Use Set<ActiveHost> instead of List<ActiveHost>
       examplesLog.fine('Found device: ${await host.toStringFull()}');

@@ -23,12 +23,8 @@ dependencies:
   csv: ^5.1.1
   # Multi-platform network ping utility.
   dart_ping: ^9.0.1
-  # Defines the annotations used by json_serializable 
-  get_it: ^7.6.4
   # A composable, Future-based library for making HTTP requests.
   http: ^1.1.2
-  # Injectable is a convenient code generator for get_it. 
-  injectable: ^2.3.2
   # Defines the annotations used by json_serializable.
   json_annotation: ^4.8.1
   # Debugging and error logging.
