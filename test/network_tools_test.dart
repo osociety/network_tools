@@ -243,7 +243,7 @@ void main() {
 
   group("Testing mdns scanner group", () {
     test('Running searchMdnsDevices tests', () async {
-      final mdnsDevices = await MdnsScanner.searchMdnsDevices();
+      final mdnsDevices = await MdnsScannerService.instance.searchMdnsDevices();
       expectLater(
         mdnsDevices,
         isA<List<ActiveHost>>(),
