@@ -3,22 +3,13 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
-import 'package:get_it/get_it.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/services/arp_service.dart';
 
-final _getIt = GetIt.instance;
-
 /// Scans for all hosts in a subnet.
-class HostScanner {
-  static final arpServiceFuture = _getIt<ARPService>().open();
-
-  /// Devices scan will start from this integer Id
-  static const int defaultFirstHostId = 1;
-
-  /// Devices scan will stop at this integer id
-  static const int defaultLastHostId = 254;
+class HostScannerServiceImpl extends HostScannerService {
+  final arpServiceFuture = ARPService.instance.open();
 
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   /// Set maxHost to higher value if you are not getting results.
@@ -26,10 +17,11 @@ class HostScanner {
   /// resource consumption.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<ActiveHost> getAllPingableDevices(
+  @override
+  Stream<ActiveHost> getAllPingableDevices(
     String subnet, {
-    int firstHostId = defaultFirstHostId,
-    int lastHostId = defaultLastHostId,
+    int firstHostId = HostScannerService.defaultFirstHostId,
+    int lastHostId = HostScannerService.defaultLastHostId,
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -54,10 +46,11 @@ class HostScanner {
   }
 
   /// Same as [getAllPingableDevices] but can be called or run inside isolate.
-  static Stream<SendableActiveHost> getAllSendablePingableDevices(
+  @override
+  Stream<SendableActiveHost> getAllSendablePingableDevices(
     String subnet, {
-    int firstHostId = defaultFirstHostId,
-    int lastHostId = defaultLastHostId,
+    int firstHostId = HostScannerService.defaultFirstHostId,
+    int lastHostId = HostScannerService.defaultLastHostId,
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -70,7 +63,7 @@ class HostScanner {
 
     for (int i = firstHostId; i <= lastValidSubnet; i++) {
       activeHostsFuture.add(
-        _getHostFromPing(
+        getHostFromPing(
           activeHostsController: activeHostsController,
           host: '$subnet.$i',
           timeoutInSeconds: timeoutInSeconds,
@@ -97,7 +90,7 @@ class HostScanner {
     }
   }
 
-  static Future<SendableActiveHost?> _getHostFromPing({
+  Future<SendableActiveHost?> getHostFromPing({
     required String host,
     required StreamController<SendableActiveHost> activeHostsController,
     int timeoutInSeconds = 1,
@@ -143,15 +136,16 @@ class HostScanner {
     return tempSendableActivateHost;
   }
 
-  static int validateAndGetLastValidSubnet(
+  @override
+  int validateAndGetLastValidSubnet(
     String subnet,
     int firstHostId,
     int lastHostId,
   ) {
     final int maxEnd = maxHost;
     if (firstHostId > lastHostId ||
-        firstHostId < defaultFirstHostId ||
-        lastHostId < defaultFirstHostId ||
+        firstHostId < HostScannerService.defaultFirstHostId ||
+        lastHostId < HostScannerService.defaultFirstHostId ||
         firstHostId > maxEnd ||
         lastHostId > maxEnd) {
       throw 'Invalid subnet range or firstHostId < lastHostId is not true';
@@ -161,10 +155,11 @@ class HostScanner {
 
   /// Works same as [getAllPingableDevices] but does everything inside
   /// isolate out of the box.
-  static Stream<ActiveHost> getAllPingableDevicesAsync(
+  @override
+  Stream<ActiveHost> getAllPingableDevicesAsync(
     String subnet, {
-    int firstHostId = defaultFirstHostId,
-    int lastHostId = defaultLastHostId,
+    int firstHostId = HostScannerService.defaultFirstHostId,
+    int lastHostId = HostScannerService.defaultLastHostId,
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -235,7 +230,7 @@ class HostScanner {
         /// Will contain all the hosts that got discovered in the network, will
         /// be use inorder to cancel on dispose of the page.
         final Stream<SendableActiveHost> hostsDiscoveredInNetwork =
-            HostScanner.getAllSendablePingableDevices(
+            HostScannerService.instance.getAllSendablePingableDevices(
           subnetIsolate,
           firstHostId: firstSubnetIsolate,
           lastHostId: lastSubnetIsolate,
@@ -255,11 +250,12 @@ class HostScanner {
   /// Scans for all hosts that have the specific port that was given.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<ActiveHost> scanDevicesForSinglePort(
+  @override
+  Stream<ActiveHost> scanDevicesForSinglePort(
     String subnet,
     int port, {
-    int firstHostId = defaultFirstHostId,
-    int lastHostId = defaultLastHostId,
+    int firstHostId = HostScannerService.defaultFirstHostId,
+    int lastHostId = HostScannerService.defaultLastHostId,
     Duration timeout = const Duration(milliseconds: 2000),
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -273,7 +269,7 @@ class HostScanner {
     for (int i = firstHostId; i <= lastValidSubnet; i++) {
       final host = '$subnet.$i';
       activeHostOpenPortList.add(
-        PortScanner.connectToPort(
+        PortScannerService.instance.connectToPort(
           address: host,
           port: port,
           timeout: timeout,
@@ -301,25 +297,25 @@ class HostScanner {
   }
 
   /// Defines total number of subnets in class A network
-  static const classASubnets = 16777216;
+  final classASubnets = 16777216;
 
   /// Defines total number of subnets in class B network
-  static const classBSubnets = 65536;
+  final classBSubnets = 65536;
 
   /// Defines total number of subnets in class C network
-  static const classCSubnets = 256;
+  final classCSubnets = 256;
 
   /// Minimum value of first octet in IPv4 address used by getMaxHost
-  static const int minNetworkId = 1;
+  final int minNetworkId = 1;
 
   /// Maximum value of first octect in IPv4 address used by getMaxHost
-  static const int maxNetworkId = 223;
+  final int maxNetworkId = 223;
 
   /// returns the max number of hosts a subnet can have excluding network Id and broadcast Id
   @Deprecated(
     "Implementation is wrong, since we only append in last octet, max host can only be 254. Use maxHost getter",
   )
-  static int getMaxHost(String subnet) {
+  int getMaxHost(String subnet) {
     if (subnet.isEmpty) {
       throw ArgumentError('Invalid subnet address, address can not be empty.');
     }
@@ -349,5 +345,5 @@ class HostScanner {
     );
   }
 
-  static int get maxHost => defaultLastHostId;
+  int get maxHost => HostScannerService.defaultLastHostId;
 }

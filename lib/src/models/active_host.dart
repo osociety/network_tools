@@ -1,11 +1,8 @@
 import 'package:dart_ping/dart_ping.dart';
-import 'package:get_it/get_it.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/services/arp_service.dart';
 import 'package:universal_io/io.dart';
-
-final _getIt = GetIt.instance;
 
 /// ActiveHost which implements comparable
 /// By default sort by hostId ascending
@@ -91,7 +88,6 @@ class ActiveHost {
   }
 
   static const generic = 'Generic Device';
-  static final arpService = _getIt<ARPService>();
 
   InternetAddress internetAddress;
 
@@ -183,8 +179,8 @@ class ActiveHost {
   }
 
   Future<ARPData?> setARPData() async {
-    await arpService.open();
-    return arpService.entryFor(address);
+    await ARPService.instance.open();
+    return ARPService.instance.entryFor(address);
   }
 
   Future<Vendor?> setVendor() async {
