@@ -202,12 +202,12 @@ class HostScannerServiceImpl extends HostScannerService {
             ],
           );
         } else if (message is SendableActiveHost) {
-          progressCallback
-              ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-          // print('Address ${message.address}');
           final activeHostFound =
               ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
           await activeHostFound.resolveInfo();
+          final j = int.tryParse(activeHostFound.hostId) ?? i;
+          progressCallback
+              ?.call((j - firstHostId) * 100 / (lastValidSubnet - firstHostId));
           yield activeHostFound;
         } else if (message is String && message == 'Done') {
           isolate.kill();
