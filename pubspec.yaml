@@ -20,7 +20,7 @@ funding:
   
 dependencies:
   # A dart csv to list converter.
-  csv: ^5.1.1
+  csv: ">=5.1.1 <7.0.0"
   # Multi-platform network ping utility.
   dart_ping: ^9.0.1
   # A composable, Future-based library for making HTTP requests.
