@@ -1,7 +1,13 @@
 # Change Log
 
-## 4.0.5
+## 5.0.0
 1. Added hostIds list parameter to restrict scan to only these ids.
+2. Breaking changes on calling static methods. You have to use instance of service now.
+
+**Breaking change** Replace these occurences in your project
+
+    * HostScanner to HostScannerService.instance
+    * PortScanner to PortScannerService.instance
 
 ## 4.0.4
 1. Bug fix for sync runs when async flag is true

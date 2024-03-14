@@ -61,7 +61,7 @@ Future<void> main() async {
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
   final String subnet = address.substring(0, address.lastIndexOf('.'));
-  final stream = HostScanner.getAllPingableDevices(subnet, firstHostId: 1, lastHostId: 50,
+  final stream = HostScannerService.instance.getAllPingableDevices(subnet, firstHostId: 1, lastHostId: 50,
       progressCallback: (progress) {
     print('Progress for host discovery : $progress');
   });
