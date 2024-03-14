@@ -1,5 +1,8 @@
 # Change Log
 
+## 4.0.5
+1. Added hostIds list parameter to restrict scan to only these ids.
+
 ## 4.0.4
 1. Bug fix for sync runs when async flag is true
 
