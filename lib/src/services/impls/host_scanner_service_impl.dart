@@ -15,6 +15,7 @@ class HostScannerServiceImpl extends HostScannerService {
   /// Set maxHost to higher value if you are not getting results.
   /// It won't firstHostId again unless previous scan is completed due to heavy
   /// resource consumption.
+  /// Use hostIds to limit subnet scan to hosts given.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
   @override
@@ -22,6 +23,7 @@ class HostScannerServiceImpl extends HostScannerService {
     String subnet, {
     int firstHostId = HostScannerService.defaultFirstHostId,
     int lastHostId = HostScannerService.defaultLastHostId,
+    List<int> hostIds = const [],
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -30,6 +32,7 @@ class HostScannerServiceImpl extends HostScannerService {
       subnet,
       firstHostId: firstHostId,
       lastHostId: lastHostId,
+      hostIds: hostIds,
       timeoutInSeconds: timeoutInSeconds,
       progressCallback: progressCallback,
       resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
@@ -51,6 +54,7 @@ class HostScannerServiceImpl extends HostScannerService {
     String subnet, {
     int firstHostId = HostScannerService.defaultFirstHostId,
     int lastHostId = HostScannerService.defaultLastHostId,
+    List<int> hostIds = const [],
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -61,14 +65,18 @@ class HostScannerServiceImpl extends HostScannerService {
     final StreamController<SendableActiveHost> activeHostsController =
         StreamController<SendableActiveHost>();
 
+    final List<int> pinged = [];
     for (int i = firstHostId; i <= lastValidSubnet; i++) {
-      activeHostsFuture.add(
-        getHostFromPing(
-          activeHostsController: activeHostsController,
-          host: '$subnet.$i',
-          timeoutInSeconds: timeoutInSeconds,
-        ),
-      );
+      if (hostIds.isEmpty || hostIds.contains(i)) {
+        pinged.add(i);
+        activeHostsFuture.add(
+          getHostFromPing(
+            activeHostsController: activeHostsController,
+            host: '$subnet.$i',
+            timeoutInSeconds: timeoutInSeconds,
+          ),
+        );
+      }
     }
 
     if (!resultsInAddressAscendingOrder) {
@@ -80,8 +88,9 @@ class HostScannerServiceImpl extends HostScannerService {
       i++;
       final SendableActiveHost? tempHost = await host;
 
-      progressCallback
-          ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
+      progressCallback?.call(
+        (pinged[i] - firstHostId) * 100 / (lastValidSubnet - firstHostId),
+      );
 
       if (tempHost == null) {
         continue;
@@ -160,6 +169,7 @@ class HostScannerServiceImpl extends HostScannerService {
     String subnet, {
     int firstHostId = HostScannerService.defaultFirstHostId,
     int lastHostId = HostScannerService.defaultLastHostId,
+    List<int> hostIds = const [],
     int timeoutInSeconds = 1,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
@@ -188,15 +198,16 @@ class HostScannerServiceImpl extends HostScannerService {
               resultsInAddressAscendingOrder.toString(),
               dbDirectory,
               enableDebugging.toString(),
+              hostIds.join(','),
             ],
           );
         } else if (message is SendableActiveHost) {
-          progressCallback
-              ?.call((i - firstHostId) * 100 / (lastValidSubnet - firstHostId));
-          // print('Address ${message.address}');
           final activeHostFound =
               ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
           await activeHostFound.resolveInfo();
+          final j = int.tryParse(activeHostFound.hostId) ?? i;
+          progressCallback
+              ?.call((j - firstHostId) * 100 / (lastValidSubnet - firstHostId));
           yield activeHostFound;
         } else if (message is String && message == 'Done') {
           isolate.kill();
@@ -221,6 +232,11 @@ class HostScannerServiceImpl extends HostScannerService {
         final bool resultsInAddressAscendingOrder = message[4] == "true";
         final String dbDirectory = message[5];
         final bool enableDebugging = message[6] == "true";
+        final List<int> hostIds = message[7]
+            .split(',')
+            .where((e) => e.isNotEmpty)
+            .map(int.parse)
+            .toList();
         // configure again
         await configureNetworkTools(
           dbDirectory,
@@ -234,6 +250,7 @@ class HostScannerServiceImpl extends HostScannerService {
           subnetIsolate,
           firstHostId: firstSubnetIsolate,
           lastHostId: lastSubnetIsolate,
+          hostIds: hostIds,
           timeoutInSeconds: timeoutInSeconds,
           resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
         );
