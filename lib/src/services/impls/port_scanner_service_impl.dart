@@ -6,39 +6,10 @@ import 'package:network_tools/network_tools.dart';
 import 'package:universal_io/io.dart';
 
 /// Scans open port for a target Address or domain.
-class PortScanner {
-  static const int defaultStartPort = 1;
-  static const int defaultEndPort = 1024;
-  static const List<int> commonPorts = [
-    20,
-    21,
-    22,
-    23,
-    25,
-    50,
-    51,
-    53,
-    67,
-    68,
-    69,
-    80,
-    110,
-    119,
-    123,
-    135,
-    139,
-    143,
-    161,
-    162,
-    389,
-    443,
-    989,
-    990,
-    3389,
-  ];
-
+class PortScannerServiceImpl extends PortScannerService {
   /// Checks if the single [port] is open or not for the [target].
-  static Future<ActiveHost?> isOpen(
+  @override
+  Future<ActiveHost?> isOpen(
     String target,
     int port, {
     Duration timeout = const Duration(milliseconds: 2000),
@@ -67,9 +38,10 @@ class PortScanner {
   /// Tries connecting ports before until [timeout] reached.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
   /// ascending order and without [progressCallback].
-  static Stream<ActiveHost> customDiscover(
+  @override
+  Stream<ActiveHost> customDiscover(
     String target, {
-    List<int> portList = commonPorts,
+    List<int> portList = PortScannerService.commonPorts,
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
@@ -121,7 +93,7 @@ class PortScanner {
 
   /// Will search devices in the network inside new isolate
   @pragma('vm:entry-point')
-  static Future<void> _startSearchingPorts(SendPort sendPort) async {
+  Future<void> _startSearchingPorts(SendPort sendPort) async {
     final port = ReceivePort();
     sendPort.send(port.sendPort);
 
@@ -154,9 +126,9 @@ class PortScanner {
     }
   }
 
-  static Stream<T> _customDiscover<T>(
+  Stream<T> _customDiscover<T>(
     String target, {
-    List<int> portList = commonPorts,
+    List<int> portList = PortScannerService.commonPorts,
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
@@ -204,10 +176,11 @@ class PortScanner {
   /// Scans port from [startPort] to [endPort] of [target]. Progress can be
   /// retrieved by [progressCallback]
   /// Tries connecting ports before until [timeout] reached.
-  static Stream<ActiveHost> scanPortsForSingleDevice(
+  @override
+  Stream<ActiveHost> scanPortsForSingleDevice(
     String target, {
-    int startPort = defaultStartPort,
-    int endPort = defaultEndPort,
+    int startPort = PortScannerService.defaultStartPort,
+    int endPort = PortScannerService.defaultEndPort,
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
@@ -238,7 +211,8 @@ class PortScanner {
     );
   }
 
-  static Future<ActiveHost?> connectToPort({
+  @override
+  Future<ActiveHost?> connectToPort({
     required String address,
     required int port,
     required Duration timeout,
@@ -253,7 +227,7 @@ class PortScanner {
     );
   }
 
-  static Future<T?> _connectToPort<T>({
+  Future<T?> _connectToPort<T>({
     required String address,
     required int port,
     required Duration timeout,
@@ -311,5 +285,5 @@ class PortScanner {
     }
   }
 
-  static final _errorCodes = [13, 49, 61, 64, 65, 101, 111, 113];
+  final _errorCodes = [13, 49, 61, 64, 65, 101, 111, 113];
 }

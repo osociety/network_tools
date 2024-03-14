@@ -22,7 +22,6 @@ analyzer:
     - "**/*.pbjson.dart"
     - "**/*.gr.dart"
     - "**/*.md"
-    - "example/**"
 
 linter:
   rules:

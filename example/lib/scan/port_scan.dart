@@ -1,5 +1,5 @@
-import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
+
 import '../example_utils.dart';
 
 Future<void> main() async {
@@ -18,7 +18,7 @@ Future<void> main() async {
   // [New] Scan for a single open port in a subnet
   // You can set [firstHostId] and scan will start from this host in the network.
   // Similarly set [lastHostId] and scan will end at this host in the network.
-  final stream2 = HostScanner.scanDevicesForSinglePort(
+  final stream2 = HostScannerService.instance.scanDevicesForSinglePort(
     subnet,
     53,
     progressCallback: (progress) {
@@ -27,9 +27,9 @@ Future<void> main() async {
   );
 
   stream2.listen(
-    (activeHost) {
-      examplesLog.fine(
-          '[scanDevicesForSinglePort]: Found device : ${activeHost.toString()}');
+    (ActiveHost activeHost) {
+      examplesLog
+          .fine('[scanDevicesForSinglePort]: Found device : $activeHost');
       final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
       if (deviceWithOpenPort.isOpen) {
         examplesLog.fine(
@@ -49,7 +49,7 @@ Future<void> main() async {
     examplesLog.fine("Target is $target");
   }
 
-  PortScanner.scanPortsForSingleDevice(
+  PortScannerService.instance.scanPortsForSingleDevice(
     target,
     // Scan will start from this port.
     // startPort: 1,
@@ -63,7 +63,8 @@ Future<void> main() async {
 
       if (deviceWithOpenPort.isOpen) {
         examplesLog.fine(
-            'Found open port: ${deviceWithOpenPort.port} on device $target');
+          'Found open port: ${deviceWithOpenPort.port} on device $target',
+        );
       }
     },
     onDone: () {

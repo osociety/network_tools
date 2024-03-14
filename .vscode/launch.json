@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "host scan",
+            "program": "${workspaceFolder}/example/lib/scan/host_scan.dart",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "mdns scan",
+            "program": "${workspaceFolder}/example/lib/scan/mdns_scan.dart",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "port scan",
+            "program": "${workspaceFolder}/example/lib/scan/port_scan.dart",
+            "request": "launch",
+            "type": "dart"
+        },
+    ]
+}

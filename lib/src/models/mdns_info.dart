@@ -35,6 +35,9 @@ class MdnsInfo {
 
   /// mDNS name without the ._tcp.local
   String getOnlyTheStartOfMdnsName() {
-    return mdnsName.substring(0, mdnsName.indexOf('.'));
+    if (mdnsName.contains('.')) {
+      return mdnsName.substring(0, mdnsName.indexOf('.'));
+    }
+    return mdnsName;
   }
 }
