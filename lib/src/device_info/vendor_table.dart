@@ -38,7 +38,7 @@ class VendorTable {
     final csvPath = p.join(dbDirectory, "mac-vendors-export.csv");
     final file = File(csvPath);
     if (!await file.exists()) {
-      log.fine("Downloading mac-vendors-export.csv from network_tools");
+      logger.fine("Downloading mac-vendors-export.csv from network_tools");
       final response = await http.get(
         Uri.https(
           "raw.githubusercontent.com",
@@ -46,9 +46,9 @@ class VendorTable {
         ),
       );
       file.writeAsBytesSync(response.bodyBytes);
-      log.fine("Downloaded mac-vendors-export.csv successfully");
+      logger.fine("Downloaded mac-vendors-export.csv successfully");
     } else {
-      log.fine("File mac-vendors-export.csv already exists");
+      logger.fine("File mac-vendors-export.csv already exists");
     }
 
     final input = file.openRead();

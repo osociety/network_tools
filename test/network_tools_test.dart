@@ -24,7 +24,7 @@ void main() {
     server =
         await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
     port = server.port;
-    log.fine("Opened port in this machine at $port");
+    logger.fine("Opened port in this machine at $port");
 
     final interface = await NetInterface.localInterface();
     if (interface != null) {
@@ -44,7 +44,7 @@ void main() {
           }
         }
       }
-      log.fine(
+      logger.fine(
         'Fetched own host as $myOwnHost and interface address as $interfaceIp',
       );
     }
