@@ -1,5 +1,8 @@
 # Change Log
 
+## 5.0.1
+1. Bug fixes and improvements
+
 ## 5.0.0
 1. Added hostIds list parameter to restrict scan to only these ids.
 2. Breaking changes on calling static methods. You have to use instance of service now.
