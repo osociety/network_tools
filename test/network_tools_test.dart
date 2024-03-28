@@ -7,6 +7,7 @@ import 'package:universal_io/io.dart';
 
 void main() {
   int port = 0;
+  int hostId = 0;
   int firstHostId = 0;
   int lastHostId = 0;
   String myOwnHost = "0.0.0.0";
@@ -23,11 +24,11 @@ void main() {
     server =
         await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
     port = server.port;
-    log.fine("Opened port in this machine at $port");
+    logger.fine("Opened port in this machine at $port");
 
     final interface = await NetInterface.localInterface();
     if (interface != null) {
-      final hostId = interface.hostId;
+      hostId = interface.hostId;
       interfaceIp = interface.networkId;
       myOwnHost = interface.ipAddress;
       // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
@@ -43,7 +44,7 @@ void main() {
           }
         }
       }
-      log.fine(
+      logger.fine(
         'Fetched own host as $myOwnHost and interface address as $interfaceIp',
       );
     }
@@ -77,6 +78,28 @@ void main() {
             lastHostId: lastHostId,
           ),
           emits(isA<ActiveHost>()),
+        );
+        expectLater(
+          //There should be at least one device pingable in network when limiting to own hostId
+          HostScannerService.instance.getAllPingableDevices(
+            interfaceIp,
+            timeoutInSeconds: 3,
+            hostIds: [hostId],
+            firstHostId: firstHostId,
+            lastHostId: lastHostId,
+          ),
+          emits(isA<ActiveHost>()),
+        );
+        expectLater(
+          //There should be at least one device pingable in network when limiting to hostId other than own
+          HostScannerService.instance.getAllPingableDevices(
+            interfaceIp,
+            timeoutInSeconds: 3,
+            hostIds: [0],
+            firstHostId: firstHostId,
+            lastHostId: lastHostId,
+          ),
+          neverEmits(isA<ActiveHost>()),
         );
         expectLater(
           //Should emit at least our own local machine when pinging all hosts.
@@ -121,6 +144,28 @@ void main() {
               internetAddress: InternetAddress(myOwnHost),
             ),
           ),
+        );
+        expectLater(
+          //There should be at least one device pingable in network when limiting to own hostId
+          HostScannerService.instance.getAllPingableDevicesAsync(
+            interfaceIp,
+            timeoutInSeconds: 3,
+            hostIds: [hostId],
+            firstHostId: firstHostId,
+            lastHostId: lastHostId,
+          ),
+          emits(isA<ActiveHost>()),
+        );
+        expectLater(
+          //There should be at least one device pingable in network when limiting to hostId other than own
+          HostScannerService.instance.getAllPingableDevicesAsync(
+            interfaceIp,
+            timeoutInSeconds: 3,
+            hostIds: [0],
+            firstHostId: firstHostId,
+            lastHostId: lastHostId,
+          ),
+          neverEmits(isA<ActiveHost>()),
         );
       },
     );

@@ -16,7 +16,7 @@ Future<void> main() async {
 
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
-  examplesLog.fine("Starting scan on subnet $subnet");
+  examplesLogger.fine("Starting scan on subnet $subnet");
 
   // You can set [firstHostId] and scan will start from this host in the network.
   // Similarly set [lastHostId] and scan will end at this host in the network.
@@ -25,7 +25,7 @@ Future<void> main() async {
     // firstHostId: 1,
     // lastHostId: 254,
     progressCallback: (progress) {
-      examplesLog.finer('Progress for host discovery : $progress');
+      examplesLogger.finer('Progress for host discovery : $progress');
     },
   );
 
@@ -33,10 +33,10 @@ Future<void> main() async {
     (host) async {
       //Same host can be emitted multiple times
       //Use Set<ActiveHost> instead of List<ActiveHost>
-      examplesLog.fine('Found device: ${await host.toStringFull()}');
+      examplesLogger.fine('Found device: ${await host.toStringFull()}');
     },
     onDone: () {
-      examplesLog.fine('Scan completed');
+      examplesLogger.fine('Scan completed');
     },
   ); // Don't forget to cancel the stream when not in use.
 }

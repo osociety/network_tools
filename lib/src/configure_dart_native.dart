@@ -1,5 +1,5 @@
 import 'package:logging/logging.dart';
-import 'package:network_tools/network_tools.dart' as pacakges_page;
+import 'package:network_tools/network_tools.dart' as packages_page;
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/services/arp_service.dart';
 import 'package:network_tools/src/services/impls/arp_service_sembast_impl.dart';
@@ -11,13 +11,13 @@ Future<void> configureNetworkTools(
   String dbDirectory, {
   bool enableDebugging = false,
 }) async {
-  pacakges_page.enableDebugging = enableDebugging;
-  pacakges_page.dbDirectory = dbDirectory;
+  packages_page.enableDebugging = enableDebugging;
+  packages_page.dbDirectory = dbDirectory;
 
-  if (pacakges_page.enableDebugging) {
+  if (packages_page.enableDebugging) {
     Logger.root.level = Level.FINE;
     Logger.root.onRecord.listen((record) {
-      if (record.loggerName == log.name) {
+      if (record.loggerName == logger.name) {
         // ignore: avoid_print
         print(
           '${record.time.toLocal()}: ${record.level.name}: ${record.loggerName}: ${record.message}',
@@ -34,5 +34,5 @@ Future<void> configureNetworkTools(
 
   final arpService = await ARPService.instance.open();
   await arpService.buildTable();
-  await pacakges_page.VendorTable.createVendorTableMap();
+  await packages_page.VendorTable.createVendorTableMap();
 }

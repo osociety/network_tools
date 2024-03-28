@@ -133,7 +133,7 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
         listOfActiveHost.add(activeHost);
       }
     } catch (e) {
-      log.severe(
+      logger.severe(
         'Error finding ip of mdns record ${ptr.name} srv target ${srv.target}, will add it with ip 0.0.0.0\n$e',
       );
       final ActiveHost activeHost = convertSrvToHostName(

@@ -174,7 +174,7 @@ class ActiveHost {
         // throw exception.
         // We don't need to print this crash as it is by design.
       } else {
-        log.severe('Exception here: $e');
+        logger.severe('Exception here: $e');
       }
     }
     return null;
