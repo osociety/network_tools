@@ -1,5 +1,9 @@
 # Change Log
 
+## 5.0.2
+1. Bug for other languages on Windows fixed by codepage.
+2. Added mac address option to ActiveHost constractor.
+
 ## 5.0.1
 1. Bug fixes and improvements
 
