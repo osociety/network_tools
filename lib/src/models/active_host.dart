@@ -140,7 +140,12 @@ class ActiveHost {
 
     PingData tempPingData = const PingData();
 
-    Ping(host, count: 1, timeout: timeoutInSeconds).stream.listen((pingData) {
+    Ping(
+      host,
+      count: 1,
+      timeout: timeoutInSeconds,
+      forceCodepage: Platform.isWindows,
+    ).stream.listen((pingData) {
       final PingResponse? response = pingData.response;
       if (response != null) {
         final Duration? time = response.time;

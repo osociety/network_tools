@@ -6,6 +6,7 @@ import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/services/arp_service.dart';
+import 'package:universal_io/io.dart';
 
 /// Scans for all hosts in a subnet.
 class HostScannerServiceImpl extends HostScannerService {
@@ -106,8 +107,12 @@ class HostScannerServiceImpl extends HostScannerService {
   }) async {
     SendableActiveHost? tempSendableActivateHost;
 
-    await for (final PingData pingData
-        in Ping(host, count: 1, timeout: timeoutInSeconds).stream) {
+    await for (final PingData pingData in Ping(
+      host,
+      count: 1,
+      timeout: timeoutInSeconds,
+      forceCodepage: Platform.isWindows,
+    ).stream) {
       final PingResponse? response = pingData.response;
       final PingError? pingError = pingData.error;
       if (response != null) {
