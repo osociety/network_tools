@@ -10,9 +10,11 @@ class ActiveHost {
   ActiveHost({
     required this.internetAddress,
     this.openPorts = const [],
+    String? macAddress,
     PingData? pingData,
     MdnsInfo? mdnsInfoVar,
   }) {
+    _macAddress = macAddress;
     final String tempAddress = internetAddress.address;
 
     if (tempAddress.contains('.')) {
@@ -53,6 +55,7 @@ class ActiveHost {
   }
   factory ActiveHost.buildWithAddress({
     required String address,
+    String? macAddress,
     List<OpenPort> openPorts = const [],
     PingData? pingData,
     MdnsInfo? mdnsInfo,
@@ -64,6 +67,7 @@ class ActiveHost {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
+      macAddress: macAddress,
       openPorts: openPorts,
       pingData: pingData,
       mdnsInfoVar: mdnsInfo,
@@ -72,6 +76,7 @@ class ActiveHost {
 
   factory ActiveHost.fromSendableActiveHost({
     required SendableActiveHost sendableActiveHost,
+    String? macAddress,
     MdnsInfo? mdnsInfo,
   }) {
     final InternetAddress? internetAddressTemp =
@@ -81,6 +86,7 @@ class ActiveHost {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
+      macAddress: macAddress,
       openPorts: sendableActiveHost.openPorts,
       pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
@@ -110,6 +116,10 @@ class ActiveHost {
 
   /// Only works if arpData is not null and have valid mac address.
   late Future<Vendor?> vendor;
+
+  String? _macAddress;
+  Future<String?> getMacAddress() async =>
+      _macAddress ?? (await arpData)?.macAddress;
 
   /// List of all the open port of this device
   List<OpenPort> openPorts;
@@ -189,7 +199,9 @@ class ActiveHost {
   }
 
   Future<Vendor?> setVendor() async {
-    return VendorTable.getVendor(arpData);
+    final String? macAddress = await getMacAddress();
+
+    return macAddress == null ? null : VendorTable.macToVendor(macAddress);
   }
 
   /// Try to find the mdns name of this device, if not exist mdns name will
