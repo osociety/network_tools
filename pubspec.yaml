@@ -42,10 +42,6 @@ dependencies:
   
 
 dev_dependencies:
-  # Standalone generator and watcher for Dart 
-  build_runner: ^2.4.7
-  # A generator for injectable library.
-  injectable_generator: ^2.4.1
   # Provides Dart Build System builders for handling JSON.
   json_serializable: ^6.7.1
   # Set of lint rules for Dart.
