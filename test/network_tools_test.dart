@@ -170,7 +170,7 @@ void main() {
       },
     );
 
-    test('Running scanDevicesForSinglePort tests', () async* {
+    test('Running scanDevicesForSinglePort tests', () {
       expectLater(
         HostScannerService.instance.scanDevicesForSinglePort(
           interfaceIp,
