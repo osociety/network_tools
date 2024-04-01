@@ -288,11 +288,11 @@ void main() {
 
   group("Testing mdns scanner group", () {
     test('Running searchMdnsDevices tests', () async {
-      // final mdnsDevices = await MdnsScannerService.instance.searchMdnsDevices();
-      // expectLater(
-      //   mdnsDevices,
-      //   isA<List<ActiveHost>>(),
-      // );
+      final mdnsDevices = await MdnsScannerService.instance.searchMdnsDevices();
+      expectLater(
+        mdnsDevices,
+        isA<List<ActiveHost>>(),
+      );
       //todo: mdnsDevices are empty in GHA, open one to be discoverable
       // expectLater(
       //   mdnsDevices,
