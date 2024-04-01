@@ -63,3 +63,6 @@ jobs:
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: coverage/coverage.lcov
+
+      - name: Check Publish Warnings
+        run: dart pub publish --dry-run
