@@ -34,7 +34,7 @@ dependencies:
   # A comprehensive, cross-platform path manipulation library for Dart.
   path: ^1.8.3
   # Process run helpers
-  process_run: ">=0.13.3+1 <0.15.0"
+  process_run: ">=0.13.3+1 <2.0.0"
   # Yet another NoSQL persistent store database solution for single process io apps.
   sembast: ^3.5.0+1
   # Cross-platform 'dart:io' that works in all platforms.
