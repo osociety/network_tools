@@ -1,5 +1,8 @@
 # Change Log
 
+## 5.0.4
+Updated dependencies, added tests, and updated GHA.
+
 ## 5.0.3
 Updated dependencies
 

@@ -54,6 +54,10 @@ void main() {
     test('Running OpenPort tests', () {
       final actualOpenPort = openPort;
       final expectedOpenPort = OpenPort(port);
+      final json = <String, dynamic>{
+        'port': expectedOpenPort.port,
+        'isOpen': expectedOpenPort.isOpen,
+      };
 
       if (actualOpenPort != null) {
         expect(actualOpenPort, expectedOpenPort);
@@ -62,6 +66,35 @@ void main() {
       expect(expectedOpenPort.isOpen, equals(true)); // because default is true
       expect(expectedOpenPort.hashCode, expectedOpenPort.port.hashCode);
       expect(expectedOpenPort.toString(), expectedOpenPort.port.toString());
+      expect(expectedOpenPort.toJson(), json);
+      expect(OpenPort.fromJson(json), expectedOpenPort);
+    });
+    test('Running ARPData tests', () {
+      final json = <String, dynamic>{
+        'hostname': 'Local',
+        'iPAddress': '192.168.1.1',
+        'macAddress': '00:00:3F:C1:DD:3E',
+        'interfaceName': 'eth0',
+        'interfaceType': 'bridge',
+      };
+
+      final arpData = ARPData.fromJson(json);
+      expect(arpData.toJson(), json);
+      expect(arpData.notNullIPAddress, true);
+      expect(arpData.notNullMacAddress, true);
+      expect(arpData.notNullInterfaceType, true);
+    });
+
+    test('Running Vendor tests', () {
+      final json = <String, dynamic>{
+        'macPrefix': '00:00:0C',
+        'vendorName': 'Cisco Systems, Inc',
+        'private': 'false',
+        'blockType': 'MA-L',
+        'lastUpdate': '2015/11/17',
+      };
+      final vendor = Vendor.fromJson(json);
+      expect(vendor.toJson(), json);
     });
   });
 
