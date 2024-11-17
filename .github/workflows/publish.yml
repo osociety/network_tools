@@ -58,7 +58,6 @@ jobs:
           file: coverage/coverage.lcov
           
   publish:
-    runs-on: ubuntu-latest
     needs: 'test'
     permissions:
       id-token: write # Required for authentication using OIDC
