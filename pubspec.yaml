@@ -32,7 +32,7 @@ dependencies:
   # Performing mDNS queries (e.g. Bonjour, Avahi).
   multicast_dns: ^0.3.2+7
   # A comprehensive, cross-platform path manipulation library for Dart.
-  path: ^1.9.1
+  path: ^1.9.0
   # Process run helpers
   process_run: ^1.2.2
   # Yet another NoSQL persistent store database solution for single process io apps.
