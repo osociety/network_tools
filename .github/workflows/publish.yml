@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  publish:
+  test:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Required for authentication using OIDC
@@ -50,15 +50,19 @@ jobs:
 
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
-
-      - name: Publish Package
-        uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
-        with:
-          environment: 'pub.dev'
       
       - name: Upload Coverage to CodeCov
         uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: coverage/coverage.lcov
+          
+  publish:
+    runs-on: ubuntu-latest
+    needs: 'test'
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    with:
+      environment: 'pub.dev'
           
