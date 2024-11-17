@@ -48,6 +48,6 @@ jobs:
     needs: 'test'
     permissions:
       id-token: write # Required for authentication using OIDC
-    uses: git-elliot/setup-dart/blob/main/.github/workflows/publish.yml@v1 # Added build_runner step
+    uses: git-elliot/setup-dart/.github/workflows/publish.yml@main # Added build_runner step
     with:
       environment: 'pub.dev'
