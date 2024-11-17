@@ -42,6 +42,8 @@ dependencies:
   
 
 dev_dependencies:
+  # provides a concrete way of generating files using Dart code
+  build_runner: ^2.4.13
   # Provides Dart Build System builders for handling JSON.
   json_serializable: ^6.8.0
   # Set of lint rules for Dart.
