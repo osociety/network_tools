@@ -125,7 +125,8 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
       await for (final IPAddressResourceRecord ip
           in iPAddressResourceRecordStream) {
         final ActiveHost activeHost = convertSrvToHostName(
-          internetAddress: ip.address,
+          internetAddress:
+              InternetAddress.fromRawAddress(ip.address.rawAddress),
           ptr: ptr,
           srv: srv,
         );

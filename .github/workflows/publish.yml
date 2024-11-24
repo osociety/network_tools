@@ -1,15 +1,13 @@
 name: Publish plugin
 
 on:
-  release:
-    types: [published]
-
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+      
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write # Required for authentication using OIDC
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -17,7 +15,7 @@ jobs:
       # Note: This workflow uses the latest stable version of the Dart SDK.
       # You can specify other versions if desired, see documentation here:
       # https://github.com/dart-lang/setup-dart/blob/main/README.md
-      - uses: dart-lang/setup-dart@v1.4
+      - uses: dart-lang/setup-dart@v1.6.5
       # - uses: dart-lang/setup-dart@9a04e6d73cca37bd455e0608d7e5092f881fd603
 
       - name: Install dependencies
@@ -38,16 +36,6 @@ jobs:
       - name: Format Coverage
         run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
 
-      - name: Setup Pub Credentials
-        shell: bash
-        env:
-          PUB_DEV_PUBLISH_ACCESS_TOKEN: ${{ secrets.PUB_DEV_PUBLISH_ACCESS_TOKEN }}
-          PUB_DEV_PUBLISH_REFRESH_TOKEN: ${{ secrets.PUB_DEV_PUBLISH_REFRESH_TOKEN }}
-          PUB_DEV_PUBLISH_TOKEN_ENDPOINT: ${{ secrets.PUB_DEV_PUBLISH_TOKEN_ENDPOINT }}
-          PUB_DEV_PUBLISH_EXPIRATION: ${{ secrets.PUB_DEV_PUBLISH_EXPIRATION }}
-        run: |
-          sh ./pub_login.sh
-
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
       
@@ -61,7 +49,7 @@ jobs:
     needs: 'test'
     permissions:
       id-token: write # Required for authentication using OIDC
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    uses: git-elliot/setup-dart/.github/workflows/publish.yml@main # Added build_runner step
     with:
       environment: 'pub.dev'
-          
+      build_runner: true

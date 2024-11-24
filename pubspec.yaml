@@ -1,6 +1,6 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 5.0.4
+version: 5.0.5
 issue_tracker: https://github.com/osociety/network_tools/issues
 repository: https://github.com/osociety/network_tools
 
@@ -32,7 +32,7 @@ dependencies:
   # Performing mDNS queries (e.g. Bonjour, Avahi).
   multicast_dns: ^0.3.2+7
   # A comprehensive, cross-platform path manipulation library for Dart.
-  path: ^1.9.1
+  path: ^1.9.0
   # Process run helpers
   process_run: ^1.2.2
   # Yet another NoSQL persistent store database solution for single process io apps.
