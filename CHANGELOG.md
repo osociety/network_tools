@@ -1,5 +1,8 @@
 # Change Log
 
+## 5.0.5
+Fixed compatibility for web
+
 ## 5.0.4
 Updated dependencies, added tests, and updated GHA.
 
