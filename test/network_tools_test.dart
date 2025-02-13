@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:test/test.dart';
@@ -6,6 +7,7 @@ import 'package:universal_io/io.dart';
 
 void main() {
   int port = 0;
+  int hostId = 0;
   int firstHostId = 0;
   int lastHostId = 0;
   String myOwnHost = "0.0.0.0";
@@ -22,18 +24,18 @@ void main() {
     server =
         await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
     port = server.port;
-    log.fine("Opened port in this machine at $port");
+    logger.fine("Opened port in this machine at $port");
 
     final interface = await NetInterface.localInterface();
     if (interface != null) {
-      final hostId = interface.hostId;
+      hostId = interface.hostId;
       interfaceIp = interface.networkId;
       myOwnHost = interface.ipAddress;
       // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
       firstHostId = hostId <= 1 ? hostId : hostId - 1;
       lastHostId = hostId >= 254 ? hostId : hostId + 1;
-      await for (final host
-          in HostScanner.scanDevicesForSinglePort(interfaceIp, port)) {
+      await for (final host in HostScannerService.instance
+          .scanDevicesForSinglePort(interfaceIp, port)) {
         hostsWithOpenPort.add(host);
         for (final tempOpenPort in host.openPorts) {
           if (tempOpenPort.port == port) {
@@ -42,7 +44,7 @@ void main() {
           }
         }
       }
-      log.fine(
+      logger.fine(
         'Fetched own host as $myOwnHost and interface address as $interfaceIp',
       );
     }
@@ -52,6 +54,10 @@ void main() {
     test('Running OpenPort tests', () {
       final actualOpenPort = openPort;
       final expectedOpenPort = OpenPort(port);
+      final json = <String, dynamic>{
+        'port': expectedOpenPort.port,
+        'isOpen': expectedOpenPort.isOpen,
+      };
 
       if (actualOpenPort != null) {
         expect(actualOpenPort, expectedOpenPort);
@@ -60,6 +66,35 @@ void main() {
       expect(expectedOpenPort.isOpen, equals(true)); // because default is true
       expect(expectedOpenPort.hashCode, expectedOpenPort.port.hashCode);
       expect(expectedOpenPort.toString(), expectedOpenPort.port.toString());
+      expect(expectedOpenPort.toJson(), json);
+      expect(OpenPort.fromJson(json), expectedOpenPort);
+    });
+    test('Running ARPData tests', () {
+      final json = <String, dynamic>{
+        'hostname': 'Local',
+        'iPAddress': '192.168.1.1',
+        'macAddress': '00:00:3F:C1:DD:3E',
+        'interfaceName': 'eth0',
+        'interfaceType': 'bridge',
+      };
+
+      final arpData = ARPData.fromJson(json);
+      expect(arpData.toJson(), json);
+      expect(arpData.notNullIPAddress, true);
+      expect(arpData.notNullMacAddress, true);
+      expect(arpData.notNullInterfaceType, true);
+    });
+
+    test('Running Vendor tests', () {
+      final json = <String, dynamic>{
+        'macPrefix': '00:00:0C',
+        'vendorName': 'Cisco Systems, Inc',
+        'private': 'false',
+        'blockType': 'MA-L',
+        'lastUpdate': '2015/11/17',
+      };
+      final vendor = Vendor.fromJson(json);
+      expect(vendor.toJson(), json);
     });
   });
 
@@ -69,7 +104,7 @@ void main() {
       () {
         expectLater(
           //There should be at least one device pingable in network
-          HostScanner.getAllPingableDevices(
+          HostScannerService.instance.getAllPingableDevices(
             interfaceIp,
             timeoutInSeconds: 3,
             firstHostId: firstHostId,
@@ -78,8 +113,30 @@ void main() {
           emits(isA<ActiveHost>()),
         );
         expectLater(
+          //There should be at least one device pingable in network when limiting to own hostId
+          HostScannerService.instance.getAllPingableDevices(
+            interfaceIp,
+            timeoutInSeconds: 3,
+            hostIds: [hostId],
+            firstHostId: firstHostId,
+            lastHostId: lastHostId,
+          ),
+          emits(isA<ActiveHost>()),
+        );
+        expectLater(
+          //There should be at least one device pingable in network when limiting to hostId other than own
+          HostScannerService.instance.getAllPingableDevices(
+            interfaceIp,
+            timeoutInSeconds: 3,
+            hostIds: [0],
+            firstHostId: firstHostId,
+            lastHostId: lastHostId,
+          ),
+          neverEmits(isA<ActiveHost>()),
+        );
+        expectLater(
           //Should emit at least our own local machine when pinging all hosts.
-          HostScanner.getAllPingableDevices(
+          HostScannerService.instance.getAllPingableDevices(
             interfaceIp,
             timeoutInSeconds: 3,
             firstHostId: firstHostId,
@@ -99,7 +156,7 @@ void main() {
       () {
         expectLater(
           //There should be at least one device pingable in network
-          HostScanner.getAllPingableDevicesAsync(
+          HostScannerService.instance.getAllPingableDevicesAsync(
             interfaceIp,
             timeoutInSeconds: 3,
             firstHostId: firstHostId,
@@ -109,7 +166,7 @@ void main() {
         );
         expectLater(
           //Should emit at least our own local machine when pinging all hosts.
-          HostScanner.getAllPingableDevicesAsync(
+          HostScannerService.instance.getAllPingableDevicesAsync(
             interfaceIp,
             timeoutInSeconds: 3,
             firstHostId: firstHostId,
@@ -121,12 +178,34 @@ void main() {
             ),
           ),
         );
+        expectLater(
+          //There should be at least one device pingable in network when limiting to own hostId
+          HostScannerService.instance.getAllPingableDevicesAsync(
+            interfaceIp,
+            timeoutInSeconds: 3,
+            hostIds: [hostId],
+            firstHostId: firstHostId,
+            lastHostId: lastHostId,
+          ),
+          emits(isA<ActiveHost>()),
+        );
+        expectLater(
+          //There should be at least one device pingable in network when limiting to hostId other than own
+          HostScannerService.instance.getAllPingableDevicesAsync(
+            interfaceIp,
+            timeoutInSeconds: 3,
+            hostIds: [0],
+            firstHostId: firstHostId,
+            lastHostId: lastHostId,
+          ),
+          neverEmits(isA<ActiveHost>()),
+        );
       },
     );
 
-    test('Running scanDevicesForSinglePort tests', () async* {
+    test('Running scanDevicesForSinglePort tests', () {
       expectLater(
-        HostScanner.scanDevicesForSinglePort(
+        HostScannerService.instance.scanDevicesForSinglePort(
           interfaceIp,
           port,
           firstHostId: firstHostId,
@@ -142,7 +221,7 @@ void main() {
       for (final activeHost in hostsWithOpenPort) {
         final port = activeHost.openPorts.elementAt(0).port;
         expectLater(
-          PortScanner.scanPortsForSingleDevice(
+          PortScannerService.instance.scanPortsForSingleDevice(
             activeHost.address,
             startPort: port - 1,
             endPort: port,
@@ -162,7 +241,7 @@ void main() {
       for (final activeHost in hostsWithOpenPort) {
         final port = activeHost.openPorts.elementAt(0).port;
         expectLater(
-          PortScanner.scanPortsForSingleDevice(
+          PortScannerService.instance.scanPortsForSingleDevice(
             activeHost.address,
             startPort: port - 1,
             endPort: port,
@@ -182,7 +261,7 @@ void main() {
     test('Running customDiscover tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
-          PortScanner.customDiscover(
+          PortScannerService.instance.customDiscover(
             activeHost.address,
             portList: [port],
           ),
@@ -194,7 +273,7 @@ void main() {
     test('Running customDiscover Async tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
-          PortScanner.customDiscover(
+          PortScannerService.instance.customDiscover(
             activeHost.address,
             portList: [port],
             async: true,
@@ -207,7 +286,7 @@ void main() {
     test('Running connectToPort tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
-          PortScanner.connectToPort(
+          PortScannerService.instance.connectToPort(
             address: activeHost.address,
             port: port,
             timeout: const Duration(seconds: 5),
@@ -227,7 +306,7 @@ void main() {
     test('Running isOpen tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
-          PortScanner.isOpen(activeHost.address, port),
+          PortScannerService.instance.isOpen(activeHost.address, port),
           completion(
             isA<ActiveHost>().having(
               (p0) => p0.openPorts.contains(OpenPort(port)),
@@ -242,7 +321,7 @@ void main() {
 
   group("Testing mdns scanner group", () {
     test('Running searchMdnsDevices tests', () async {
-      final mdnsDevices = await MdnsScanner.searchMdnsDevices();
+      final mdnsDevices = await MdnsScannerService.instance.searchMdnsDevices();
       expectLater(
         mdnsDevices,
         isA<List<ActiveHost>>(),

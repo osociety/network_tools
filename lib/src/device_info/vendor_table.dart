@@ -10,20 +10,14 @@ import 'package:universal_io/io.dart';
 class VendorTable {
   static Map<dynamic, dynamic> _vendorTableMap = {};
 
-  static Future<Vendor?> getVendor(Future<ARPData?> arpDataFuture) async {
-    final arpData = await arpDataFuture;
-    if (arpData != null) {
-      if (arpData.notNullMacAddress) {
-        await createVendorTableMap();
-        final pattern = arpData.macAddress.contains(':') ? ':' : '-';
-        return _vendorTableMap[arpData.macAddress
-            .split(pattern)
-            .sublist(0, 3)
-            .join()
-            .toUpperCase()] as Vendor?;
-      }
-    }
-    return null;
+  static Future<Vendor?> macToVendor(String macAddress) async {
+    await createVendorTableMap();
+    final pattern = macAddress.contains(':') ? ':' : '-';
+    return _vendorTableMap[macAddress
+        .split(pattern)
+        .sublist(0, 3)
+        .join()
+        .toUpperCase()] as Vendor?;
   }
 
   static Future<void> createVendorTableMap() async {
@@ -38,7 +32,7 @@ class VendorTable {
     final csvPath = p.join(dbDirectory, "mac-vendors-export.csv");
     final file = File(csvPath);
     if (!await file.exists()) {
-      log.fine("Downloading mac-vendors-export.csv from network_tools");
+      logger.fine("Downloading mac-vendors-export.csv from network_tools");
       final response = await http.get(
         Uri.https(
           "raw.githubusercontent.com",
@@ -46,9 +40,9 @@ class VendorTable {
         ),
       );
       file.writeAsBytesSync(response.bodyBytes);
-      log.fine("Downloaded mac-vendors-export.csv successfully");
+      logger.fine("Downloaded mac-vendors-export.csv successfully");
     } else {
-      log.fine("File mac-vendors-export.csv already exists");
+      logger.fine("File mac-vendors-export.csv already exists");
     }
 
     final input = file.openRead();

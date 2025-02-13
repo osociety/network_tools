@@ -1,11 +1,8 @@
 import 'package:dart_ping/dart_ping.dart';
-import 'package:get_it/get_it.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/services/arp_service.dart';
 import 'package:universal_io/io.dart';
-
-final _getIt = GetIt.instance;
 
 /// ActiveHost which implements comparable
 /// By default sort by hostId ascending
@@ -13,9 +10,11 @@ class ActiveHost {
   ActiveHost({
     required this.internetAddress,
     this.openPorts = const [],
+    String? macAddress,
     PingData? pingData,
     MdnsInfo? mdnsInfoVar,
   }) {
+    _macAddress = macAddress;
     final String tempAddress = internetAddress.address;
 
     if (tempAddress.contains('.')) {
@@ -56,6 +55,7 @@ class ActiveHost {
   }
   factory ActiveHost.buildWithAddress({
     required String address,
+    String? macAddress,
     List<OpenPort> openPorts = const [],
     PingData? pingData,
     MdnsInfo? mdnsInfo,
@@ -67,6 +67,7 @@ class ActiveHost {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
+      macAddress: macAddress,
       openPorts: openPorts,
       pingData: pingData,
       mdnsInfoVar: mdnsInfo,
@@ -75,6 +76,7 @@ class ActiveHost {
 
   factory ActiveHost.fromSendableActiveHost({
     required SendableActiveHost sendableActiveHost,
+    String? macAddress,
     MdnsInfo? mdnsInfo,
   }) {
     final InternetAddress? internetAddressTemp =
@@ -84,6 +86,7 @@ class ActiveHost {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
+      macAddress: macAddress,
       openPorts: sendableActiveHost.openPorts,
       pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
@@ -91,7 +94,6 @@ class ActiveHost {
   }
 
   static const generic = 'Generic Device';
-  static final arpService = _getIt<ARPService>();
 
   InternetAddress internetAddress;
 
@@ -115,6 +117,10 @@ class ActiveHost {
   /// Only works if arpData is not null and have valid mac address.
   late Future<Vendor?> vendor;
 
+  String? _macAddress;
+  Future<String?> getMacAddress() async =>
+      _macAddress ?? (await arpData)?.macAddress;
+
   /// List of all the open port of this device
   List<OpenPort> openPorts;
 
@@ -134,7 +140,12 @@ class ActiveHost {
 
     PingData tempPingData = const PingData();
 
-    Ping(host, count: 1, timeout: timeoutInSeconds).stream.listen((pingData) {
+    Ping(
+      host,
+      count: 1,
+      timeout: timeoutInSeconds,
+      forceCodepage: Platform.isWindows,
+    ).stream.listen((pingData) {
       final PingResponse? response = pingData.response;
       if (response != null) {
         final Duration? time = response.time;
@@ -168,7 +179,7 @@ class ActiveHost {
         // throw exception.
         // We don't need to print this crash as it is by design.
       } else {
-        log.severe('Exception here: $e');
+        logger.severe('Exception here: $e');
       }
     }
     return null;
@@ -183,12 +194,14 @@ class ActiveHost {
   }
 
   Future<ARPData?> setARPData() async {
-    await arpService.open();
-    return arpService.entryFor(address);
+    await ARPService.instance.open();
+    return ARPService.instance.entryFor(address);
   }
 
   Future<Vendor?> setVendor() async {
-    return VendorTable.getVendor(arpData);
+    final String? macAddress = await getMacAddress();
+
+    return macAddress == null ? null : VendorTable.macToVendor(macAddress);
   }
 
   /// Try to find the mdns name of this device, if not exist mdns name will

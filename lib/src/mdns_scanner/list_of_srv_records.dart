@@ -7,7 +7,7 @@ List<String> tcpSrvRecordsList = [
   '_googlecast._tcp', // Is there a ChromeCast-capable device in this network "domain": "cast"
   '_androidtvremote2._tcp',
   '_smartview._tcp', // Samsung tv's
-  '_spotify-connect', // "domain": "spotify"
+  '_spotify-connect._tcp', // "domain": "spotify"
   '_nanoleafapi._tcp', // "domain": "nanoleaf"
   '_nanoleafms._tcp', // "domain": "nanoleaf"
   '_esphomelib._tcp', // [ { "domain": "esphome" }, { "domain": "zha", "name": "tube*" } ]

@@ -11,7 +11,7 @@ class SrvListLinux {
       srvList.addAll(await runAvahiBrowseCommand());
       srvList.addAll(await runMdnsScanCommand());
     } catch (e) {
-      log.severe('Error:\n$e');
+      logger.severe('Error:\n$e');
     }
     return srvList.toList();
   }
@@ -35,7 +35,7 @@ timeout 2s avahi-browse --all -p
         final String? resultStderr = error.result?.stderr.toString();
         if (resultStderr != null &&
             resultStderr.contains('No such file or directory')) {
-          log.fine(
+          logger.fine(
             'You can make the mdns process better by installing `avahi-browse`',
           );
           return [];
@@ -59,7 +59,7 @@ timeout 2s avahi-browse --all -p
         }
       }
     } catch (e) {
-      log.severe('Error getting info from avahi-browse\n$e');
+      logger.severe('Error getting info from avahi-browse\n$e');
     }
     return srvListAvahi;
   }
@@ -84,7 +84,7 @@ timeout 2s mdns-scan
 
         if (resultStderr == null ||
             (resultStderr.contains('No such file or directory'))) {
-          log.fine(
+          logger.fine(
             'You can make the mdns process better by installing `mdns-scan`',
           );
           return [];
@@ -105,7 +105,7 @@ timeout 2s mdns-scan
         }
       }
     } catch (e) {
-      log.severe('Error getting info from mdns-scan\n$e');
+      logger.severe('Error getting info from mdns-scan\n$e');
     }
     return srvListMdnsScan;
   }

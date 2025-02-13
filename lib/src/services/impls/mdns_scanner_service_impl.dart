@@ -4,7 +4,7 @@ import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart'
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
-class MdnsScanner {
+class MdnsScannerServiceImpl extends MdnsScannerService {
   /// This method searching for all the mdns devices in the network.
   /// TODO: The implementation is **Lacking!** and will not find all the
   /// TODO: results that actual exist in the network!, only some of them.
@@ -13,7 +13,8 @@ class MdnsScanner {
   /// TODO: In some cases we resolve this missing functionality using
   /// TODO: specific os tools.
 
-  static Future<List<ActiveHost>> searchMdnsDevices({
+  @override
+  Future<List<ActiveHost>> searchMdnsDevices({
     bool forceUseOfSavedSrvRecordList = false,
   }) async {
     List<String> srvRecordListToSearchIn;
@@ -47,7 +48,8 @@ class MdnsScanner {
     return activeHostList;
   }
 
-  static Future<List<ActiveHost>> findingMdnsWithAddress(
+  @override
+  Future<List<ActiveHost>> findingMdnsWithAddress(
     String serviceType,
   ) async {
     final MDnsClient client = MDnsClient(
@@ -79,7 +81,7 @@ class MdnsScanner {
       )) {
         listOfActiveHost.addAll(
           await findAllActiveHostForSrv(
-            addressType: AddressType.ipv4,
+            addressType: InternetAddress.anyIPv4,
             client: client,
             ptr: ptr,
             srv: srv,
@@ -87,7 +89,7 @@ class MdnsScanner {
         );
         listOfActiveHost.addAll(
           await findAllActiveHostForSrv(
-            addressType: AddressType.ipv6,
+            addressType: InternetAddress.anyIPv6,
             client: client,
             ptr: ptr,
             srv: srv,
@@ -100,8 +102,9 @@ class MdnsScanner {
     return listOfActiveHost;
   }
 
-  static Future<List<ActiveHost>> findAllActiveHostForSrv({
-    required AddressType addressType,
+  @override
+  Future<List<ActiveHost>> findAllActiveHostForSrv({
+    required InternetAddress addressType,
     required MDnsClient client,
     required PtrResourceRecord ptr,
     required SrvResourceRecord srv,
@@ -110,7 +113,7 @@ class MdnsScanner {
     try {
       Stream<IPAddressResourceRecord> iPAddressResourceRecordStream;
 
-      if (addressType == AddressType.ipv4) {
+      if (addressType == InternetAddress.anyIPv4) {
         iPAddressResourceRecordStream = client.lookup<IPAddressResourceRecord>(
           ResourceRecordQuery.addressIPv4(srv.target),
         );
@@ -122,7 +125,8 @@ class MdnsScanner {
       await for (final IPAddressResourceRecord ip
           in iPAddressResourceRecordStream) {
         final ActiveHost activeHost = convertSrvToHostName(
-          internetAddress: ip.address,
+          internetAddress:
+              InternetAddress.fromRawAddress(ip.address.rawAddress),
           ptr: ptr,
           srv: srv,
         );
@@ -130,7 +134,7 @@ class MdnsScanner {
         listOfActiveHost.add(activeHost);
       }
     } catch (e) {
-      log.severe(
+      logger.severe(
         'Error finding ip of mdns record ${ptr.name} srv target ${srv.target}, will add it with ip 0.0.0.0\n$e',
       );
       final ActiveHost activeHost = convertSrvToHostName(
@@ -143,7 +147,8 @@ class MdnsScanner {
     return listOfActiveHost;
   }
 
-  static ActiveHost convertSrvToHostName({
+  @override
+  ActiveHost convertSrvToHostName({
     required InternetAddress internetAddress,
     required PtrResourceRecord ptr,
     required SrvResourceRecord srv,
@@ -158,5 +163,3 @@ class MdnsScanner {
     );
   }
 }
-
-enum AddressType { ipv4, ipv6 }

@@ -61,7 +61,7 @@ Future<void> main() async {
   // or You can also get address using network_info_plus package
   // final String? address = await (NetworkInfo().getWifiIP());
   final String subnet = address.substring(0, address.lastIndexOf('.'));
-  final stream = HostScanner.getAllPingableDevices(subnet, firstHostId: 1, lastHostId: 50,
+  final stream = HostScannerService.instance.getAllPingableDevices(subnet, firstHostId: 1, lastHostId: 50,
       progressCallback: (progress) {
     print('Progress for host discovery : $progress');
   });
@@ -80,7 +80,7 @@ Future<void> main() async {
 ```dart
   //1. Range
   String target = '192.168.1.1';
-  PortScanner.scanPortsForSingleDevice(target, startPort: 1, endPort: 1024,
+  PortScannerService.instance.scanPortsForSingleDevice(target, startPort: 1, endPort: 1024,
       progressCallback: (progress) {
     print('Progress for port discovery : $progress');
   }).listen((ActiveHost event) {
@@ -99,7 +99,7 @@ Future<void> main() async {
 ### Mdns Scanner
 
 ```dart
-  for (final ActiveHost activeHost in await MdnsScanner.searchMdnsDevices()) {
+  for (final ActiveHost activeHost in await MdnsScannerService.instance.searchMdnsDevices()) {
     final MdnsInfo? mdnsInfo = await activeHost.mdnsInfo;
     print('''
     Address: ${activeHost.address}
