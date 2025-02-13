@@ -73,6 +73,7 @@ List<String> tcpSrvRecordsList = [
   '_zwave-js-server._tcp', // "domain": "zwave_js"
   '_axis-video._tcp', // "properties": { "macaddress": "00408c*" } "properties": { "macaddress": "accc8e*" } "properties": { "macaddress": "b8a44f*" }
   '_nvstream_dbd._tcp',
+  '_matter._tcp',
 ];
 
 List<String> udpSrvRecordsList = [
@@ -82,4 +83,5 @@ List<String> udpSrvRecordsList = [
   '_sleep-proxy._udp', // "domain": "apple_tv"
   '_system-bridge._udp',
   '_kdeconnect._udp',
+  '_matterc._udp'
 ];
