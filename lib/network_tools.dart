@@ -1,6 +1,3 @@
-/// Network tools base library
-library network_tools;
-
 export 'src/configure_dart_native.dart';
 export 'src/device_info/net_interface.dart';
 export 'src/device_info/vendor_table.dart';

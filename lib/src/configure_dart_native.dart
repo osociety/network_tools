@@ -18,6 +18,7 @@ Future<void> configureNetworkTools(
     Logger.root.level = Level.FINE;
     Logger.root.onRecord.listen((record) {
       if (record.loggerName == logger.name) {
+        // When debugging is enabled, log only the network_tools logger
         // ignore: avoid_print
         print(
           '${record.time.toLocal()}: ${record.level.name}: ${record.loggerName}: ${record.message}',
