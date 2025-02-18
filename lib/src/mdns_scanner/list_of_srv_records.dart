@@ -83,5 +83,5 @@ List<String> udpSrvRecordsList = [
   '_sleep-proxy._udp', // "domain": "apple_tv"
   '_system-bridge._udp',
   '_kdeconnect._udp',
-  '_matterc._udp'
+  '_matterc._udp',
 ];
