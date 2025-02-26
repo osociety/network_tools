@@ -25,11 +25,13 @@ abstract class MdnsScannerService {
     required MDnsClient client,
     required PtrResourceRecord ptr,
     required SrvResourceRecord srv,
+    required TxtResourceRecord txt,
   });
 
   ActiveHost convertSrvToHostName({
     required InternetAddress internetAddress,
     required PtrResourceRecord ptr,
     required SrvResourceRecord srv,
+    required TxtResourceRecord txt,
   });
 }
