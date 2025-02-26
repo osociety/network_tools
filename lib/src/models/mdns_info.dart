@@ -4,6 +4,7 @@ class MdnsInfo {
   MdnsInfo({
     required this.srvResourceRecord,
     required this.ptrResourceRecord,
+    required this.txtResourceRecord,
   });
 
   /// Also can be called target
@@ -29,9 +30,13 @@ class MdnsInfo {
     return tempString;
   }
 
+  String get textRecord => txtResourceRecord.text;
+
   SrvResourceRecord srvResourceRecord;
 
   PtrResourceRecord ptrResourceRecord;
+
+  TxtResourceRecord txtResourceRecord;
 
   /// mDNS name without the ._tcp.local
   String getOnlyTheStartOfMdnsName() {

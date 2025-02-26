@@ -79,22 +79,29 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
           in client.lookup<SrvResourceRecord>(
         ResourceRecordQuery.service(ptr.domainName),
       )) {
-        listOfActiveHost.addAll(
-          await findAllActiveHostForSrv(
-            addressType: InternetAddress.anyIPv4,
-            client: client,
-            ptr: ptr,
-            srv: srv,
-          ),
-        );
-        listOfActiveHost.addAll(
-          await findAllActiveHostForSrv(
-            addressType: InternetAddress.anyIPv6,
-            client: client,
-            ptr: ptr,
-            srv: srv,
-          ),
-        );
+        await for (final TxtResourceRecord txtRecords
+            in client.lookup<TxtResourceRecord>(
+          ResourceRecordQuery.text(ptr.domainName),
+        )) {
+          listOfActiveHost.addAll(
+            await findAllActiveHostForSrv(
+              addressType: InternetAddress.anyIPv4,
+              client: client,
+              ptr: ptr,
+              srv: srv,
+              txt: txtRecords,
+            ),
+          );
+          listOfActiveHost.addAll(
+            await findAllActiveHostForSrv(
+              addressType: InternetAddress.anyIPv6,
+              client: client,
+              ptr: ptr,
+              srv: srv,
+              txt: txtRecords,
+            ),
+          );
+        }
       }
     }
     client.stop();
@@ -108,6 +115,7 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
     required MDnsClient client,
     required PtrResourceRecord ptr,
     required SrvResourceRecord srv,
+    required TxtResourceRecord txt,
   }) async {
     final List<ActiveHost> listOfActiveHost = [];
     try {
@@ -129,6 +137,7 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
               InternetAddress.fromRawAddress(ip.address.rawAddress),
           ptr: ptr,
           srv: srv,
+          txt: txt,
         );
 
         listOfActiveHost.add(activeHost);
@@ -141,6 +150,7 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
         internetAddress: InternetAddress('0.0.0.0'),
         srv: srv,
         ptr: ptr,
+        txt: txt,
       );
       listOfActiveHost.add(activeHost);
     }
@@ -152,10 +162,12 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
     required InternetAddress internetAddress,
     required PtrResourceRecord ptr,
     required SrvResourceRecord srv,
+    required TxtResourceRecord txt,
   }) {
     final MdnsInfo mdnsInfo = MdnsInfo(
       srvResourceRecord: srv,
       ptrResourceRecord: ptr,
+      txtResourceRecord: txt,
     );
     return ActiveHost(
       internetAddress: internetAddress,
