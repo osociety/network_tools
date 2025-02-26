@@ -1,5 +1,8 @@
 # Change Log
 
+## 5.0.6
+mDNS search improvements
+
 ## 5.0.5
 Fixed compatibility for web
 
