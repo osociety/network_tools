@@ -219,7 +219,7 @@ class PortScannerServiceImpl extends PortScannerService {
     required StreamController<ActiveHost> activeHostsController,
     int recursionCount = 0,
   }) async {
-    return _connectToPort<ActiveHost>(
+    return await _connectToPort<ActiveHost>(
       address: address,
       port: port,
       timeout: timeout,
