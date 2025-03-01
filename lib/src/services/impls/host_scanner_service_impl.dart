@@ -86,12 +86,12 @@ class HostScannerServiceImpl extends HostScannerService {
 
     int i = 0;
     for (final Future<SendableActiveHost?> host in activeHostsFuture) {
-      i++;
       final SendableActiveHost? tempHost = await host;
 
       progressCallback?.call(
         (pinged[i] - firstHostId) * 100 / (lastValidSubnet - firstHostId),
       );
+      i++;
 
       if (tempHost == null) {
         continue;
