@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.2
+Database error fix
+
 ## 6.0.1
 Bug fix for windows
 
