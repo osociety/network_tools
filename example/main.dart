@@ -2,7 +2,8 @@ import 'package:network_tools/network_tools.dart';
 
 void main() async {
   // Example: Scan for active hosts in the local subnet (e.g., 192.168.1)
-  final subnet = '192.168.1';
+  // Change subnet value as needed for your network.
+  final subnet = '192.168.29';
   print('Scanning for active hosts in ' + subnet + '.0/24 ...');
   await configureNetworkTools('build', enableDebugging: true);
 
