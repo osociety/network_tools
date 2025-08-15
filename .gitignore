@@ -33,7 +33,6 @@
 **/build/
 
 # Generated sources
-*.g.dart
 *.config.dart
 
 # Downloaded files
