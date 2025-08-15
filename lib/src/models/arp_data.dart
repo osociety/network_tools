@@ -13,6 +13,7 @@ class ARPData {
     required this.interfaceName,
     required this.interfaceType,
   });
+  
   factory ARPData.fromJson(Map<String, dynamic> json) =>
       _$ARPDataFromJson(json);
 
