@@ -13,6 +13,8 @@ export 'src/services/host_scanner_service.dart';
 export 'src/services/mdns_scanner_service.dart';
 export 'src/services/port_scanner_service.dart';
 
+/// Whether debugging is enabled for the network tools package.
 late bool enableDebugging;
 
+/// The directory path where the network tools database and assets are stored.
 late String dbDirectory;

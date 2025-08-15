@@ -8,6 +8,10 @@ import 'package:network_tools/src/services/impls/host_scanner_service_impl.dart'
 import 'package:network_tools/src/services/impls/mdns_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart';
 
+/// Configures the network tools package for Dart native platforms.
+///
+/// Sets up the database directory, enables debugging if specified, and initializes
+/// all required service implementations and vendor tables for network operations.
 Future<void> configureNetworkTools(
   String dbDirectory, {
   bool enableDebugging = false,

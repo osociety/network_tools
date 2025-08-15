@@ -1,5 +1,6 @@
-/// Service record list that is including the protocol, mostly _tcp, _udp may
-/// not work
+/// List of common mDNS service records using the TCP protocol.
+///
+/// These service types are used for discovering devices and services on the local network via mDNS.
 List<String> tcpSrvRecordsList = [
   '_autodiscover._tcp',
   '_http._tcp', // "domain": "bosch_shc", "name": "bosch shc*"
@@ -76,6 +77,9 @@ List<String> tcpSrvRecordsList = [
   '_matter._tcp',
 ];
 
+/// List of common mDNS service records using the UDP protocol.
+///
+/// These service types are used for discovering devices and services on the local network via mDNS.
 List<String> udpSrvRecordsList = [
   '_api._udp', // "domain": "guardian"
   '_hap._udp', // "domain": "homekit_controller"
