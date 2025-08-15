@@ -10,11 +10,15 @@ import 'package:universal_io/io.dart';
 /// Maybe in future dart native will support sending raw packets,
 /// so that time we can add implementation for mobile devices.
 /// Currenlty this is achieved by process package.
+/// Helper class for retrieving and parsing the ARP table on supported desktop platforms.
 class ARPTableHelper {
+  /// Logger for ARP table operations.
   static final arpLogger = Logger("arp-table-logger");
 
-  /// Fires arp -a command only on 3 platforms i.e., Linux, Windows, and macOS
-  /// and returns the result in form of ARPData after parsing each line.
+  /// Retrieves the ARP table by running the `arp -a` command on Linux, Windows, and macOS.
+  ///
+  /// Parses the output and returns a list of [ARPData] objects representing each ARP entry.
+  /// Returns an empty list on unsupported platforms (e.g., Android, iOS).
   static Future<List<ARPData>> buildTable() async {
     final Map<String, ARPData> arpEntries = {};
     final int startTime = DateTime.now().millisecondsSinceEpoch;

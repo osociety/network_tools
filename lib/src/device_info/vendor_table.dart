@@ -7,9 +7,13 @@ import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:universal_io/io.dart';
 
+/// Provides utilities for mapping MAC addresses to vendor information using a local CSV file.
 class VendorTable {
   static Map<dynamic, dynamic> _vendorTableMap = {};
 
+  /// Returns the [Vendor] corresponding to the given [macAddress], or null if not found.
+  ///
+  /// This method ensures the vendor table is loaded, then looks up the vendor by the MAC address prefix.
   static Future<Vendor?> macToVendor(String macAddress) async {
     await createVendorTableMap();
     final pattern = macAddress.contains(':') ? ':' : '-';
@@ -21,6 +25,7 @@ class VendorTable {
         as Vendor?;
   }
 
+  /// Loads the vendor table from the CSV file if it is not already loaded.
   static Future<void> createVendorTableMap() async {
     if (_vendorTableMap.keys.isEmpty) {
       _vendorTableMap = await _fetchVendorTable();
