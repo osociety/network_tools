@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.0
+Performance improvement using drift database
+
 ## 5.0.6
 mDNS search improvements
 

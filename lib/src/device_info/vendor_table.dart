@@ -14,10 +14,11 @@ class VendorTable {
     await createVendorTableMap();
     final pattern = macAddress.contains(':') ? ':' : '-';
     return _vendorTableMap[macAddress
-        .split(pattern)
-        .sublist(0, 3)
-        .join()
-        .toUpperCase()] as Vendor?;
+            .split(pattern)
+            .sublist(0, 3)
+            .join()
+            .toUpperCase()]
+        as Vendor?;
   }
 
   static Future<void> createVendorTableMap() async {

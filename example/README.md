@@ -1,1 +1,1 @@
-Check examples/lib/main.dart
+Check example/lib/main.dart

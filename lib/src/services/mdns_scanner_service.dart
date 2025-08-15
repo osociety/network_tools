@@ -16,9 +16,7 @@ abstract class MdnsScannerService {
     bool forceUseOfSavedSrvRecordList = false,
   });
 
-  Future<List<ActiveHost>> findingMdnsWithAddress(
-    String serviceType,
-  );
+  Future<List<ActiveHost>> findingMdnsWithAddress(String serviceType);
 
   Future<List<ActiveHost>> findAllActiveHostForSrv({
     required InternetAddress addressType,
