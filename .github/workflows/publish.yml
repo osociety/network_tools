@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: dart pub get
       
-      - name: Run build_runner
-        run: dart run build_runner build
-      
       - name: Analyze project source
         run: dart analyze --fatal-infos 
 
@@ -49,7 +46,6 @@ jobs:
     needs: 'test'
     permissions:
       id-token: write # Required for authentication using OIDC
-    uses: git-elliot/setup-dart/.github/workflows/publish.yml@main # Added build_runner step
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
       environment: 'pub.dev'
-      build_runner: true
