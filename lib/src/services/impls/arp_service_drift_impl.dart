@@ -21,14 +21,16 @@ class ARPServiceDriftImpl extends ARPService {
     arpDriftLogger.fine("No old entries found, building ARP table");
 
     final entries = (await ARPTableHelper.buildTable())
-        .map((e) => ARPDriftCompanion.insert(
-              iPAddress: e.iPAddress,
-              macAddress: e.macAddress,
-              hostname: e.hostname,
-              interfaceName: e.interfaceName,
-              interfaceType: e.interfaceType,
-              createdAt: Value(DateTime.now()),
-            ))
+        .map(
+          (e) => ARPDriftCompanion.insert(
+            iPAddress: e.iPAddress,
+            macAddress: e.macAddress,
+            hostname: e.hostname,
+            interfaceName: e.interfaceName,
+            interfaceType: e.interfaceType,
+            createdAt: Value(DateTime.now()),
+          ),
+        )
         .toList();
     if (entries.isNotEmpty) {
       await database.batch((batch) {
@@ -45,18 +47,18 @@ class ARPServiceDriftImpl extends ARPService {
 
   @override
   Future<List<String>> entries() async {
-    final records = await (database.select(database.aRPDrift)
-          ..orderBy([(t) => OrderingTerm(expression: t.id)]))
-        .get();
+    final records = await (database.select(
+      database.aRPDrift,
+    )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
 
     return records.map((e) => e.iPAddress).toList();
   }
 
   @override
   Future<ARPData?> entryFor(String address) async {
-    final records = await (database.select(database.aRPDrift)
-          ..where((t) => t.iPAddress.equals(address)))
-        .getSingleOrNull();
+    final records = await (database.select(
+      database.aRPDrift,
+    )..where((t) => t.iPAddress.equals(address))).getSingleOrNull();
     if (records != null) {
       return ARPData.fromDriftData(records);
     }

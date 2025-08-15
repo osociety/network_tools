@@ -25,29 +25,29 @@ class SrvListLinux {
 
     List<String> resultForEachLine = [];
     try {
-      await shell.run(
-        '''
+      await shell
+          .run('''
 timeout 2s avahi-browse --all -p
-''',
-      ).onError((ShellException error, stackTrace) {
-        // The command should return error as we are killing it with the command timeout
+''')
+          .onError((ShellException error, stackTrace) {
+            // The command should return error as we are killing it with the command timeout
 
-        final String? resultStderr = error.result?.stderr.toString();
-        if (resultStderr != null &&
-            resultStderr.contains('No such file or directory')) {
-          logger.fine(
-            'You can make the mdns process better by installing `avahi-browse`',
-          );
-          return [];
-        }
-        final String? resultStdout = error.result?.stdout.toString();
-        if (resultStdout == null) {
-          return [];
-        }
-        resultForEachLine = resultStdout.split('\n');
+            final String? resultStderr = error.result?.stderr.toString();
+            if (resultStderr != null &&
+                resultStderr.contains('No such file or directory')) {
+              logger.fine(
+                'You can make the mdns process better by installing `avahi-browse`',
+              );
+              return [];
+            }
+            final String? resultStdout = error.result?.stdout.toString();
+            if (resultStdout == null) {
+              return [];
+            }
+            resultForEachLine = resultStdout.split('\n');
 
-        return [];
-      });
+            return [];
+          });
 
       for (final String resultLine in resultForEachLine) {
         final List<String> lineSeparated = resultLine.split(';');
@@ -73,26 +73,26 @@ timeout 2s avahi-browse --all -p
 
     List<String> resultForEachLine = [];
     try {
-      await shell.run(
-        '''
+      await shell
+          .run('''
 timeout 2s mdns-scan
-''',
-      ).onError((ShellException error, stackTrace) {
-        // The command should return error as we are killing it with the command timeout
+''')
+          .onError((ShellException error, stackTrace) {
+            // The command should return error as we are killing it with the command timeout
 
-        final String? resultStderr = error.result?.stderr.toString();
+            final String? resultStderr = error.result?.stderr.toString();
 
-        if (resultStderr == null ||
-            (resultStderr.contains('No such file or directory'))) {
-          logger.fine(
-            'You can make the mdns process better by installing `mdns-scan`',
-          );
-          return [];
-        }
-        resultForEachLine = resultStderr.split('\n');
+            if (resultStderr == null ||
+                (resultStderr.contains('No such file or directory'))) {
+              logger.fine(
+                'You can make the mdns process better by installing `mdns-scan`',
+              );
+              return [];
+            }
+            resultForEachLine = resultStderr.split('\n');
 
-        return [];
-      });
+            return [];
+          });
 
       for (final String resultLine in resultForEachLine) {
         final List<String> lineSeparated = resultLine.split('.');

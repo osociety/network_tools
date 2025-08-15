@@ -17,9 +17,8 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => 1;
 
   static QueryExecutor _openConnection() {
-    return NativeDatabase.createInBackground(File(path.join(
-      Directory.current.path,
-      'network_tools',
-    )));
+    return NativeDatabase.createInBackground(
+      File(path.join(Directory.current.path, 'network_tools')),
+    );
   }
 }

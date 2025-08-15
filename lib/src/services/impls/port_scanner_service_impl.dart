@@ -18,8 +18,10 @@ class PortScannerServiceImpl extends PortScannerService {
       throw 'Provide a valid port range between '
           '0 to 65535 or startPort < endPort is not true';
     }
-    final List<InternetAddress> address =
-        await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
+    final List<InternetAddress> address = await InternetAddress.lookup(
+      target,
+      type: InternetAddressType.IPv4,
+    );
     if (address.isNotEmpty) {
       final String hostAddress = address[0].address;
       return connectToPort(
@@ -61,25 +63,26 @@ class PortScannerServiceImpl extends PortScannerService {
       for (int i = 0; i <= portList.length; i += scanRangeForIsolate + 1) {
         final limit = min(i + scanRangeForIsolate, portList.length);
         final receivePort = ReceivePort();
-        final isolate =
-            await Isolate.spawn(_startSearchingPorts, receivePort.sendPort);
+        final isolate = await Isolate.spawn(
+          _startSearchingPorts,
+          receivePort.sendPort,
+        );
 
         await for (final message in receivePort) {
           if (message is SendPort) {
-            message.send(
-              <dynamic>[
-                target,
-                portList.sublist(i, limit),
-                timeout,
-                resultsInAddressAscendingOrder.toString(),
-                dbDirectory,
-                enableDebugging.toString(),
-              ],
-            );
+            message.send(<dynamic>[
+              target,
+              portList.sublist(i, limit),
+              timeout,
+              resultsInAddressAscendingOrder.toString(),
+              dbDirectory,
+              enableDebugging.toString(),
+            ]);
           } else if (message is SendableActiveHost) {
             progressCallback?.call(i * 100 / (portList.length));
-            final activeHostFound =
-                ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
+            final activeHostFound = ActiveHost.fromSendableActiveHost(
+              sendableActiveHost: message,
+            );
             await activeHostFound.resolveInfo();
             yield activeHostFound;
           } else if (message is String && message == 'Done') {
@@ -133,8 +136,10 @@ class PortScannerServiceImpl extends PortScannerService {
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    final List<InternetAddress> address =
-        await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
+    final List<InternetAddress> address = await InternetAddress.lookup(
+      target,
+      type: InternetAddressType.IPv4,
+    );
     if (address.isNotEmpty) {
       final String hostAddress = address[0].address;
       final List<Future<T?>> openPortList = [];
