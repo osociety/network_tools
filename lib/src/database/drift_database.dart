@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/models/drift/arp_data.dart';
 import 'package:path/path.dart' as path;
 part 'drift_database.g.dart';
@@ -18,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
 
   static QueryExecutor _openConnection() {
     return NativeDatabase.createInBackground(
-      File(path.join(Directory.current.path, 'network_tools')),
+      File(path.join(dbDirectory, 'network_tools')),
     );
   }
 }
