@@ -290,5 +290,5 @@ class PortScannerServiceImpl extends PortScannerService {
     }
   }
 
-  final _errorCodes = [13, 49, 61, 64, 65, 101, 110, 111, 113];
+  final _errorCodes = [13, 49, 61, 64, 65, 101, 110, 111, 113, 10060];
 }
