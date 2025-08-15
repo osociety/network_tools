@@ -1,6 +1,8 @@
 import 'package:universal_io/io.dart';
 
+/// Represents a network interface with its network ID, host ID, and IP address.
 class NetInterface {
+  /// Creates a [NetInterface] with the given [networkId], [hostId], and [ipAddress].
   NetInterface({
     required this.networkId,
     required this.hostId,
@@ -11,6 +13,10 @@ class NetInterface {
   final int hostId;
   final String ipAddress;
 
+  /// Returns the local network interface information for the first available IPv4 interface.
+  ///
+  /// This method fetches the list of network interfaces and returns a [NetInterface]
+  /// object for the first interface found, or null if none are available.
   static Future<NetInterface?> localInterface() async {
     final interfaceList = await NetworkInterface.list(
       type: InternetAddressType.IPv4,

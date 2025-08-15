@@ -8,6 +8,9 @@ import 'package:universal_io/io.dart';
 /// Scans open port for a target Address or domain.
 class PortScannerServiceImpl extends PortScannerService {
   /// Checks if the single [port] is open or not for the [target].
+  ///
+  /// Returns an [ActiveHost] if the port is open, otherwise null.
+  /// Throws if the port is out of range or the target cannot be resolved.
   @override
   Future<ActiveHost?> isOpen(
     String target,
@@ -18,8 +21,10 @@ class PortScannerServiceImpl extends PortScannerService {
       throw 'Provide a valid port range between '
           '0 to 65535 or startPort < endPort is not true';
     }
-    final List<InternetAddress> address =
-        await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
+    final List<InternetAddress> address = await InternetAddress.lookup(
+      target,
+      type: InternetAddressType.IPv4,
+    );
     if (address.isNotEmpty) {
       final String hostAddress = address[0].address;
       return connectToPort(
@@ -33,11 +38,12 @@ class PortScannerServiceImpl extends PortScannerService {
     }
   }
 
-  /// Scans ports only listed in [portList] for a [target]. Progress can be
-  /// retrieved by [progressCallback]
-  /// Tries connecting ports before until [timeout] reached.
-  /// [resultsInAddressAscendingOrder] = false will return results faster but not in
-  /// ascending order and without [progressCallback].
+  /// Scans only the ports listed in [portList] for a [target].
+  ///
+  /// Progress can be retrieved by [progressCallback].
+  /// Tries connecting ports until [timeout] is reached for each port.
+  /// If [resultsInAddressAscendingOrder] is false, results may be returned faster but not in ascending order and without [progressCallback].
+  /// If [async] is true, scanning is performed in isolates for better performance on large port lists.
   @override
   Stream<ActiveHost> customDiscover(
     String target, {
@@ -61,25 +67,26 @@ class PortScannerServiceImpl extends PortScannerService {
       for (int i = 0; i <= portList.length; i += scanRangeForIsolate + 1) {
         final limit = min(i + scanRangeForIsolate, portList.length);
         final receivePort = ReceivePort();
-        final isolate =
-            await Isolate.spawn(_startSearchingPorts, receivePort.sendPort);
+        final isolate = await Isolate.spawn(
+          _startSearchingPorts,
+          receivePort.sendPort,
+        );
 
         await for (final message in receivePort) {
           if (message is SendPort) {
-            message.send(
-              <dynamic>[
-                target,
-                portList.sublist(i, limit),
-                timeout,
-                resultsInAddressAscendingOrder.toString(),
-                dbDirectory,
-                enableDebugging.toString(),
-              ],
-            );
+            message.send(<dynamic>[
+              target,
+              portList.sublist(i, limit),
+              timeout,
+              resultsInAddressAscendingOrder.toString(),
+              dbDirectory,
+              enableDebugging.toString(),
+            ]);
           } else if (message is SendableActiveHost) {
             progressCallback?.call(i * 100 / (portList.length));
-            final activeHostFound =
-                ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
+            final activeHostFound = ActiveHost.fromSendableActiveHost(
+              sendableActiveHost: message,
+            );
             await activeHostFound.resolveInfo();
             yield activeHostFound;
           } else if (message is String && message == 'Done') {
@@ -91,7 +98,6 @@ class PortScannerServiceImpl extends PortScannerService {
     }
   }
 
-  /// Will search devices in the network inside new isolate
   @pragma('vm:entry-point')
   Future<void> _startSearchingPorts(SendPort sendPort) async {
     final port = ReceivePort();
@@ -133,8 +139,10 @@ class PortScannerServiceImpl extends PortScannerService {
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    final List<InternetAddress> address =
-        await InternetAddress.lookup(target, type: InternetAddressType.IPv4);
+    final List<InternetAddress> address = await InternetAddress.lookup(
+      target,
+      type: InternetAddressType.IPv4,
+    );
     if (address.isNotEmpty) {
       final String hostAddress = address[0].address;
       final List<Future<T?>> openPortList = [];
@@ -173,9 +181,12 @@ class PortScannerServiceImpl extends PortScannerService {
     }
   }
 
-  /// Scans port from [startPort] to [endPort] of [target]. Progress can be
-  /// retrieved by [progressCallback]
-  /// Tries connecting ports before until [timeout] reached.
+  /// Scans ports from [startPort] to [endPort] for a [target].
+  ///
+  /// Progress can be retrieved by [progressCallback].
+  /// Tries connecting ports until [timeout] is reached for each port.
+  /// If [resultsInAddressAscendingOrder] is false, results may be returned faster but not in ascending order and without [progressCallback].
+  /// If [async] is true, scanning is performed in isolates for better performance on large port ranges.
   @override
   Stream<ActiveHost> scanPortsForSingleDevice(
     String target, {
@@ -211,6 +222,9 @@ class PortScannerServiceImpl extends PortScannerService {
     );
   }
 
+  /// Attempts to connect to a specific [port] on an [address] within a [timeout].
+  ///
+  /// Returns an [ActiveHost] if the port is open, otherwise null. Used internally.
   @override
   Future<ActiveHost?> connectToPort({
     required String address,
@@ -285,5 +299,5 @@ class PortScannerServiceImpl extends PortScannerService {
     }
   }
 
-  final _errorCodes = [13, 49, 61, 64, 65, 101, 111, 113];
+  final _errorCodes = [13, 49, 61, 64, 65, 101, 110, 111, 113, 10060];
 }

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:network_tools/src/database/drift_database.dart';
 import 'package:universal_io/io.dart';
 
 part 'arp_data.g.dart';
@@ -12,8 +13,17 @@ class ARPData {
     required this.interfaceName,
     required this.interfaceType,
   });
+
   factory ARPData.fromJson(Map<String, dynamic> json) =>
       _$ARPDataFromJson(json);
+
+  factory ARPData.fromDriftData(ARPDriftData arpData) => ARPData(
+    hostname: arpData.hostname,
+    iPAddress: arpData.iPAddress,
+    macAddress: arpData.macAddress,
+    interfaceName: arpData.interfaceName,
+    interfaceType: arpData.interfaceType,
+  );
 
   final String hostname;
   final String iPAddress;

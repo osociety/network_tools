@@ -60,8 +60,9 @@ class ActiveHost {
     PingData? pingData,
     MdnsInfo? mdnsInfo,
   }) {
-    final InternetAddress? internetAddressTemp =
-        InternetAddress.tryParse(address);
+    final InternetAddress? internetAddressTemp = InternetAddress.tryParse(
+      address,
+    );
     if (internetAddressTemp == null) {
       throw 'Cant parse address $address to InternetAddress';
     }
@@ -79,8 +80,9 @@ class ActiveHost {
     String? macAddress,
     MdnsInfo? mdnsInfo,
   }) {
-    final InternetAddress? internetAddressTemp =
-        InternetAddress.tryParse(sendableActiveHost.address);
+    final InternetAddress? internetAddressTemp = InternetAddress.tryParse(
+      sendableActiveHost.address,
+    );
     if (internetAddressTemp == null) {
       throw 'Cant parse address ${sendableActiveHost.address} to InternetAddress';
     }

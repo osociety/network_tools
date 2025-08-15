@@ -28,8 +28,9 @@ Future<void> main() async {
 
   stream2.listen(
     (ActiveHost activeHost) {
-      examplesLogger
-          .fine('[scanDevicesForSinglePort]: Found device : $activeHost');
+      examplesLogger.fine(
+        '[scanDevicesForSinglePort]: Found device : $activeHost',
+      );
       final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
       if (deviceWithOpenPort.isOpen) {
         examplesLogger.fine(
@@ -49,26 +50,28 @@ Future<void> main() async {
     examplesLogger.fine("Target is $target");
   }
 
-  PortScannerService.instance.scanPortsForSingleDevice(
-    target,
-    // Scan will start from this port.
-    // startPort: 1,
-    endPort: 9400,
-    progressCallback: (progress) {
-      examplesLogger.finer('Progress for port discovery : $progress');
-    },
-  ).listen(
-    (activeHost) {
-      final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
+  PortScannerService.instance
+      .scanPortsForSingleDevice(
+        target,
+        // Scan will start from this port.
+        // startPort: 1,
+        endPort: 9400,
+        progressCallback: (progress) {
+          examplesLogger.finer('Progress for port discovery : $progress');
+        },
+      )
+      .listen(
+        (activeHost) {
+          final OpenPort deviceWithOpenPort = activeHost.openPorts[0];
 
-      if (deviceWithOpenPort.isOpen) {
-        examplesLogger.fine(
-          'Found open port: ${deviceWithOpenPort.port} on device $target',
-        );
-      }
-    },
-    onDone: () {
-      examplesLogger.fine('Port Scan from 1 to 9400 completed');
-    },
-  );
+          if (deviceWithOpenPort.isOpen) {
+            examplesLogger.fine(
+              'Found open port: ${deviceWithOpenPort.port} on device $target',
+            );
+          }
+        },
+        onDone: () {
+          examplesLogger.fine('Port Scan from 1 to 9400 completed');
+        },
+      );
 }

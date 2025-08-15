@@ -19,23 +19,27 @@ void main() {
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
     await configureNetworkTools('build', enableDebugging: true);
-    //open a port in shared way because of portscanner using same,
-    //if passed false then two hosts come up in search and breaks test.
-    server =
-        await ServerSocket.bind(InternetAddress.anyIPv4, port, shared: true);
-    port = server.port;
-    logger.fine("Opened port in this machine at $port");
-
     final interface = await NetInterface.localInterface();
+
     if (interface != null) {
       hostId = interface.hostId;
       interfaceIp = interface.networkId;
       myOwnHost = interface.ipAddress;
+
+      //open a port in shared way because of portscanner using same,
+      //if passed false then two hosts come up in search and breaks test.
+      server = await ServerSocket.bind(myOwnHost, port);
+      port = server.port;
+      logger.fine("Opened port in this machine at $port");
+
       // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
       firstHostId = hostId <= 1 ? hostId : hostId - 1;
       lastHostId = hostId >= 254 ? hostId : hostId + 1;
-      await for (final host in HostScannerService.instance
-          .scanDevicesForSinglePort(interfaceIp, port)) {
+      await for (final host
+          in HostScannerService.instance.scanDevicesForSinglePort(
+            interfaceIp,
+            port,
+          )) {
         hostsWithOpenPort.add(host);
         for (final tempOpenPort in host.openPorts) {
           if (tempOpenPort.port == port) {
@@ -99,109 +103,95 @@ void main() {
   });
 
   group('Testing Host Scanner group', () {
-    test(
-      'Running getAllPingableDevices tests',
-      () {
-        expectLater(
-          //There should be at least one device pingable in network
-          HostScannerService.instance.getAllPingableDevices(
-            interfaceIp,
-            timeoutInSeconds: 3,
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ),
-          emits(isA<ActiveHost>()),
-        );
-        expectLater(
-          //There should be at least one device pingable in network when limiting to own hostId
-          HostScannerService.instance.getAllPingableDevices(
-            interfaceIp,
-            timeoutInSeconds: 3,
-            hostIds: [hostId],
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ),
-          emits(isA<ActiveHost>()),
-        );
-        expectLater(
-          //There should be at least one device pingable in network when limiting to hostId other than own
-          HostScannerService.instance.getAllPingableDevices(
-            interfaceIp,
-            timeoutInSeconds: 3,
-            hostIds: [0],
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ),
-          neverEmits(isA<ActiveHost>()),
-        );
-        expectLater(
-          //Should emit at least our own local machine when pinging all hosts.
-          HostScannerService.instance.getAllPingableDevices(
-            interfaceIp,
-            timeoutInSeconds: 3,
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ),
-          emitsThrough(
-            ActiveHost(
-              internetAddress: InternetAddress(myOwnHost),
-            ),
-          ),
-        );
-      },
-    );
+    test('Running getAllPingableDevices tests', () {
+      expectLater(
+        //There should be at least one device pingable in network
+        HostScannerService.instance.getAllPingableDevices(
+          interfaceIp,
+          timeoutInSeconds: 3,
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ),
+        emits(isA<ActiveHost>()),
+      );
+      expectLater(
+        //There should be at least one device pingable in network when limiting to own hostId
+        HostScannerService.instance.getAllPingableDevices(
+          interfaceIp,
+          timeoutInSeconds: 3,
+          hostIds: [hostId],
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ),
+        emits(isA<ActiveHost>()),
+      );
+      expectLater(
+        //There should be at least one device pingable in network when limiting to hostId other than own
+        HostScannerService.instance.getAllPingableDevices(
+          interfaceIp,
+          timeoutInSeconds: 3,
+          hostIds: [0],
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ),
+        neverEmits(isA<ActiveHost>()),
+      );
+      expectLater(
+        //Should emit at least our own local machine when pinging all hosts.
+        HostScannerService.instance.getAllPingableDevices(
+          interfaceIp,
+          timeoutInSeconds: 3,
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ),
+        emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
+      );
+    });
 
-    test(
-      'Running getAllPingableDevicesAsync tests',
-      () {
-        expectLater(
-          //There should be at least one device pingable in network
-          HostScannerService.instance.getAllPingableDevicesAsync(
-            interfaceIp,
-            timeoutInSeconds: 3,
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ),
-          emits(isA<ActiveHost>()),
-        );
-        expectLater(
-          //Should emit at least our own local machine when pinging all hosts.
-          HostScannerService.instance.getAllPingableDevicesAsync(
-            interfaceIp,
-            timeoutInSeconds: 3,
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ),
-          emitsThrough(
-            ActiveHost(
-              internetAddress: InternetAddress(myOwnHost),
-            ),
-          ),
-        );
-        expectLater(
-          //There should be at least one device pingable in network when limiting to own hostId
-          HostScannerService.instance.getAllPingableDevicesAsync(
-            interfaceIp,
-            timeoutInSeconds: 3,
-            hostIds: [hostId],
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ),
-          emits(isA<ActiveHost>()),
-        );
-        expectLater(
-          //There should be at least one device pingable in network when limiting to hostId other than own
-          HostScannerService.instance.getAllPingableDevicesAsync(
-            interfaceIp,
-            timeoutInSeconds: 3,
-            hostIds: [0],
-            firstHostId: firstHostId,
-            lastHostId: lastHostId,
-          ),
-          neverEmits(isA<ActiveHost>()),
-        );
-      },
-    );
+    test('Running getAllPingableDevicesAsync tests', () {
+      expectLater(
+        //There should be at least one device pingable in network
+        HostScannerService.instance.getAllPingableDevicesAsync(
+          interfaceIp,
+          timeoutInSeconds: 3,
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ),
+        emits(isA<ActiveHost>()),
+      );
+      expectLater(
+        //Should emit at least our own local machine when pinging all hosts.
+        HostScannerService.instance.getAllPingableDevicesAsync(
+          interfaceIp,
+          timeoutInSeconds: 3,
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ),
+        emitsThrough(ActiveHost(internetAddress: InternetAddress(myOwnHost))),
+      );
+      expectLater(
+        //There should be at least one device pingable in network when limiting to own hostId
+        HostScannerService.instance.getAllPingableDevicesAsync(
+          interfaceIp,
+          timeoutInSeconds: 3,
+          hostIds: [hostId],
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ),
+        emits(isA<ActiveHost>()),
+      );
+      expectLater(
+        //There should be at least one device pingable in network when limiting to hostId other than own
+        HostScannerService.instance.getAllPingableDevicesAsync(
+          interfaceIp,
+          timeoutInSeconds: 3,
+          hostIds: [0],
+          firstHostId: firstHostId,
+          lastHostId: lastHostId,
+        ),
+        neverEmits(isA<ActiveHost>()),
+      );
+    });
 
     test('Running scanDevicesForSinglePort tests', () {
       expectLater(
@@ -322,10 +312,7 @@ void main() {
   group("Testing mdns scanner group", () {
     test('Running searchMdnsDevices tests', () async {
       final mdnsDevices = await MdnsScannerService.instance.searchMdnsDevices();
-      expectLater(
-        mdnsDevices,
-        isA<List<ActiveHost>>(),
-      );
+      expectLater(mdnsDevices, isA<List<ActiveHost>>());
       //todo: mdnsDevices are empty in GHA, open one to be discoverable
       // expectLater(
       //   mdnsDevices,

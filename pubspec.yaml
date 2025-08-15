@@ -1,11 +1,12 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 5.0.6
+version: 6.0.0
 issue_tracker: https://github.com/osociety/network_tools/issues
 repository: https://github.com/osociety/network_tools
+example: example/main.dart
 
 environment:
-  sdk: ">=3.2.0 <4.0.0"
+  sdk: ">=3.8.0 <4.0.0"
 
 topics:
   - network
@@ -23,6 +24,8 @@ dependencies:
   csv: ">=5.1.1 <7.0.0"
   # Multi-platform network ping utility.
   dart_ping: ^9.0.1
+  # Drift is a reactive persistence library for Flutter and Dart, built on top of SQLite.
+  drift: ^2.28.1
   # A composable, Future-based library for making HTTP requests.
   http: ^1.2.2
   # Defines the annotations used by json_serializable.
@@ -35,8 +38,8 @@ dependencies:
   path: ^1.9.0
   # Process run helpers
   process_run: ^1.2.2
-  # Yet another NoSQL persistent store database solution for single process io apps.
-  sembast: ^3.7.5+2
+  # sqlite3 is a pure Dart implementation of SQLite.
+  sqlite3: ^2.8.0
   # Cross-platform 'dart:io' that works in all platforms.
   universal_io: ^2.2.2
   
@@ -44,8 +47,10 @@ dependencies:
 dev_dependencies:
   # provides a concrete way of generating files using Dart code
   build_runner: ^2.4.13
+  # Drift is a reactive persistence library for Flutter and Dart, built on top of SQLite.
+  drift_dev: ^2.28.1
   # Provides Dart Build System builders for handling JSON.
-  json_serializable: ^6.8.0
+  json_serializable: ^6.10.0
   # Set of lint rules for Dart.
   lint: ^2.3.0
   # Writing and running Dart tests.

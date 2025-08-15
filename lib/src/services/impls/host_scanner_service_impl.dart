@@ -60,8 +60,11 @@ class HostScannerServiceImpl extends HostScannerService {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    final int lastValidSubnet =
-        validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
+    final int lastValidSubnet = validateAndGetLastValidSubnet(
+      subnet,
+      firstHostId,
+      lastHostId,
+    );
     final List<Future<SendableActiveHost?>> activeHostsFuture = [];
     final StreamController<SendableActiveHost> activeHostsController =
         StreamController<SendableActiveHost>();
@@ -86,12 +89,12 @@ class HostScannerServiceImpl extends HostScannerService {
 
     int i = 0;
     for (final Future<SendableActiveHost?> host in activeHostsFuture) {
-      i++;
       final SendableActiveHost? tempHost = await host;
 
       progressCallback?.call(
         (pinged[i] - firstHostId) * 100 / (lastValidSubnet - firstHostId),
       );
+      i++;
 
       if (tempHost == null) {
         continue;
@@ -121,8 +124,10 @@ class HostScannerServiceImpl extends HostScannerService {
           final Duration? time = response.time;
           if (time != null) {
             logger.fine("Pingable device found: $host");
-            tempSendableActivateHost =
-                SendableActiveHost(host, pingData: pingData);
+            tempSendableActivateHost = SendableActiveHost(
+              host,
+              pingData: pingData,
+            );
           } else {
             logger.fine("Non pingable device found: $host");
           }
@@ -134,8 +139,10 @@ class HostScannerServiceImpl extends HostScannerService {
 
         if (data != null) {
           logger.fine("Successfully fetched arp entry for $host as $data");
-          tempSendableActivateHost =
-              SendableActiveHost(host, pingData: pingData);
+          tempSendableActivateHost = SendableActiveHost(
+            host,
+            pingData: pingData,
+          );
         } else {
           logger.fine("Problem in fetching arp entry for $host");
         }
@@ -180,39 +187,46 @@ class HostScannerServiceImpl extends HostScannerService {
     bool resultsInAddressAscendingOrder = true,
   }) async* {
     const int scanRangeForIsolate = 51;
-    final int lastValidSubnet =
-        validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
-    for (int i = firstHostId;
-        i <= lastValidSubnet;
-        i += scanRangeForIsolate + 1) {
+    final int lastValidSubnet = validateAndGetLastValidSubnet(
+      subnet,
+      firstHostId,
+      lastHostId,
+    );
+    for (
+      int i = firstHostId;
+      i <= lastValidSubnet;
+      i += scanRangeForIsolate + 1
+    ) {
       final limit = min(i + scanRangeForIsolate, lastValidSubnet);
       logger.fine('Scanning from $i to $limit');
 
       final receivePort = ReceivePort();
-      final isolate =
-          await Isolate.spawn(_startSearchingDevices, receivePort.sendPort);
+      final isolate = await Isolate.spawn(
+        _startSearchingDevices,
+        receivePort.sendPort,
+      );
 
       await for (final message in receivePort) {
         if (message is SendPort) {
-          message.send(
-            <String>[
-              subnet,
-              i.toString(),
-              limit.toString(),
-              timeoutInSeconds.toString(),
-              resultsInAddressAscendingOrder.toString(),
-              dbDirectory,
-              enableDebugging.toString(),
-              hostIds.join(','),
-            ],
-          );
+          message.send(<String>[
+            subnet,
+            i.toString(),
+            limit.toString(),
+            timeoutInSeconds.toString(),
+            resultsInAddressAscendingOrder.toString(),
+            dbDirectory,
+            enableDebugging.toString(),
+            hostIds.join(','),
+          ]);
         } else if (message is SendableActiveHost) {
-          final activeHostFound =
-              ActiveHost.fromSendableActiveHost(sendableActiveHost: message);
+          final activeHostFound = ActiveHost.fromSendableActiveHost(
+            sendableActiveHost: message,
+          );
           await activeHostFound.resolveInfo();
           final j = int.tryParse(activeHostFound.hostId) ?? i;
-          progressCallback
-              ?.call((j - firstHostId) * 100 / (lastValidSubnet - firstHostId));
+          progressCallback?.call(
+            (j - firstHostId) * 100 / (lastValidSubnet - firstHostId),
+          );
           yield activeHostFound;
         } else if (message is String && message == 'Done') {
           isolate.kill();
@@ -253,13 +267,13 @@ class HostScannerServiceImpl extends HostScannerService {
         /// be use inorder to cancel on dispose of the page.
         final Stream<SendableActiveHost> hostsDiscoveredInNetwork =
             HostScannerService.instance.getAllSendablePingableDevices(
-          subnetIsolate,
-          firstHostId: firstSubnetIsolate,
-          lastHostId: lastSubnetIsolate,
-          hostIds: hostIds,
-          timeoutInSeconds: timeoutInSeconds,
-          resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
-        );
+              subnetIsolate,
+              firstHostId: firstSubnetIsolate,
+              lastHostId: lastSubnetIsolate,
+              hostIds: hostIds,
+              timeoutInSeconds: timeoutInSeconds,
+              resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+            );
 
         await for (final SendableActiveHost activeHostFound
             in hostsDiscoveredInNetwork) {
@@ -283,8 +297,11 @@ class HostScannerServiceImpl extends HostScannerService {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    final int lastValidSubnet =
-        validateAndGetLastValidSubnet(subnet, firstHostId, lastHostId);
+    final int lastValidSubnet = validateAndGetLastValidSubnet(
+      subnet,
+      firstHostId,
+      lastHostId,
+    );
     final List<Future<ActiveHost?>> activeHostOpenPortList = [];
     final StreamController<ActiveHost> activeHostsController =
         StreamController<ActiveHost>();
