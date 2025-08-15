@@ -19,21 +19,19 @@ void main() {
   // Fetching interfaceIp and hostIp
   setUpAll(() async {
     await configureNetworkTools('build', enableDebugging: true);
-    //open a port in shared way because of portscanner using same,
-    //if passed false then two hosts come up in search and breaks test.
-    server = await ServerSocket.bind(
-      InternetAddress.anyIPv4,
-      port,
-      shared: true,
-    );
-    port = server.port;
-    logger.fine("Opened port in this machine at $port");
-
     final interface = await NetInterface.localInterface();
+
     if (interface != null) {
       hostId = interface.hostId;
       interfaceIp = interface.networkId;
       myOwnHost = interface.ipAddress;
+
+      //open a port in shared way because of portscanner using same,
+      //if passed false then two hosts come up in search and breaks test.
+      server = await ServerSocket.bind(myOwnHost, port);
+      port = server.port;
+      logger.fine("Opened port in this machine at $port");
+
       // Better to restrict to scan from hostId - 1 to hostId + 1 to prevent GHA timeouts
       firstHostId = hostId <= 1 ? hostId : hostId - 1;
       lastHostId = hostId >= 254 ? hostId : hostId + 1;
