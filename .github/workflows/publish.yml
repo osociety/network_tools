@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: dart pub get
       
-      - name: Run build_runner
-        run: dart run build_runner build
-      
       - name: Analyze project source
         run: dart analyze --fatal-infos 
 
