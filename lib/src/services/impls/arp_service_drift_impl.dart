@@ -58,10 +58,12 @@ class ARPServiceDriftImpl extends ARPService {
   Future<ARPData?> entryFor(String address) async {
     final records = await (database.select(
       database.aRPDrift,
-    )..where((t) => t.iPAddress.equals(address))).getSingleOrNull();
-    if (records != null) {
-      return ARPData.fromDriftData(records);
+    )..where((t) => t.iPAddress.equals(address))).get();
+    if (records.isNotEmpty) {
+      arpDriftLogger.fine("Found ARP entry for address: $address");
+      return ARPData.fromDriftData(records.first);
     }
+    arpDriftLogger.fine("No ARP entry found for address: $address");
     return null;
   }
 
