@@ -16,9 +16,10 @@ class ARPTableHelper {
   /// Fires arp -a command only on 3 platforms i.e., Linux, Windows, and macOS
   /// and returns the result in form of ARPData after parsing each line.
   static Future<List<ARPData>> buildTable() async {
-    final arpEntries = <ARPData>[];
+    final Map<String, ARPData> arpEntries = {};
+    final int startTime = DateTime.now().millisecondsSinceEpoch;
     // ARP is not allowed to be run for mobile devices currenlty.
-    if (Platform.isAndroid || Platform.isIOS) return arpEntries;
+    if (Platform.isAndroid || Platform.isIOS) return arpEntries.values.toList();
     final result = await Process.run('arp', ['-a']);
     final entries = const LineSplitter().convert(result.stdout.toString());
     RegExp? pattern;
@@ -50,10 +51,12 @@ class ARPTableHelper {
         );
         if (arpData.macAddress != '(incomplete)') {
           arpLogger.fine("Adding entry to table -> $arpData");
-          arpEntries.add(arpData);
+          arpEntries[arpData.iPAddress] = arpData;
         }
       }
     }
-    return arpEntries;
+    arpLogger.fine(
+        "ARP calculation took ${DateTime.now().millisecondsSinceEpoch - startTime} ms");
+    return arpEntries.values.toList();
   }
 }

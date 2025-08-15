@@ -14,10 +14,11 @@ class VendorTable {
     await createVendorTableMap();
     final pattern = macAddress.contains(':') ? ':' : '-';
     return _vendorTableMap[macAddress
-        .split(pattern)
-        .sublist(0, 3)
-        .join()
-        .toUpperCase()] as Vendor?;
+            .split(pattern)
+            .sublist(0, 3)
+            .join()
+            .toUpperCase()]
+        as Vendor?;
   }
 
   static Future<void> createVendorTableMap() async {
@@ -39,6 +40,7 @@ class VendorTable {
           "osociety/network_tools/main/lib/assets/mac-vendors-export.csv",
         ),
       );
+      print(response.statusCode);
       file.writeAsBytesSync(response.bodyBytes);
       logger.fine("Downloaded mac-vendors-export.csv successfully");
     } else {
