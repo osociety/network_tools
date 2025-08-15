@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.1
+Bug fix for windows
+
 ## 6.0.0
 Performance improvement using drift database
 
