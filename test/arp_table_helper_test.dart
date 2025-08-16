@@ -84,11 +84,14 @@ void main() {
     });
 
     test('Parses Windows ARP output', () async {
-      // Failback platform is windows
       mockArpTableHelper.setPlatform(
+        // ignore: avoid_redundant_argument_values
         android: false,
+        // ignore: avoid_redundant_argument_values
         ios: false,
+        // ignore: avoid_redundant_argument_values
         linux: false,
+        // ignore: avoid_redundant_argument_values
         macos: false,
       );
       final result = await mockArpTableHelper.buildTable();

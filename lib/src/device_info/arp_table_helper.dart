@@ -77,7 +77,7 @@ class ARPTableHelper {
       if (match != null) {
         final arpData = ARPData.fromRegExpMatch(match);
         if (arpData.macAddress != '(incomplete)') {
-          print("Adding entry to table -> $arpData");
+          arpLogger.fine("Adding entry to table -> $arpData");
           arpEntries[arpData.iPAddress] = arpData;
         }
       }
