@@ -30,9 +30,23 @@ jobs:
       - name: Install coverage tools
         run: dart pub global activate coverage
 
+      - name: Install lcov
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            sudo apt-get update && sudo apt-get install -y lcov
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            brew install lcov
+          elif [[ "${{ runner.os }}" == "Windows" ]]; then
+            choco install lcov
+          fi
+        shell: bash
+
       - name: Format Coverage
         run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
-
+            
+      - name: Excluded generated files
+        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' -o ./coverage/coverage.lcov
+        
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
       

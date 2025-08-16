@@ -9,37 +9,19 @@ import 'package:universal_io/io.dart';
 
 /// Provides utilities for mapping MAC addresses to vendor information using a local CSV file.
 class VendorTable {
-  static Map<dynamic, dynamic> _vendorTableMap = {};
-
-  /// Returns the [Vendor] corresponding to the given [macAddress], or null if not found.
-  ///
-  /// This method ensures the vendor table is loaded, then looks up the vendor by the MAC address prefix.
-  static Future<Vendor?> macToVendor(String macAddress) async {
-    await createVendorTableMap();
+  static String noColonString(String macAddress) {
     final pattern = macAddress.contains(':') ? ':' : '-';
-    return _vendorTableMap[macAddress
-            .split(pattern)
-            .sublist(0, 3)
-            .join()
-            .toUpperCase()]
-        as Vendor?;
+    return macAddress.split(pattern).sublist(0, 3).join().toUpperCase();
   }
 
-  /// Loads the vendor table from the CSV file if it is not already loaded.
-  static Future<void> createVendorTableMap() async {
-    if (_vendorTableMap.keys.isEmpty) {
-      _vendorTableMap = await _fetchVendorTable();
-    }
-    return;
-  }
-
-  static Future<Map<dynamic, dynamic>> _fetchVendorTable() async {
+  static Future<List<Vendor>> fetchVendorTable({http.Client? client}) async {
     //Download and store
     final csvPath = p.join(dbDirectory, "mac-vendors-export.csv");
     final file = File(csvPath);
     if (!await file.exists()) {
       logger.fine("Downloading mac-vendors-export.csv from network_tools");
-      final response = await http.get(
+      final httpClient = client ?? http.Client();
+      final response = await httpClient.get(
         Uri.https(
           "raw.githubusercontent.com",
           "osociety/network_tools/main/lib/assets/mac-vendors-export.csv",
@@ -47,26 +29,33 @@ class VendorTable {
       );
       file.writeAsBytesSync(response.bodyBytes);
       logger.fine("Downloaded mac-vendors-export.csv successfully");
+      if (client == null) {
+        httpClient.close();
+      }
     } else {
       logger.fine("File mac-vendors-export.csv already exists");
     }
 
     final input = file.openRead();
 
-    List<List<dynamic>> fields = await input
-        .transform(utf8.decoder)
-        .transform(const CsvToListConverter(eol: '\n'))
-        .toList();
+    List<List<String>> fields =
+        (await input
+                .transform(utf8.decoder)
+                .transform(const CsvToListConverter(eol: '\n'))
+                .toList())
+            .map<List<String>>((row) => row.map((e) => e.toString()).toList())
+            .toList();
     // Remove header from csv
     fields = fields.sublist(1);
-
-    final result = {};
-
-    for (final field in fields) {
-      final vendor = Vendor.fromCSVField(field);
-      // print('Vendor mac split : ${vendor.macPrefix.split(":").join()}');
-      result[vendor.macPrefix.split(":").join()] = vendor;
-    }
-    return result;
+    // Filter out empty or malformed rows
+    fields = fields
+        .where(
+          (field) =>
+              field.length >= 2 &&
+              field[0].trim().isNotEmpty &&
+              field[1].trim().isNotEmpty,
+        )
+        .toList();
+    return fields.map((field) => Vendor.fromCSVField(field)).toList();
   }
 }
