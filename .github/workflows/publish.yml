@@ -42,9 +42,11 @@ jobs:
         shell: bash
 
       - name: Format Coverage
-        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage |
-            lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' -o ./coverage/coverage.lcov
-
+        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
+            
+      - name: Excluded generated files
+        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' -o ./coverage/coverage.lcov
+        
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
       
