@@ -73,13 +73,8 @@ jobs:
       - name: Format Coverage
         run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
             
-      # - name: Excluded generated files
-      #   if: runner.os != 'Windows'
-      #   run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
-
-      # - name: Excluded generated files
-      #   if: runner.os == 'Windows'
-      #   run: lcov --remove ./coverage/coverage.lcov '*\lib\src\*.g.dart' '*\lib\src\models\drift\*' -o ./coverage/coverage.lcov
+      - name: Excluded generated files
+        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
 
       - name: Upload Coverage to CodeCov
         uses: codecov/codecov-action@v3
