@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.3
+Bug fixes and performance improvements
+
 ## 6.0.2
 Database error fix
 
