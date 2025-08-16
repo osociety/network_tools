@@ -76,11 +76,11 @@ jobs:
       - name: Excluded generated files
         run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
 
+      - name: Check Publish Warnings
+        run: dart pub publish --dry-run
+        
       - name: Upload Coverage to CodeCov
         uses: codecov/codecov-action@v3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: coverage/coverage.lcov
-
-      - name: Check Publish Warnings
-        run: dart pub publish --dry-run
