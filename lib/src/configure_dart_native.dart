@@ -15,6 +15,7 @@ import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart'
 Future<void> configureNetworkTools(
   String dbDirectory, {
   bool enableDebugging = false,
+  bool rebuildData = false,
 }) async {
   final logger = Logger('configure_network_tools');
   packages_page.enableDebugging = enableDebugging;
@@ -44,7 +45,9 @@ Future<void> configureNetworkTools(
   PortScannerServiceImpl();
   MdnsScannerServiceImpl();
 
-  final arpService = await ARPService.instance.open();
-  await arpService.buildTable();
+  if (rebuildData) {
+    await ARPService.instance.clear();
+  }
+  await ARPService.instance.build();
   await packages_page.VendorTable.createVendorTableMap();
 }

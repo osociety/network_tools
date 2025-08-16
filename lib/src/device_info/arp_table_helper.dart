@@ -52,6 +52,7 @@ class ARPTableHelper {
               ? match.namedGroup("intf") ?? ''
               : '',
           interfaceType: match.namedGroup("typ") ?? ARPData.nullInterfaceType,
+          createdAt: DateTime.now(),
         );
         if (arpData.macAddress != '(incomplete)') {
           arpLogger.fine("Adding entry to table -> $arpData");
@@ -60,7 +61,7 @@ class ARPTableHelper {
       }
     }
     arpLogger.fine(
-      "ARP calculation took ${DateTime.now().millisecondsSinceEpoch - startTime} ms",
+      "ARP calculation took ${DateTime.now().millisecondsSinceEpoch - startTime} ms with ${arpEntries.length} entries",
     );
     return arpEntries.values.toList();
   }
