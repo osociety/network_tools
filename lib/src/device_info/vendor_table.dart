@@ -34,12 +34,13 @@ class VendorTable {
 
     final input = file.openRead();
 
-    List<List<String>> fields = (await input
-        .transform(utf8.decoder)
-        .transform(const CsvToListConverter(eol: '\n'))
-        .toList())
-        .map<List<String>>((row) => row.map((e) => e.toString()).toList())
-        .toList();
+    List<List<String>> fields =
+        (await input
+                .transform(utf8.decoder)
+                .transform(const CsvToListConverter(eol: '\n'))
+                .toList())
+            .map<List<String>>((row) => row.map((e) => e.toString()).toList())
+            .toList();
     // Remove header from csv
     fields = fields.sublist(1);
     return fields.map((field) => Vendor.fromCSVField(field)).toList();
