@@ -80,6 +80,7 @@ void main() {
         'macAddress': '00:00:3F:C1:DD:3E',
         'interfaceName': 'eth0',
         'interfaceType': 'bridge',
+        'createdAt': DateTime.now().toIso8601String(),
       };
 
       final arpData = ARPData.fromJson(json);
