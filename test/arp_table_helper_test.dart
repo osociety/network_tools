@@ -103,5 +103,10 @@ void main() {
       expect(result[1].macAddress, 'ff-ff-ff-ff-ff-ff');
       expect(result[1].interfaceType, 'static');
     });
+
+    test('ARPTableHelper return non empty result on any machine', () {
+      final result = ARPTableHelper().executeARPCommand();
+      expect(result, isNotEmpty);
+    });
   });
 }
