@@ -195,8 +195,7 @@ class ActiveHost {
     await hostName;
   }
 
-  Future<ARPData?> setARPData() async {
-    await ARPService.instance.open();
+  Future<ARPData?> setARPData() {
     return ARPService.instance.entryFor(address);
   }
 

@@ -10,8 +10,6 @@ import 'package:universal_io/io.dart';
 
 /// Scans for all hosts in a subnet.
 class HostScannerServiceImpl extends HostScannerService {
-  final arpServiceFuture = ARPService.instance.open();
-
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   /// Set maxHost to higher value if you are not getting results.
   /// It won't firstHostId again unless previous scan is completed due to heavy
@@ -135,8 +133,7 @@ class HostScannerServiceImpl extends HostScannerService {
       }
       if (tempSendableActivateHost == null) {
         // Check if it's there in arp table
-        final data = await (await arpServiceFuture).entryFor(host);
-        // print("Trying to get arp entry for $host: $data");
+        final data = await ARPService.instance.entryFor(host);
 
         if (data != null) {
           logger.fine("Successfully fetched arp entry for $host as $data");

@@ -61,7 +61,7 @@ class ARPTableHelper {
       }
     }
     arpLogger.fine(
-      "ARP calculation took ${DateTime.now().millisecondsSinceEpoch - startTime} ms",
+      "ARP calculation took ${DateTime.now().millisecondsSinceEpoch - startTime} ms with ${arpEntries.length} entries",
     );
     return arpEntries.values.toList();
   }
