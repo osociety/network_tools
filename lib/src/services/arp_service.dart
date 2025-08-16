@@ -9,9 +9,9 @@ abstract class ARPService {
 
   static ARPService get instance => _instance;
 
-  Future<ARPService> open();
   Future<List<String?>?> entries();
   Future<ARPData?> entryFor(String address);
-  Future<void> buildTable();
+  Future<void> build();
+  Future<bool> clear();
   void close();
 }

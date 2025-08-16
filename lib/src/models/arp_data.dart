@@ -12,6 +12,7 @@ class ARPData {
     required this.macAddress,
     required this.interfaceName,
     required this.interfaceType,
+    required this.createdAt,
   });
 
   factory ARPData.fromJson(Map<String, dynamic> json) =>
@@ -23,6 +24,7 @@ class ARPData {
     macAddress: arpData.macAddress,
     interfaceName: arpData.interfaceName,
     interfaceType: arpData.interfaceType,
+    createdAt: arpData.createdAt,
   );
 
   final String hostname;
@@ -35,6 +37,7 @@ class ARPData {
   final String macAddress;
   final String interfaceName;
   final String interfaceType;
+  final DateTime createdAt;
 
   Map<String, dynamic> toJson() => _$ARPDataToJson(this);
 

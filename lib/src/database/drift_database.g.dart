@@ -84,9 +84,9 @@ class $ARPDriftTable extends ARPDrift
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
     'created_at',
     aliasedName,
-    true,
+    false,
     type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
+    requiredDuringInsert: true,
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -164,6 +164,8 @@ class $ARPDriftTable extends ARPDrift
         _createdAtMeta,
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
     }
     return context;
   }
@@ -201,7 +203,7 @@ class $ARPDriftTable extends ARPDrift
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
-      ),
+      )!,
     );
   }
 
@@ -218,7 +220,7 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
   final String interfaceName;
   final String interfaceType;
   final String macAddress;
-  final DateTime? createdAt;
+  final DateTime createdAt;
   const ARPDriftData({
     required this.id,
     required this.iPAddress,
@@ -226,7 +228,7 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
     required this.interfaceName,
     required this.interfaceType,
     required this.macAddress,
-    this.createdAt,
+    required this.createdAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -237,9 +239,7 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
     map['interface_name'] = Variable<String>(interfaceName);
     map['interface_type'] = Variable<String>(interfaceType);
     map['mac_address'] = Variable<String>(macAddress);
-    if (!nullToAbsent || createdAt != null) {
-      map['created_at'] = Variable<DateTime>(createdAt);
-    }
+    map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
 
@@ -251,9 +251,7 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
       interfaceName: Value(interfaceName),
       interfaceType: Value(interfaceType),
       macAddress: Value(macAddress),
-      createdAt: createdAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(createdAt),
+      createdAt: Value(createdAt),
     );
   }
 
@@ -269,7 +267,7 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
       interfaceName: serializer.fromJson<String>(json['interfaceName']),
       interfaceType: serializer.fromJson<String>(json['interfaceType']),
       macAddress: serializer.fromJson<String>(json['macAddress']),
-      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
   @override
@@ -282,7 +280,7 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
       'interfaceName': serializer.toJson<String>(interfaceName),
       'interfaceType': serializer.toJson<String>(interfaceType),
       'macAddress': serializer.toJson<String>(macAddress),
-      'createdAt': serializer.toJson<DateTime?>(createdAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
@@ -293,7 +291,7 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
     String? interfaceName,
     String? interfaceType,
     String? macAddress,
-    Value<DateTime?> createdAt = const Value.absent(),
+    DateTime? createdAt,
   }) => ARPDriftData(
     id: id ?? this.id,
     iPAddress: iPAddress ?? this.iPAddress,
@@ -301,7 +299,7 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
     interfaceName: interfaceName ?? this.interfaceName,
     interfaceType: interfaceType ?? this.interfaceType,
     macAddress: macAddress ?? this.macAddress,
-    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    createdAt: createdAt ?? this.createdAt,
   );
   ARPDriftData copyWithCompanion(ARPDriftCompanion data) {
     return ARPDriftData(
@@ -365,7 +363,7 @@ class ARPDriftCompanion extends UpdateCompanion<ARPDriftData> {
   final Value<String> interfaceName;
   final Value<String> interfaceType;
   final Value<String> macAddress;
-  final Value<DateTime?> createdAt;
+  final Value<DateTime> createdAt;
   const ARPDriftCompanion({
     this.id = const Value.absent(),
     this.iPAddress = const Value.absent(),
@@ -382,12 +380,13 @@ class ARPDriftCompanion extends UpdateCompanion<ARPDriftData> {
     required String interfaceName,
     required String interfaceType,
     required String macAddress,
-    this.createdAt = const Value.absent(),
+    required DateTime createdAt,
   }) : iPAddress = Value(iPAddress),
        hostname = Value(hostname),
        interfaceName = Value(interfaceName),
        interfaceType = Value(interfaceType),
-       macAddress = Value(macAddress);
+       macAddress = Value(macAddress),
+       createdAt = Value(createdAt);
   static Insertable<ARPDriftData> custom({
     Expression<int>? id,
     Expression<String>? iPAddress,
@@ -415,7 +414,7 @@ class ARPDriftCompanion extends UpdateCompanion<ARPDriftData> {
     Value<String>? interfaceName,
     Value<String>? interfaceType,
     Value<String>? macAddress,
-    Value<DateTime?>? createdAt,
+    Value<DateTime>? createdAt,
   }) {
     return ARPDriftCompanion(
       id: id ?? this.id,
@@ -489,7 +488,7 @@ typedef $$ARPDriftTableCreateCompanionBuilder =
       required String interfaceName,
       required String interfaceType,
       required String macAddress,
-      Value<DateTime?> createdAt,
+      required DateTime createdAt,
     });
 typedef $$ARPDriftTableUpdateCompanionBuilder =
     ARPDriftCompanion Function({
@@ -499,7 +498,7 @@ typedef $$ARPDriftTableUpdateCompanionBuilder =
       Value<String> interfaceName,
       Value<String> interfaceType,
       Value<String> macAddress,
-      Value<DateTime?> createdAt,
+      Value<DateTime> createdAt,
     });
 
 class $$ARPDriftTableFilterComposer
@@ -666,7 +665,7 @@ class $$ARPDriftTableTableManager
                 Value<String> interfaceName = const Value.absent(),
                 Value<String> interfaceType = const Value.absent(),
                 Value<String> macAddress = const Value.absent(),
-                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
               }) => ARPDriftCompanion(
                 id: id,
                 iPAddress: iPAddress,
@@ -684,7 +683,7 @@ class $$ARPDriftTableTableManager
                 required String interfaceName,
                 required String interfaceType,
                 required String macAddress,
-                Value<DateTime?> createdAt = const Value.absent(),
+                required DateTime createdAt,
               }) => ARPDriftCompanion.insert(
                 id: id,
                 iPAddress: iPAddress,
