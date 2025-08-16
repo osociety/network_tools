@@ -4,8 +4,9 @@ import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
-import 'package:network_tools/src/services/arp_service.dart';
+import 'package:network_tools/src/services/repository.dart';
 import 'package:universal_io/io.dart';
 
 /// Scans for all hosts in a subnet.
@@ -133,7 +134,8 @@ class HostScannerServiceImpl extends HostScannerService {
       }
       if (tempSendableActivateHost == null) {
         // Check if it's there in arp table
-        final data = await ARPService.instance.entryFor(host);
+
+        final data = await getIt<Repository<ARPData>>().entryFor(host);
 
         if (data != null) {
           logger.fine("Successfully fetched arp entry for $host as $data");

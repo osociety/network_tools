@@ -1,6 +1,5 @@
 export 'src/configure_dart_native.dart';
 export 'src/device_info/net_interface.dart';
-export 'src/device_info/vendor_table.dart';
 export 'src/mdns_scanner/list_of_srv_records.dart';
 export 'src/models/active_host.dart';
 export 'src/models/arp_data.dart';

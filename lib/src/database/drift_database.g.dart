@@ -176,34 +176,41 @@ class $ARPDriftTable extends ARPDrift
   ARPDriftData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ARPDriftData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      iPAddress: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}i_p_address'],
-      )!,
-      hostname: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hostname'],
-      )!,
-      interfaceName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}interface_name'],
-      )!,
-      interfaceType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}interface_type'],
-      )!,
-      macAddress: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mac_address'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      iPAddress:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}i_p_address'],
+          )!,
+      hostname:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}hostname'],
+          )!,
+      interfaceName:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}interface_name'],
+          )!,
+      interfaceType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}interface_type'],
+          )!,
+      macAddress:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}mac_address'],
+          )!,
+      createdAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}created_at'],
+          )!,
     );
   }
 
@@ -306,15 +313,16 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
       id: data.id.present ? data.id.value : this.id,
       iPAddress: data.iPAddress.present ? data.iPAddress.value : this.iPAddress,
       hostname: data.hostname.present ? data.hostname.value : this.hostname,
-      interfaceName: data.interfaceName.present
-          ? data.interfaceName.value
-          : this.interfaceName,
-      interfaceType: data.interfaceType.present
-          ? data.interfaceType.value
-          : this.interfaceType,
-      macAddress: data.macAddress.present
-          ? data.macAddress.value
-          : this.macAddress,
+      interfaceName:
+          data.interfaceName.present
+              ? data.interfaceName.value
+              : this.interfaceName,
+      interfaceType:
+          data.interfaceType.present
+              ? data.interfaceType.value
+              : this.interfaceType,
+      macAddress:
+          data.macAddress.present ? data.macAddress.value : this.macAddress,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -469,15 +477,424 @@ class ARPDriftCompanion extends UpdateCompanion<ARPDriftData> {
   }
 }
 
+class $VendorDriftTable extends VendorDrift
+    with TableInfo<$VendorDriftTable, VendorDriftData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VendorDriftTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _macPrefixMeta = const VerificationMeta(
+    'macPrefix',
+  );
+  @override
+  late final GeneratedColumn<String> macPrefix = GeneratedColumn<String>(
+    'mac_prefix',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _vendorNameMeta = const VerificationMeta(
+    'vendorName',
+  );
+  @override
+  late final GeneratedColumn<String> vendorName = GeneratedColumn<String>(
+    'vendor_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _privateMeta = const VerificationMeta(
+    'private',
+  );
+  @override
+  late final GeneratedColumn<String> private = GeneratedColumn<String>(
+    'private',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _blockTypeMeta = const VerificationMeta(
+    'blockType',
+  );
+  @override
+  late final GeneratedColumn<String> blockType = GeneratedColumn<String>(
+    'block_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastUpdateMeta = const VerificationMeta(
+    'lastUpdate',
+  );
+  @override
+  late final GeneratedColumn<String> lastUpdate = GeneratedColumn<String>(
+    'last_update',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    macPrefix,
+    vendorName,
+    private,
+    blockType,
+    lastUpdate,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vendor_drift';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VendorDriftData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('mac_prefix')) {
+      context.handle(
+        _macPrefixMeta,
+        macPrefix.isAcceptableOrUnknown(data['mac_prefix']!, _macPrefixMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_macPrefixMeta);
+    }
+    if (data.containsKey('vendor_name')) {
+      context.handle(
+        _vendorNameMeta,
+        vendorName.isAcceptableOrUnknown(data['vendor_name']!, _vendorNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vendorNameMeta);
+    }
+    if (data.containsKey('private')) {
+      context.handle(
+        _privateMeta,
+        private.isAcceptableOrUnknown(data['private']!, _privateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_privateMeta);
+    }
+    if (data.containsKey('block_type')) {
+      context.handle(
+        _blockTypeMeta,
+        blockType.isAcceptableOrUnknown(data['block_type']!, _blockTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_blockTypeMeta);
+    }
+    if (data.containsKey('last_update')) {
+      context.handle(
+        _lastUpdateMeta,
+        lastUpdate.isAcceptableOrUnknown(data['last_update']!, _lastUpdateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lastUpdateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VendorDriftData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VendorDriftData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      macPrefix:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}mac_prefix'],
+          )!,
+      vendorName:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}vendor_name'],
+          )!,
+      private:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}private'],
+          )!,
+      blockType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}block_type'],
+          )!,
+      lastUpdate:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}last_update'],
+          )!,
+    );
+  }
+
+  @override
+  $VendorDriftTable createAlias(String alias) {
+    return $VendorDriftTable(attachedDatabase, alias);
+  }
+}
+
+class VendorDriftData extends DataClass implements Insertable<VendorDriftData> {
+  final int id;
+  final String macPrefix;
+  final String vendorName;
+  final String private;
+  final String blockType;
+  final String lastUpdate;
+  const VendorDriftData({
+    required this.id,
+    required this.macPrefix,
+    required this.vendorName,
+    required this.private,
+    required this.blockType,
+    required this.lastUpdate,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['mac_prefix'] = Variable<String>(macPrefix);
+    map['vendor_name'] = Variable<String>(vendorName);
+    map['private'] = Variable<String>(private);
+    map['block_type'] = Variable<String>(blockType);
+    map['last_update'] = Variable<String>(lastUpdate);
+    return map;
+  }
+
+  VendorDriftCompanion toCompanion(bool nullToAbsent) {
+    return VendorDriftCompanion(
+      id: Value(id),
+      macPrefix: Value(macPrefix),
+      vendorName: Value(vendorName),
+      private: Value(private),
+      blockType: Value(blockType),
+      lastUpdate: Value(lastUpdate),
+    );
+  }
+
+  factory VendorDriftData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VendorDriftData(
+      id: serializer.fromJson<int>(json['id']),
+      macPrefix: serializer.fromJson<String>(json['macPrefix']),
+      vendorName: serializer.fromJson<String>(json['vendorName']),
+      private: serializer.fromJson<String>(json['private']),
+      blockType: serializer.fromJson<String>(json['blockType']),
+      lastUpdate: serializer.fromJson<String>(json['lastUpdate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'macPrefix': serializer.toJson<String>(macPrefix),
+      'vendorName': serializer.toJson<String>(vendorName),
+      'private': serializer.toJson<String>(private),
+      'blockType': serializer.toJson<String>(blockType),
+      'lastUpdate': serializer.toJson<String>(lastUpdate),
+    };
+  }
+
+  VendorDriftData copyWith({
+    int? id,
+    String? macPrefix,
+    String? vendorName,
+    String? private,
+    String? blockType,
+    String? lastUpdate,
+  }) => VendorDriftData(
+    id: id ?? this.id,
+    macPrefix: macPrefix ?? this.macPrefix,
+    vendorName: vendorName ?? this.vendorName,
+    private: private ?? this.private,
+    blockType: blockType ?? this.blockType,
+    lastUpdate: lastUpdate ?? this.lastUpdate,
+  );
+  VendorDriftData copyWithCompanion(VendorDriftCompanion data) {
+    return VendorDriftData(
+      id: data.id.present ? data.id.value : this.id,
+      macPrefix: data.macPrefix.present ? data.macPrefix.value : this.macPrefix,
+      vendorName:
+          data.vendorName.present ? data.vendorName.value : this.vendorName,
+      private: data.private.present ? data.private.value : this.private,
+      blockType: data.blockType.present ? data.blockType.value : this.blockType,
+      lastUpdate:
+          data.lastUpdate.present ? data.lastUpdate.value : this.lastUpdate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VendorDriftData(')
+          ..write('id: $id, ')
+          ..write('macPrefix: $macPrefix, ')
+          ..write('vendorName: $vendorName, ')
+          ..write('private: $private, ')
+          ..write('blockType: $blockType, ')
+          ..write('lastUpdate: $lastUpdate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, macPrefix, vendorName, private, blockType, lastUpdate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VendorDriftData &&
+          other.id == this.id &&
+          other.macPrefix == this.macPrefix &&
+          other.vendorName == this.vendorName &&
+          other.private == this.private &&
+          other.blockType == this.blockType &&
+          other.lastUpdate == this.lastUpdate);
+}
+
+class VendorDriftCompanion extends UpdateCompanion<VendorDriftData> {
+  final Value<int> id;
+  final Value<String> macPrefix;
+  final Value<String> vendorName;
+  final Value<String> private;
+  final Value<String> blockType;
+  final Value<String> lastUpdate;
+  const VendorDriftCompanion({
+    this.id = const Value.absent(),
+    this.macPrefix = const Value.absent(),
+    this.vendorName = const Value.absent(),
+    this.private = const Value.absent(),
+    this.blockType = const Value.absent(),
+    this.lastUpdate = const Value.absent(),
+  });
+  VendorDriftCompanion.insert({
+    this.id = const Value.absent(),
+    required String macPrefix,
+    required String vendorName,
+    required String private,
+    required String blockType,
+    required String lastUpdate,
+  }) : macPrefix = Value(macPrefix),
+       vendorName = Value(vendorName),
+       private = Value(private),
+       blockType = Value(blockType),
+       lastUpdate = Value(lastUpdate);
+  static Insertable<VendorDriftData> custom({
+    Expression<int>? id,
+    Expression<String>? macPrefix,
+    Expression<String>? vendorName,
+    Expression<String>? private,
+    Expression<String>? blockType,
+    Expression<String>? lastUpdate,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (macPrefix != null) 'mac_prefix': macPrefix,
+      if (vendorName != null) 'vendor_name': vendorName,
+      if (private != null) 'private': private,
+      if (blockType != null) 'block_type': blockType,
+      if (lastUpdate != null) 'last_update': lastUpdate,
+    });
+  }
+
+  VendorDriftCompanion copyWith({
+    Value<int>? id,
+    Value<String>? macPrefix,
+    Value<String>? vendorName,
+    Value<String>? private,
+    Value<String>? blockType,
+    Value<String>? lastUpdate,
+  }) {
+    return VendorDriftCompanion(
+      id: id ?? this.id,
+      macPrefix: macPrefix ?? this.macPrefix,
+      vendorName: vendorName ?? this.vendorName,
+      private: private ?? this.private,
+      blockType: blockType ?? this.blockType,
+      lastUpdate: lastUpdate ?? this.lastUpdate,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (macPrefix.present) {
+      map['mac_prefix'] = Variable<String>(macPrefix.value);
+    }
+    if (vendorName.present) {
+      map['vendor_name'] = Variable<String>(vendorName.value);
+    }
+    if (private.present) {
+      map['private'] = Variable<String>(private.value);
+    }
+    if (blockType.present) {
+      map['block_type'] = Variable<String>(blockType.value);
+    }
+    if (lastUpdate.present) {
+      map['last_update'] = Variable<String>(lastUpdate.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VendorDriftCompanion(')
+          ..write('id: $id, ')
+          ..write('macPrefix: $macPrefix, ')
+          ..write('vendorName: $vendorName, ')
+          ..write('private: $private, ')
+          ..write('blockType: $blockType, ')
+          ..write('lastUpdate: $lastUpdate')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ARPDriftTable aRPDrift = $ARPDriftTable(this);
+  late final $VendorDriftTable vendorDrift = $VendorDriftTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [aRPDrift];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [aRPDrift, vendorDrift];
 }
 
 typedef $$ARPDriftTableCreateCompanionBuilder =
@@ -651,12 +1068,12 @@ class $$ARPDriftTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ARPDriftTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ARPDriftTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ARPDriftTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer:
+              () => $$ARPDriftTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$ARPDriftTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$ARPDriftTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -693,9 +1110,16 @@ class $$ARPDriftTableTableManager
                 macAddress: macAddress,
                 createdAt: createdAt,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -718,10 +1142,237 @@ typedef $$ARPDriftTableProcessedTableManager =
       ARPDriftData,
       PrefetchHooks Function()
     >;
+typedef $$VendorDriftTableCreateCompanionBuilder =
+    VendorDriftCompanion Function({
+      Value<int> id,
+      required String macPrefix,
+      required String vendorName,
+      required String private,
+      required String blockType,
+      required String lastUpdate,
+    });
+typedef $$VendorDriftTableUpdateCompanionBuilder =
+    VendorDriftCompanion Function({
+      Value<int> id,
+      Value<String> macPrefix,
+      Value<String> vendorName,
+      Value<String> private,
+      Value<String> blockType,
+      Value<String> lastUpdate,
+    });
+
+class $$VendorDriftTableFilterComposer
+    extends Composer<_$AppDatabase, $VendorDriftTable> {
+  $$VendorDriftTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get macPrefix => $composableBuilder(
+    column: $table.macPrefix,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get vendorName => $composableBuilder(
+    column: $table.vendorName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get private => $composableBuilder(
+    column: $table.private,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get blockType => $composableBuilder(
+    column: $table.blockType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastUpdate => $composableBuilder(
+    column: $table.lastUpdate,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VendorDriftTableOrderingComposer
+    extends Composer<_$AppDatabase, $VendorDriftTable> {
+  $$VendorDriftTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get macPrefix => $composableBuilder(
+    column: $table.macPrefix,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get vendorName => $composableBuilder(
+    column: $table.vendorName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get private => $composableBuilder(
+    column: $table.private,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get blockType => $composableBuilder(
+    column: $table.blockType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastUpdate => $composableBuilder(
+    column: $table.lastUpdate,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VendorDriftTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VendorDriftTable> {
+  $$VendorDriftTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get macPrefix =>
+      $composableBuilder(column: $table.macPrefix, builder: (column) => column);
+
+  GeneratedColumn<String> get vendorName => $composableBuilder(
+    column: $table.vendorName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get private =>
+      $composableBuilder(column: $table.private, builder: (column) => column);
+
+  GeneratedColumn<String> get blockType =>
+      $composableBuilder(column: $table.blockType, builder: (column) => column);
+
+  GeneratedColumn<String> get lastUpdate => $composableBuilder(
+    column: $table.lastUpdate,
+    builder: (column) => column,
+  );
+}
+
+class $$VendorDriftTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VendorDriftTable,
+          VendorDriftData,
+          $$VendorDriftTableFilterComposer,
+          $$VendorDriftTableOrderingComposer,
+          $$VendorDriftTableAnnotationComposer,
+          $$VendorDriftTableCreateCompanionBuilder,
+          $$VendorDriftTableUpdateCompanionBuilder,
+          (
+            VendorDriftData,
+            BaseReferences<_$AppDatabase, $VendorDriftTable, VendorDriftData>,
+          ),
+          VendorDriftData,
+          PrefetchHooks Function()
+        > {
+  $$VendorDriftTableTableManager(_$AppDatabase db, $VendorDriftTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$VendorDriftTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$VendorDriftTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () =>
+                  $$VendorDriftTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> macPrefix = const Value.absent(),
+                Value<String> vendorName = const Value.absent(),
+                Value<String> private = const Value.absent(),
+                Value<String> blockType = const Value.absent(),
+                Value<String> lastUpdate = const Value.absent(),
+              }) => VendorDriftCompanion(
+                id: id,
+                macPrefix: macPrefix,
+                vendorName: vendorName,
+                private: private,
+                blockType: blockType,
+                lastUpdate: lastUpdate,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String macPrefix,
+                required String vendorName,
+                required String private,
+                required String blockType,
+                required String lastUpdate,
+              }) => VendorDriftCompanion.insert(
+                id: id,
+                macPrefix: macPrefix,
+                vendorName: vendorName,
+                private: private,
+                blockType: blockType,
+                lastUpdate: lastUpdate,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VendorDriftTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VendorDriftTable,
+      VendorDriftData,
+      $$VendorDriftTableFilterComposer,
+      $$VendorDriftTableOrderingComposer,
+      $$VendorDriftTableAnnotationComposer,
+      $$VendorDriftTableCreateCompanionBuilder,
+      $$VendorDriftTableUpdateCompanionBuilder,
+      (
+        VendorDriftData,
+        BaseReferences<_$AppDatabase, $VendorDriftTable, VendorDriftData>,
+      ),
+      VendorDriftData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$ARPDriftTableTableManager get aRPDrift =>
       $$ARPDriftTableTableManager(_db, _db.aRPDrift);
+  $$VendorDriftTableTableManager get vendorDrift =>
+      $$VendorDriftTableTableManager(_db, _db.vendorDrift);
 }

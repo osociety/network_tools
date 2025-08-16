@@ -4,10 +4,11 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/models/drift/arp_data.dart';
+import 'package:network_tools/src/models/drift/vendor_data.dart';
 import 'package:path/path.dart' as path;
 part 'drift_database.g.dart';
 
-@DriftDatabase(tables: [ARPDrift])
+@DriftDatabase(tables: [ARPDrift, VendorDrift])
 class AppDatabase extends _$AppDatabase {
   // After generating code, this class needs to define a `schemaVersion` getter
   // and a constructor telling drift where the database should be stored.
@@ -15,11 +16,11 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   static QueryExecutor _openConnection() {
     return NativeDatabase.createInBackground(
-      File(path.join(dbDirectory, 'network_tools')),
+      File(path.join(dbDirectory, 'network_tools_v1')),
     );
   }
 }

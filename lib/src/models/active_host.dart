@@ -1,7 +1,8 @@
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
-import 'package:network_tools/src/services/arp_service.dart';
+import 'package:network_tools/src/services/repository.dart';
 import 'package:universal_io/io.dart';
 
 /// ActiveHost which implements comparable
@@ -196,13 +197,15 @@ class ActiveHost {
   }
 
   Future<ARPData?> setARPData() {
-    return ARPService.instance.entryFor(address);
+    return getIt<Repository<ARPData>>().entryFor(address);
   }
 
   Future<Vendor?> setVendor() async {
     final String? macAddress = await getMacAddress();
 
-    return macAddress == null ? null : VendorTable.macToVendor(macAddress);
+    return macAddress == null
+        ? null
+        : await getIt<Repository<Vendor>>().entryFor(macAddress);
   }
 
   /// Try to find the mdns name of this device, if not exist mdns name will
