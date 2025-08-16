@@ -24,7 +24,7 @@ class ARPRepository implements Repository<ARPData> {
       arpDriftLogger.fine("Skipping ARP table build, old entries found");
       return;
     }
-
+    arpDriftLogger.fine("Building ARP table...");
     final entries = (await ARPTableHelper.buildTable())
         .map(
           (e) => ARPDriftCompanion.insert(

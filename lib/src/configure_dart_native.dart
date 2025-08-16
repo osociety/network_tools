@@ -40,12 +40,17 @@ Future<void> configureNetworkTools(
     });
   }
 
-  configureDependencies(Env.prod);
   // Setting dart native classes implementations
   HostScannerServiceImpl();
   PortScannerServiceImpl();
   MdnsScannerServiceImpl();
 
+  await initializeNetworkTools(rebuildData);
+}
+
+/// Initializes the ARP table and vendor table map for network operations.
+Future<void> initializeNetworkTools(bool rebuildData) async {
+  configureDependencies(Env.prod);
   if (rebuildData) {
     await getIt<Repository<ARPData>>().clear();
   }

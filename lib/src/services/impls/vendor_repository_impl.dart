@@ -25,7 +25,7 @@ class VendorRepository implements Repository<Vendor> {
       );
       return;
     }
-
+    vendorDriftLogger.fine("Building Vendor table...");
     final entries = (await VendorTable.fetchVendorTable())
         .map(
           (e) => VendorDriftCompanion.insert(
