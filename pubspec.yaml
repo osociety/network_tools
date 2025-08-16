@@ -59,5 +59,6 @@ dev_dependencies:
   json_serializable: ^6.10.0
   # Set of lint rules for Dart.
   lint: ^2.3.0
+  mocktail: ^1.0.3
   # Writing and running Dart tests.
   test: ^1.25.8

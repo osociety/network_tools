@@ -15,47 +15,69 @@ class ARPTableHelper {
   /// Logger for ARP table operations.
   static final arpLogger = Logger("arp-table-logger");
 
+  bool isMobilePlatform = Platform.isAndroid || Platform.isIOS;
+  bool isMacOSPlatform = Platform.isMacOS;
+  bool isLinuxPlatform = Platform.isLinux;
+
+  List<String> executeARPCommand() {
+    // ARP is not allowed to be run for mobile devices currenlty.
+    if (isMobilePlatform) {
+      arpLogger.warning("ARP command is not supported on mobile platforms.");
+      return [];
+    }
+    final result = Process.runSync('arp', ['-a']);
+    if (result.exitCode != 0) {
+      arpLogger.severe("Failed to execute ARP command: ${result.stderr}");
+      return [];
+    }
+    return const LineSplitter().convert(result.stdout.toString());
+  }
+
+  RegExp _getARPCmdRegExPattern() {
+    if (isMacOSPlatform) {
+      return RegExp(
+        r'(?<host>[\w.?]*)\s\((?<ip>.*)\)\sat\s(?<mac>.*)\son\s(?<intf>\w+)\sifscope\s*(\w*)\s*\[(?<typ>.*)\]',
+      );
+    } else if (isLinuxPlatform) {
+      return RegExp(
+        r'(?<host>[\w.?]*)\s\((?<ip>.*)\)\sat\s(?<mac>.*)\s\[(?<typ>.*)\]\son\s(?<intf>\w+)',
+      );
+    } else {
+      // Windows: non-greedy match and trim whitespace
+      return RegExp(
+        r'(?<ip>[^\s]+)\s+(?<mac>[^\s]+)\s+(?<typ>\w+)',
+        caseSensitive: false,
+      );
+    }
+  }
+
   /// Retrieves the ARP table by running the `arp -a` command on Linux, Windows, and macOS.
   ///
   /// Parses the output and returns a list of [ARPData] objects representing each ARP entry.
   /// Returns an empty list on unsupported platforms (e.g., Android, iOS).
-  static Future<List<ARPData>> buildTable() async {
+  Future<List<ARPData>> buildTable() async {
     final Map<String, ARPData> arpEntries = {};
     final int startTime = DateTime.now().millisecondsSinceEpoch;
-    // ARP is not allowed to be run for mobile devices currenlty.
-    if (Platform.isAndroid || Platform.isIOS) return arpEntries.values.toList();
-    final result = await Process.run('arp', ['-a']);
-    final entries = const LineSplitter().convert(result.stdout.toString());
-    RegExp? pattern;
-    if (Platform.isMacOS) {
-      pattern = RegExp(
-        r'(?<host>[\w.?]*)\s\((?<ip>.*)\)\sat\s(?<mac>.*)\son\s(?<intf>\w+)\sifscope\s*(\w*)\s*\[(?<typ>.*)\]',
-      );
-    } else if (Platform.isLinux) {
-      pattern = RegExp(
-        r'(?<host>[\w.?]*)\s\((?<ip>.*)\)\sat\s(?<mac>.*)\s\[(?<typ>.*)\]\son\s(?<intf>\w+)',
-      );
-    } else {
-      pattern = RegExp(r'(?<ip>.*)\s(?<mac>.*)\s(?<typ>.*)');
+    final entries = executeARPCommand();
+    if (entries.isEmpty) {
+      arpLogger.warning("No ARP entries found.");
+      return [];
     }
 
+    final pattern = _getARPCmdRegExPattern();
+
     for (final entry in entries) {
+      // Skip Windows header and interface lines
+      if (entry.trim().isEmpty ||
+          entry.startsWith('Interface:') ||
+          entry.trim().toLowerCase().startsWith('internet address')) {
+        continue;
+      }
       final match = pattern.firstMatch(entry);
       if (match != null) {
-        final arpData = ARPData(
-          hostname: match.groupNames.contains('host')
-              ? match.namedGroup("host") ?? ''
-              : '',
-          iPAddress: match.namedGroup("ip") ?? ARPData.nullIPAddress,
-          macAddress: match.namedGroup("mac") ?? ARPData.nullMacAddress,
-          interfaceName: match.groupNames.contains('intf')
-              ? match.namedGroup("intf") ?? ''
-              : '',
-          interfaceType: match.namedGroup("typ") ?? ARPData.nullInterfaceType,
-          createdAt: DateTime.now(),
-        );
+        final arpData = ARPData.fromRegExpMatch(match);
         if (arpData.macAddress != '(incomplete)') {
-          arpLogger.fine("Adding entry to table -> $arpData");
+          print("Adding entry to table -> $arpData");
           arpEntries[arpData.iPAddress] = arpData;
         }
       }

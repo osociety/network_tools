@@ -27,12 +27,26 @@ class ARPData {
     createdAt: arpData.createdAt,
   );
 
+  factory ARPData.fromRegExpMatch(RegExpMatch match) => ARPData(
+    hostname: match.groupNames.contains('host')
+        ? (match.namedGroup("host")?.trim() ?? nullHostName)
+        : nullHostName,
+    iPAddress: match.namedGroup("ip")?.trim() ?? ARPData.nullIPAddress,
+    macAddress: match.namedGroup("mac")?.trim() ?? ARPData.nullMacAddress,
+    interfaceName: match.groupNames.contains('intf')
+        ? (match.namedGroup("intf")?.trim() ?? nullHostName)
+        : nullHostName,
+    interfaceType: match.namedGroup("typ")?.trim() ?? ARPData.nullInterfaceType,
+    createdAt: DateTime.now(),
+  );
+
   final String hostname;
   final String iPAddress;
   static const String primaryKeySembast = 'iPAddress';
   static const String nullIPAddress = '0.0.0.0';
   static const String nullMacAddress = 'ff:ff:ff:ff:ff:ff';
   static const String nullInterfaceType = 'ethernet';
+  static const String nullHostName = '';
 
   final String macAddress;
   final String interfaceName;
