@@ -5,7 +5,7 @@ import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:test/test.dart';
 import 'package:universal_io/io.dart';
 
-void main() {
+Future<void> main() async {
   int port = 0;
   int hostId = 0;
   int firstHostId = 0;

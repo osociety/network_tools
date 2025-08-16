@@ -25,7 +25,7 @@ class ARPRepository implements Repository<ARPData> {
       return;
     }
     arpDriftLogger.fine("Building ARP table...");
-    final entries = (await ARPTableHelper.buildTable())
+    final entries = (await ARPTableHelper().buildTable())
         .map(
           (e) => ARPDriftCompanion.insert(
             iPAddress: e.iPAddress,

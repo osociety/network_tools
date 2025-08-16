@@ -14,13 +14,14 @@ class VendorTable {
     return macAddress.split(pattern).sublist(0, 3).join().toUpperCase();
   }
 
-  static Future<List<Vendor>> fetchVendorTable() async {
+  static Future<List<Vendor>> fetchVendorTable({http.Client? client}) async {
     //Download and store
     final csvPath = p.join(dbDirectory, "mac-vendors-export.csv");
     final file = File(csvPath);
     if (!await file.exists()) {
       logger.fine("Downloading mac-vendors-export.csv from network_tools");
-      final response = await http.get(
+      final httpClient = client ?? http.Client();
+      final response = await httpClient.get(
         Uri.https(
           "raw.githubusercontent.com",
           "osociety/network_tools/main/lib/assets/mac-vendors-export.csv",
@@ -28,6 +29,9 @@ class VendorTable {
       );
       file.writeAsBytesSync(response.bodyBytes);
       logger.fine("Downloaded mac-vendors-export.csv successfully");
+      if (client == null) {
+        httpClient.close();
+      }
     } else {
       logger.fine("File mac-vendors-export.csv already exists");
     }
@@ -43,6 +47,15 @@ class VendorTable {
             .toList();
     // Remove header from csv
     fields = fields.sublist(1);
+    // Filter out empty or malformed rows
+    fields = fields
+        .where(
+          (field) =>
+              field.length >= 2 &&
+              field[0].trim().isNotEmpty &&
+              field[1].trim().isNotEmpty,
+        )
+        .toList();
     return fields.map((field) => Vendor.fromCSVField(field)).toList();
   }
 }
