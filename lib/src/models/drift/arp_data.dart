@@ -7,5 +7,5 @@ class ARPDrift extends Table {
   TextColumn get interfaceName => text()();
   TextColumn get interfaceType => text()();
   TextColumn get macAddress => text()();
-  DateTimeColumn get createdAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
 }

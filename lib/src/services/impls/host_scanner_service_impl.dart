@@ -136,6 +136,7 @@ class HostScannerServiceImpl extends HostScannerService {
       if (tempSendableActivateHost == null) {
         // Check if it's there in arp table
         final data = await (await arpServiceFuture).entryFor(host);
+        // print("Trying to get arp entry for $host: $data");
 
         if (data != null) {
           logger.fine("Successfully fetched arp entry for $host as $data");

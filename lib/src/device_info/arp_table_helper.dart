@@ -52,6 +52,7 @@ class ARPTableHelper {
               ? match.namedGroup("intf") ?? ''
               : '',
           interfaceType: match.namedGroup("typ") ?? ARPData.nullInterfaceType,
+          createdAt: DateTime.now(),
         );
         if (arpData.macAddress != '(incomplete)') {
           arpLogger.fine("Adding entry to table -> $arpData");

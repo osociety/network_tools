@@ -13,9 +13,25 @@ class ARPServiceDriftImpl extends ARPService {
 
   @override
   Future<void> buildTable() async {
-    final oldEnteries = await this.entries();
+    final oldEnteries = await _fullEntries();
     if (oldEnteries.isNotEmpty) {
       arpDriftLogger.fine("Skipping ARP table build, old entries found");
+      bool hasOldEntries = false;
+      for (final entry in oldEnteries) {
+        // Delete records older than 1 hour
+        if (entry.createdAt.isBefore(
+          DateTime.now().subtract(const Duration(hours: 1)),
+        )) {
+          hasOldEntries = true;
+          break;
+        }
+      }
+      if (hasOldEntries) {
+        //Delete entire table data
+        await database.delete(database.aRPDrift).go();
+        arpDriftLogger.fine("Deleting all ARP entries older than 1 hour");
+      }
+
       return;
     }
     arpDriftLogger.fine("No old entries found, building ARP table");
@@ -28,7 +44,7 @@ class ARPServiceDriftImpl extends ARPService {
             hostname: e.hostname,
             interfaceName: e.interfaceName,
             interfaceType: e.interfaceType,
-            createdAt: Value(DateTime.now()),
+            createdAt: DateTime.now(),
           ),
         )
         .toList();
@@ -43,6 +59,14 @@ class ARPServiceDriftImpl extends ARPService {
   @override
   void close() {
     database.close();
+  }
+
+  Future<List<ARPDriftData>> _fullEntries() async {
+    final records = await (database.select(
+      database.aRPDrift,
+    )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
+
+    return records.toList();
   }
 
   @override

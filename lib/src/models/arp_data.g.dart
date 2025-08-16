@@ -12,6 +12,7 @@ ARPData _$ARPDataFromJson(Map<String, dynamic> json) => ARPData(
   macAddress: json['macAddress'] as String,
   interfaceName: json['interfaceName'] as String,
   interfaceType: json['interfaceType'] as String,
+  createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
 Map<String, dynamic> _$ARPDataToJson(ARPData instance) => <String, dynamic>{
@@ -20,4 +21,5 @@ Map<String, dynamic> _$ARPDataToJson(ARPData instance) => <String, dynamic>{
   'macAddress': instance.macAddress,
   'interfaceName': instance.interfaceName,
   'interfaceType': instance.interfaceType,
+  'createdAt': instance.createdAt.toIso8601String(),
 };
