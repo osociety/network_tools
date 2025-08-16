@@ -176,41 +176,34 @@ class $ARPDriftTable extends ARPDrift
   ARPDriftData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ARPDriftData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      iPAddress:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}i_p_address'],
-          )!,
-      hostname:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}hostname'],
-          )!,
-      interfaceName:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}interface_name'],
-          )!,
-      interfaceType:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}interface_type'],
-          )!,
-      macAddress:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}mac_address'],
-          )!,
-      createdAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}created_at'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      iPAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}i_p_address'],
+      )!,
+      hostname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hostname'],
+      )!,
+      interfaceName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}interface_name'],
+      )!,
+      interfaceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}interface_type'],
+      )!,
+      macAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mac_address'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -313,16 +306,15 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
       id: data.id.present ? data.id.value : this.id,
       iPAddress: data.iPAddress.present ? data.iPAddress.value : this.iPAddress,
       hostname: data.hostname.present ? data.hostname.value : this.hostname,
-      interfaceName:
-          data.interfaceName.present
-              ? data.interfaceName.value
-              : this.interfaceName,
-      interfaceType:
-          data.interfaceType.present
-              ? data.interfaceType.value
-              : this.interfaceType,
-      macAddress:
-          data.macAddress.present ? data.macAddress.value : this.macAddress,
+      interfaceName: data.interfaceName.present
+          ? data.interfaceName.value
+          : this.interfaceName,
+      interfaceType: data.interfaceType.present
+          ? data.interfaceType.value
+          : this.interfaceType,
+      macAddress: data.macAddress.present
+          ? data.macAddress.value
+          : this.macAddress,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -659,12 +651,12 @@ class $$ARPDriftTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$ARPDriftTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$ARPDriftTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$ARPDriftTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$ARPDriftTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ARPDriftTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ARPDriftTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -701,16 +693,9 @@ class $$ARPDriftTableTableManager
                 macAddress: macAddress,
                 createdAt: createdAt,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
