@@ -176,34 +176,41 @@ class $ARPDriftTable extends ARPDrift
   ARPDriftData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ARPDriftData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      iPAddress: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}i_p_address'],
-      )!,
-      hostname: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hostname'],
-      )!,
-      interfaceName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}interface_name'],
-      )!,
-      interfaceType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}interface_type'],
-      )!,
-      macAddress: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mac_address'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      iPAddress:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}i_p_address'],
+          )!,
+      hostname:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}hostname'],
+          )!,
+      interfaceName:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}interface_name'],
+          )!,
+      interfaceType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}interface_type'],
+          )!,
+      macAddress:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}mac_address'],
+          )!,
+      createdAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}created_at'],
+          )!,
     );
   }
 
@@ -306,15 +313,16 @@ class ARPDriftData extends DataClass implements Insertable<ARPDriftData> {
       id: data.id.present ? data.id.value : this.id,
       iPAddress: data.iPAddress.present ? data.iPAddress.value : this.iPAddress,
       hostname: data.hostname.present ? data.hostname.value : this.hostname,
-      interfaceName: data.interfaceName.present
-          ? data.interfaceName.value
-          : this.interfaceName,
-      interfaceType: data.interfaceType.present
-          ? data.interfaceType.value
-          : this.interfaceType,
-      macAddress: data.macAddress.present
-          ? data.macAddress.value
-          : this.macAddress,
+      interfaceName:
+          data.interfaceName.present
+              ? data.interfaceName.value
+              : this.interfaceName,
+      interfaceType:
+          data.interfaceType.present
+              ? data.interfaceType.value
+              : this.interfaceType,
+      macAddress:
+          data.macAddress.present ? data.macAddress.value : this.macAddress,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -616,30 +624,36 @@ class $VendorDriftTable extends VendorDrift
   VendorDriftData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return VendorDriftData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      macPrefix: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mac_prefix'],
-      )!,
-      vendorName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}vendor_name'],
-      )!,
-      private: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}private'],
-      )!,
-      blockType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}block_type'],
-      )!,
-      lastUpdate: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}last_update'],
-      )!,
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      macPrefix:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}mac_prefix'],
+          )!,
+      vendorName:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}vendor_name'],
+          )!,
+      private:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}private'],
+          )!,
+      blockType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}block_type'],
+          )!,
+      lastUpdate:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}last_update'],
+          )!,
     );
   }
 
@@ -733,14 +747,12 @@ class VendorDriftData extends DataClass implements Insertable<VendorDriftData> {
     return VendorDriftData(
       id: data.id.present ? data.id.value : this.id,
       macPrefix: data.macPrefix.present ? data.macPrefix.value : this.macPrefix,
-      vendorName: data.vendorName.present
-          ? data.vendorName.value
-          : this.vendorName,
+      vendorName:
+          data.vendorName.present ? data.vendorName.value : this.vendorName,
       private: data.private.present ? data.private.value : this.private,
       blockType: data.blockType.present ? data.blockType.value : this.blockType,
-      lastUpdate: data.lastUpdate.present
-          ? data.lastUpdate.value
-          : this.lastUpdate,
+      lastUpdate:
+          data.lastUpdate.present ? data.lastUpdate.value : this.lastUpdate,
     );
   }
 
@@ -1056,12 +1068,12 @@ class $$ARPDriftTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ARPDriftTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ARPDriftTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ARPDriftTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer:
+              () => $$ARPDriftTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$ARPDriftTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$ARPDriftTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -1098,9 +1110,16 @@ class $$ARPDriftTableTableManager
                 macAddress: macAddress,
                 createdAt: createdAt,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -1277,12 +1296,13 @@ class $$VendorDriftTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$VendorDriftTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$VendorDriftTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$VendorDriftTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer:
+              () => $$VendorDriftTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$VendorDriftTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () =>
+                  $$VendorDriftTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -1315,9 +1335,16 @@ class $$VendorDriftTableTableManager
                 blockType: blockType,
                 lastUpdate: lastUpdate,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
           prefetchHooksCallback: null,
         ),
       );
