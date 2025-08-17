@@ -29,7 +29,6 @@
 .packages
 .pub-cache/
 .pub/
-**/coverage/
 **/build/
 
 # Downloaded files

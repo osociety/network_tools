@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.lcov - lib/src/models/arp_data.dart</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">lib/src/models</a> - arp_data.dart<span style="font-size: 80%;"> (source / <a href="arp_data.dart.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.lcov</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryMed">83.9&nbsp;%</td>
+            <td class="headerCovTableEntry">31</td>
+            <td class="headerCovTableEntry">26</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-08-17 12:08:13</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : import 'package:json_annotation/json_annotation.dart';</span>
+<span id="L2"><span class="lineNum">       2</span>              : import 'package:network_tools/src/database/drift_database.dart';</span>
+<span id="L3"><span class="lineNum">       3</span>              : import 'package:universal_io/io.dart';</span>
+<span id="L4"><span class="lineNum">       4</span>              : </span>
+<span id="L5"><span class="lineNum">       5</span>              : part 'arp_data.g.dart';</span>
+<span id="L6"><span class="lineNum">       6</span>              : </span>
+<span id="L7"><span class="lineNum">       7</span>              : @JsonSerializable()</span>
+<span id="L8"><span class="lineNum">       8</span>              : class ARPData {</span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC tlaBgGNC">           3 :   ARPData({</span></span>
+<span id="L10"><span class="lineNum">      10</span>              :     required this.hostname,</span>
+<span id="L11"><span class="lineNum">      11</span>              :     required this.iPAddress,</span>
+<span id="L12"><span class="lineNum">      12</span>              :     required this.macAddress,</span>
+<span id="L13"><span class="lineNum">      13</span>              :     required this.interfaceName,</span>
+<span id="L14"><span class="lineNum">      14</span>              :     required this.interfaceType,</span>
+<span id="L15"><span class="lineNum">      15</span>              :     required this.createdAt,</span>
+<span id="L16"><span class="lineNum">      16</span>              :   });</span>
+<span id="L17"><span class="lineNum">      17</span>              : </span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           1 :   factory ARPData.fromJson(Map&lt;String, dynamic&gt; json) =&gt;</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">           1 :       _$ARPDataFromJson(json);</span></span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">           4 :   factory ARPData.fromDriftData(ARPDriftData arpData) =&gt; ARPData(</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">           2 :     hostname: arpData.hostname,</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">           2 :     iPAddress: arpData.iPAddress,</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">           2 :     macAddress: arpData.macAddress,</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">           2 :     interfaceName: arpData.interfaceName,</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">           2 :     interfaceType: arpData.interfaceType,</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">           2 :     createdAt: arpData.createdAt,</span></span>
+<span id="L28"><span class="lineNum">      28</span>              :   );</span>
+<span id="L29"><span class="lineNum">      29</span>              : </span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">           6 :   factory ARPData.fromRegExpMatch(RegExpMatch match) =&gt; ARPData(</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">           6 :     hostname: match.groupNames.contains('host')</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           6 :         ? (match.namedGroup(&quot;host&quot;)?.trim() ?? nullHostName)</span></span>
+<span id="L33"><span class="lineNum">      33</span>              :         : nullHostName,</span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">           6 :     iPAddress: match.namedGroup(&quot;ip&quot;)?.trim() ?? ARPData.nullIPAddress,</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">           6 :     macAddress: match.namedGroup(&quot;mac&quot;)?.trim() ?? ARPData.nullMacAddress,</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">           6 :     interfaceName: match.groupNames.contains('intf')</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">           6 :         ? (match.namedGroup(&quot;intf&quot;)?.trim() ?? nullHostName)</span></span>
+<span id="L38"><span class="lineNum">      38</span>              :         : nullHostName,</span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">           6 :     interfaceType: match.namedGroup(&quot;typ&quot;)?.trim() ?? ARPData.nullInterfaceType,</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">           3 :     createdAt: DateTime.now(),</span></span>
+<span id="L41"><span class="lineNum">      41</span>              :   );</span>
+<span id="L42"><span class="lineNum">      42</span>              : </span>
+<span id="L43"><span class="lineNum">      43</span>              :   final String hostname;</span>
+<span id="L44"><span class="lineNum">      44</span>              :   final String iPAddress;</span>
+<span id="L45"><span class="lineNum">      45</span>              :   static const String primaryKeySembast = 'iPAddress';</span>
+<span id="L46"><span class="lineNum">      46</span>              :   static const String nullIPAddress = '0.0.0.0';</span>
+<span id="L47"><span class="lineNum">      47</span>              :   static const String nullMacAddress = 'ff:ff:ff:ff:ff:ff';</span>
+<span id="L48"><span class="lineNum">      48</span>              :   static const String nullInterfaceType = 'ethernet';</span>
+<span id="L49"><span class="lineNum">      49</span>              :   static const String nullHostName = '';</span>
+<span id="L50"><span class="lineNum">      50</span>              : </span>
+<span id="L51"><span class="lineNum">      51</span>              :   final String macAddress;</span>
+<span id="L52"><span class="lineNum">      52</span>              :   final String interfaceName;</span>
+<span id="L53"><span class="lineNum">      53</span>              :   final String interfaceType;</span>
+<span id="L54"><span class="lineNum">      54</span>              :   final DateTime createdAt;</span>
+<span id="L55"><span class="lineNum">      55</span>              : </span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">           2 :   Map&lt;String, dynamic&gt; toJson() =&gt; _$ARPDataToJson(this);</span></span>
+<span id="L57"><span class="lineNum">      57</span>              : </span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">           3 :   bool get notNullIPAddress =&gt; iPAddress != nullIPAddress;</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">           3 :   bool get notNullMacAddress =&gt; macAddress != nullMacAddress;</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">           3 :   bool get notNullInterfaceType =&gt; interfaceType != nullInterfaceType;</span></span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">           3 :   @override</span></span>
+<span id="L63"><span class="lineNum">      63</span>              :   String toString() {</span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">           3 :     if (Platform.isMacOS) {</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">          18 :       return '$hostname ($iPAddress) at $macAddress on $interfaceName ifscope [$interfaceType]';</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaUNC tlaBgUNC">           0 :     } else if (Platform.isLinux) {</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaUNC">           0 :       return '$hostname ($iPAddress) at $macAddress [$interfaceType] on $interfaceName';</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaUNC">           0 :     } else if (Platform.isWindows) {</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 :       return 'Internet Address: $iPAddress, Physical Address: $macAddress, Type: $interfaceType';</span></span>
+<span id="L70"><span class="lineNum">      70</span>              :     }</span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaUNC">           0 :     return '$hostname ($iPAddress) at $macAddress on $interfaceName type [$interfaceType]';</span></span>
+<span id="L72"><span class="lineNum">      72</span>              :   }</span>
+<span id="L73"><span class="lineNum">      73</span>              : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
