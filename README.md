@@ -1,6 +1,6 @@
 # Network Tools
 
-[![pub package](https://img.shields.io/pub/v/network_tools.svg)](https://pub.dev/packages/network_tools) [![Dart](https://github.com/osociety/network_tools/actions/workflows/dart.yml/badge.svg)](https://github.com/osociety/network_tools/actions/workflows/dart.yml) [![codecov](https://osociety.github.io/network_tools/)](Code coverage)
+[![pub package](https://img.shields.io/pub/v/network_tools.svg)](https://pub.dev/packages/network_tools) [![Dart](https://github.com/osociety/network_tools/actions/workflows/dart.yml/badge.svg)](https://github.com/osociety/network_tools/actions/workflows/dart.yml) [![Code Coverage](https://github.com/osociety/network_tools/actions/workflows/static.yml/badge.svg)](https://osociety.github.io/network_tools)
 
 Network Tools Supported
 
