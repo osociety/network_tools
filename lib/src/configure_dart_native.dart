@@ -8,7 +8,7 @@ import 'package:network_tools/src/models/vendor.dart';
 import 'package:network_tools/src/services/impls/host_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/mdns_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart';
-import 'package:network_tools/src/services/repository.dart';
+import 'package:network_tools/src/repository/repository.dart';
 
 /// Configures the network tools package for Dart native platforms.
 ///

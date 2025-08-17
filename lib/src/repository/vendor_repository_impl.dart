@@ -7,7 +7,7 @@ import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/database/database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
 import 'package:network_tools/src/device_info/vendor_table.dart';
-import 'package:network_tools/src/services/repository.dart';
+import 'package:network_tools/src/repository/repository.dart';
 
 @Injectable(as: Repository<Vendor>)
 class VendorRepository implements Repository<Vendor> {
