@@ -25,37 +25,10 @@ jobs:
         run: dart analyze --fatal-infos 
 
       - name: Run tests
-        run: dart test --coverage="coverage"
-
-      - name: Install coverage tools
-        run: dart pub global activate coverage
-
-      - name: Install lcov
-        run: |
-          if [[ "${{ runner.os }}" == "Linux" ]]; then
-            sudo apt-get update && sudo apt-get install -y lcov
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            brew install lcov
-          elif [[ "${{ runner.os }}" == "Windows" ]]; then
-            choco install lcov
-          fi
-        shell: bash
-
-      - name: Format Coverage
-        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
-            
-      - name: Excluded generated files
-        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
-        
+        run: dart test
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
-      
-      - name: Upload Coverage to CodeCov
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
-          file: coverage/coverage.lcov
-          
+
   publish:
     needs: 'test'
     permissions:
