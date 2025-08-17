@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.5
+Bug fixes and improvements
+
 ## 6.0.4
 Performance improvements
 
