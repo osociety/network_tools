@@ -1,0 +1,167 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage.lcov - lib/src/mdns_scanner/list_of_srv_records.dart</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">lib/src/mdns_scanner</a> - list_of_srv_records.dart<span style="font-size: 80%;"> (source / <a href="list_of_srv_records.dart.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage.lcov</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">2</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-08-17 12:08:13</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">-</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : /// List of common mDNS service records using the TCP protocol.</span>
+<span id="L2"><span class="lineNum">       2</span>              : ///</span>
+<span id="L3"><span class="lineNum">       3</span>              : /// These service types are used for discovering devices and services on the local network via mDNS.</span>
+<span id="L4"><span class="lineNum">       4</span> <span class="tlaGNC tlaBgGNC">           3 : List&lt;String&gt; tcpSrvRecordsList = [</span></span>
+<span id="L5"><span class="lineNum">       5</span>              :   '_autodiscover._tcp',</span>
+<span id="L6"><span class="lineNum">       6</span>              :   '_http._tcp', // &quot;domain&quot;: &quot;bosch_shc&quot;, &quot;name&quot;: &quot;bosch shc*&quot;</span>
+<span id="L7"><span class="lineNum">       7</span>              :   '_http-alt._tcp',</span>
+<span id="L8"><span class="lineNum">       8</span>              :   '_googlecast._tcp', // Is there a ChromeCast-capable device in this network &quot;domain&quot;: &quot;cast&quot;</span>
+<span id="L9"><span class="lineNum">       9</span>              :   '_androidtvremote2._tcp',</span>
+<span id="L10"><span class="lineNum">      10</span>              :   '_smartview._tcp', // Samsung tv's</span>
+<span id="L11"><span class="lineNum">      11</span>              :   '_spotify-connect._tcp', // &quot;domain&quot;: &quot;spotify&quot;</span>
+<span id="L12"><span class="lineNum">      12</span>              :   '_nanoleafapi._tcp', // &quot;domain&quot;: &quot;nanoleaf&quot;</span>
+<span id="L13"><span class="lineNum">      13</span>              :   '_nanoleafms._tcp', // &quot;domain&quot;: &quot;nanoleaf&quot;</span>
+<span id="L14"><span class="lineNum">      14</span>              :   '_esphomelib._tcp', // [ { &quot;domain&quot;: &quot;esphome&quot; }, { &quot;domain&quot;: &quot;zha&quot;, &quot;name&quot;: &quot;tube*&quot; } ]</span>
+<span id="L15"><span class="lineNum">      15</span>              :   '_ewelink._tcp', // Ewelink devices</span>
+<span id="L16"><span class="lineNum">      16</span>              :   '_hue._tcp', // &quot;domain&quot;: &quot;hue&quot;</span>
+<span id="L17"><span class="lineNum">      17</span>              :   '_mqtt._tcp',</span>
+<span id="L18"><span class="lineNum">      18</span>              :   '_hap._tcp', // [ { &quot;domain&quot;: &quot;homekit_controller&quot; }, { &quot;domain&quot;: &quot;zwave_me&quot;, &quot;name&quot;: &quot;*z.wave-me*&quot; } ]</span>
+<span id="L19"><span class="lineNum">      19</span>              :   '_homekit._tcp', // &quot;domain&quot;: &quot;homekit&quot;</span>
+<span id="L20"><span class="lineNum">      20</span>              :   '_hscp._tcp', // &quot;domain&quot;: &quot;apple_tv&quot;</span>
+<span id="L21"><span class="lineNum">      21</span>              :   '_appletv-v2._tcp', // &quot;domain&quot;: &quot;apple_tv&quot;</span>
+<span id="L22"><span class="lineNum">      22</span>              :   '_airplay._tcp', // Any Apple AirPlay-capable video displays here_ipps // [ { &quot;domain&quot;: &quot;apple_tv&quot;, &quot;properties&quot;: { &quot;model&quot;: &quot;appletv*&quot; } }, { &quot;domain&quot;: &quot;apple_tv&quot;, &quot;properties&quot;: { &quot;model&quot;: &quot;audioaccessory*&quot; } }, { &quot;domain&quot;: &quot;apple_tv&quot;, &quot;properties&quot;: { &quot;am&quot;: &quot;airport*&quot; } }, { &quot;domain&quot;: &quot;samsungtv&quot;, &quot;properties&quot;: { &quot;manufacturer&quot;: &quot;samsung*&quot; } } ]</span>
+<span id="L23"><span class="lineNum">      23</span>              :   '_raop._tcp', // Any Apple AirPlay-capable audio devices [ { &quot;domain&quot;: &quot;apple_tv&quot;, &quot;properties&quot;: { &quot;am&quot;: &quot;appletv*&quot; } }, { &quot;domain&quot;: &quot;apple_tv&quot;, &quot;properties&quot;: { &quot;am&quot;: &quot;audioaccessory*&quot; } },  { &quot;domain&quot;: &quot;apple_tv&quot;, &quot;properties&quot;: { &quot;am&quot;: &quot;airport*&quot; } } ],</span>
+<span id="L24"><span class="lineNum">      24</span>              :   '_airport._tcp', // Any Apple AirPort WiFi APs // &quot;domain&quot;: &quot;apple_tv&quot;</span>
+<span id="L25"><span class="lineNum">      25</span>              :   '_touch-able._tcp', // &quot;domain&quot;: &quot;apple_tv&quot;</span>
+<span id="L26"><span class="lineNum">      26</span>              :   '_mediaremotetv._tcp', // &quot;domain&quot;: &quot;apple_tv&quot;</span>
+<span id="L27"><span class="lineNum">      27</span>              :   '_uscan._tcp', // Any HP-compatible network scanners</span>
+<span id="L28"><span class="lineNum">      28</span>              :   '_uscans._tcp', // Any SSL/TLS-capable HP-compatible network scanners</span>
+<span id="L29"><span class="lineNum">      29</span>              :   '_privet._tcp', // Any Google CloudPrint-capable printers or print services</span>
+<span id="L30"><span class="lineNum">      30</span>              :   '_scanner._tcp', // Are there any Bonjour-capable scanners</span>
+<span id="L31"><span class="lineNum">      31</span>              :   '_pdl-datastream._tcp', // Any HP JetDirect-style network printers</span>
+<span id="L32"><span class="lineNum">      32</span>              :   '_ipp._tcp', // Are there any printers using the IPP protocol // &quot;domain&quot;: &quot;ipp&quot;</span>
+<span id="L33"><span class="lineNum">      33</span>              :   '_ipps._tcp', // Any SSL/TLS capable IPP printers // &quot;domain&quot;: &quot;ipp&quot;</span>
+<span id="L34"><span class="lineNum">      34</span>              :   '_ippusb._tcp', // Are there any shared printers that are using the IPP-over-USB protocol, i.e. USB-connected printers shared by a Mac</span>
+<span id="L35"><span class="lineNum">      35</span>              :   '_printer._tcp', // Any kinds of shared printers at all  &quot;domain&quot;: &quot;brother&quot;, &quot;name&quot;: &quot;brother*&quot;</span>
+<span id="L36"><span class="lineNum">      36</span>              :   '_ptp._tcp', // Any devices supporting the Picture Transfer Protocol over this network</span>
+<span id="L37"><span class="lineNum">      37</span>              :   '_kpasswd._tcp',</span>
+<span id="L38"><span class="lineNum">      38</span>              :   '_ldap._tcp',</span>
+<span id="L39"><span class="lineNum">      39</span>              :   '_gc._tcp',</span>
+<span id="L40"><span class="lineNum">      40</span>              :   '_kerberos._tcp',</span>
+<span id="L41"><span class="lineNum">      41</span>              :   '_sip._tcp',</span>
+<span id="L42"><span class="lineNum">      42</span>              :   '_minecraft._tcp',</span>
+<span id="L43"><span class="lineNum">      43</span>              :   '_Volumio._tcp', // &quot;domain&quot;: &quot;volumio&quot;</span>
+<span id="L44"><span class="lineNum">      44</span>              :   '_api._tcp', // [ { &quot;domain&quot;: &quot;baf&quot;, &quot;properties&quot;: { &quot;model&quot;: &quot;haiku*&quot; } }, { &quot;domain&quot;: &quot;baf&quot;, &quot;properties&quot;: { &quot;model&quot;: &quot;i6*&quot; } } ]</span>
+<span id="L45"><span class="lineNum">      45</span>              :   '_axis-video._tcp', // [ { &quot;domain&quot;: &quot;axis&quot;, &quot;properties&quot;: { &quot;macaddress&quot;: &quot;00408c*&quot; } }, { &quot;domain&quot;: &quot;axis&quot;, &quot;properties&quot;: { &quot;macaddress&quot;: &quot;accc8e*&quot; } }, { &quot;domain&quot;: &quot;axis&quot;, &quot;properties&quot;: { &quot;macaddress&quot;: &quot;b8a44f*&quot; } }, { &quot;domain&quot;: &quot;doorbird&quot;, &quot;properties&quot;: { &quot;macaddress&quot;: &quot;1ccae3*&quot;} } ],</span>
+<span id="L46"><span class="lineNum">      46</span>              :   '_bond._tcp', // &quot;domain&quot;: &quot;bond&quot;</span>
+<span id="L47"><span class="lineNum">      47</span>              :   '_companion-link._tcp', // &quot;domain&quot;: &quot;apple_tv&quot;</span>
+<span id="L48"><span class="lineNum">      48</span>              :   '_daap._tcp', // &quot;domain&quot;: &quot;forked_daapd&quot;</span>
+<span id="L49"><span class="lineNum">      49</span>              :   '_dkapi._tcp', // &quot;domain&quot;: &quot;daikin&quot;</span>
+<span id="L50"><span class="lineNum">      50</span>              :   '_dvl-deviceapi._tcp', // [ { &quot;domain&quot;: &quot;devolo_home_control&quot; }, { &quot;domain&quot;: &quot;devolo_home_network&quot;, &quot;properties&quot;: { &quot;MT&quot;: &quot;*&quot; } } ]</span>
+<span id="L51"><span class="lineNum">      51</span>              :   '_easylink._tcp', // &quot;domain&quot;: &quot;modern_forms&quot;, &quot;name&quot;: &quot;wac*&quot;</span>
+<span id="L52"><span class="lineNum">      52</span>              :   '_elg._tcp', // &quot;domain&quot;: &quot;elgato&quot;</span>
+<span id="L53"><span class="lineNum">      53</span>              :   '_enphase-envoy._tcp', // &quot;domain&quot;: &quot;enphase_envoy&quot;</span>
+<span id="L54"><span class="lineNum">      54</span>              :   '_fbx-api._tcp', //  &quot;domain&quot;: &quot;freebox&quot;</span>
+<span id="L55"><span class="lineNum">      55</span>              :   '_hwenergy._tcp', // &quot;domain&quot;: &quot;homewizard&quot;,</span>
+<span id="L56"><span class="lineNum">      56</span>              :   '_kizbox._tcp', // &quot;domain&quot;: &quot;overkiz&quot;, &quot;name&quot;: &quot;gateway*&quot;</span>
+<span id="L57"><span class="lineNum">      57</span>              :   '_leap._tcp', // &quot;domain&quot;: &quot;lutron_caseta&quot;</span>
+<span id="L58"><span class="lineNum">      58</span>              :   '_lookin._tcp', // &quot;domain&quot;: &quot;lookin&quot;</span>
+<span id="L59"><span class="lineNum">      59</span>              :   '_nut._tcp', // &quot;domain&quot;: &quot;nut&quot;</span>
+<span id="L60"><span class="lineNum">      60</span>              :   '_octoprint._tcp', // &quot;domain&quot;: &quot;octoprint&quot;</span>
+<span id="L61"><span class="lineNum">      61</span>              :   '_plexmediasvr._tcp', // &quot;domain&quot;: &quot;plex&quot;</span>
+<span id="L62"><span class="lineNum">      62</span>              :   '_plugwise._tcp', // &quot;domain&quot;: &quot;plugwise&quot;</span>
+<span id="L63"><span class="lineNum">      63</span>              :   '_powerview._tcp', // &quot;domain&quot;: &quot;hunterdouglas_powerview&quot;</span>
+<span id="L64"><span class="lineNum">      64</span>              :   '_sideplay._tcp', // { &quot;domain&quot;: &quot;ecobee&quot;, &quot;properties&quot;: { &quot;mdl&quot;: &quot;eb-*&quot; } }, { &quot;domain&quot;: &quot;ecobee&quot;, &quot;properties&quot;: { &quot;mdl&quot;: &quot;ecobee*&quot; } }</span>
+<span id="L65"><span class="lineNum">      65</span>              :   '_sonos._tcp', // &quot;domain&quot;: &quot;sonos&quot;</span>
+<span id="L66"><span class="lineNum">      66</span>              :   '_soundtouch._tcp', // &quot;domain&quot;: &quot;soundtouch&quot;</span>
+<span id="L67"><span class="lineNum">      67</span>              :   '_ssh._tcp', // { &quot;domain&quot;: &quot;smappee&quot;, &quot;name&quot;: &quot;smappee1*&quot; }, { &quot;domain&quot;: &quot;smappee&quot;, &quot;name&quot;: &quot;smappee2*&quot; }, { &quot;domain&quot;: &quot;smappee&quot;, &quot;name&quot;: &quot;smappee50*&quot; }</span>
+<span id="L68"><span class="lineNum">      68</span>              :   '_system-bridge._tcp', // &quot;domain&quot;: &quot;system_bridge&quot;</span>
+<span id="L69"><span class="lineNum">      69</span>              :   '_viziocast._tcp', // &quot;domain&quot;: &quot;vizio&quot;</span>
+<span id="L70"><span class="lineNum">      70</span>              :   '_wled._tcp', // &quot;domain&quot;: &quot;wled&quot;</span>
+<span id="L71"><span class="lineNum">      71</span>              :   '_xbmc-jsonrpc-h._tcp', // &quot;domain&quot;: &quot;kodi&quot;</span>
+<span id="L72"><span class="lineNum">      72</span>              :   '_home-assistant._tcp',</span>
+<span id="L73"><span class="lineNum">      73</span>              :   '_zigate-zigbee-gateway._tcp', //  &quot;domain&quot;: &quot;zha&quot;, &quot;name&quot;: &quot;*zigate*&quot;</span>
+<span id="L74"><span class="lineNum">      74</span>              :   '_zwave-js-server._tcp', // &quot;domain&quot;: &quot;zwave_js&quot;</span>
+<span id="L75"><span class="lineNum">      75</span>              :   '_axis-video._tcp', // &quot;properties&quot;: { &quot;macaddress&quot;: &quot;00408c*&quot; } &quot;properties&quot;: { &quot;macaddress&quot;: &quot;accc8e*&quot; } &quot;properties&quot;: { &quot;macaddress&quot;: &quot;b8a44f*&quot; }</span>
+<span id="L76"><span class="lineNum">      76</span>              :   '_nvstream_dbd._tcp',</span>
+<span id="L77"><span class="lineNum">      77</span>              :   '_matter._tcp',</span>
+<span id="L78"><span class="lineNum">      78</span>              : ];</span>
+<span id="L79"><span class="lineNum">      79</span>              : </span>
+<span id="L80"><span class="lineNum">      80</span>              : /// List of common mDNS service records using the UDP protocol.</span>
+<span id="L81"><span class="lineNum">      81</span>              : ///</span>
+<span id="L82"><span class="lineNum">      82</span>              : /// These service types are used for discovering devices and services on the local network via mDNS.</span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">           3 : List&lt;String&gt; udpSrvRecordsList = [</span></span>
+<span id="L84"><span class="lineNum">      84</span>              :   '_api._udp', // &quot;domain&quot;: &quot;guardian&quot;</span>
+<span id="L85"><span class="lineNum">      85</span>              :   '_hap._udp', // &quot;domain&quot;: &quot;homekit_controller&quot;</span>
+<span id="L86"><span class="lineNum">      86</span>              :   '_miio._udp', // [ { &quot;domain&quot;: &quot;xiaomi_aqara&quot; }, { &quot;domain&quot;: &quot;xiaomi_miio&quot; }, { &quot;domain&quot;: &quot;yeelight&quot;, &quot;name&quot;: &quot;yeelink-*&quot; } ]</span>
+<span id="L87"><span class="lineNum">      87</span>              :   '_sleep-proxy._udp', // &quot;domain&quot;: &quot;apple_tv&quot;</span>
+<span id="L88"><span class="lineNum">      88</span>              :   '_system-bridge._udp',</span>
+<span id="L89"><span class="lineNum">      89</span>              :   '_kdeconnect._udp',</span>
+<span id="L90"><span class="lineNum">      90</span>              :   '_matterc._udp',</span>
+<span id="L91"><span class="lineNum">      91</span>              : ];</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
