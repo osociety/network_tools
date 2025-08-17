@@ -3,7 +3,7 @@
 import 'package:drift/native.dart';
 import 'package:network_tools/src/database/database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
-import 'package:network_tools/src/services/impls/arp_repository_impl.dart';
+import 'package:network_tools/src/repository/arp_repository_impl.dart';
 import 'package:test/test.dart';
 
 // Minimal DatabaseService for testing (no implements)

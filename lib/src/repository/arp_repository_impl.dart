@@ -7,7 +7,7 @@ import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/database/database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
 import 'package:network_tools/src/device_info/arp_table_helper.dart';
-import 'package:network_tools/src/services/repository.dart';
+import 'package:network_tools/src/repository/repository.dart';
 
 @Injectable(as: Repository<ARPData>)
 class ARPRepository implements Repository<ARPData> {
