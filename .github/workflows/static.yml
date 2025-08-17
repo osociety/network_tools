@@ -1,0 +1,64 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Code Coverage
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["dev","main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - uses: dart-lang/setup-dart@v1.4
+
+      - name: Run tests
+        run: dart test --coverage="./coverage"
+
+      - name: Install coverage tools
+        run: dart pub global activate coverage
+
+      - name: Install lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
+
+      - name: Format Coverage
+        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
+
+      - name: Excluded generated files
+        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
+
+      - name: Generate HTML coverage report
+        run: genhtml -o ./coverage/report ./coverage/coverage.lcov
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: './coverage/report'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

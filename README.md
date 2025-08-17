@@ -1,6 +1,6 @@
-# Network Tools
+# Cross Platform Network Tools
 
-[![pub package](https://img.shields.io/pub/v/network_tools.svg)](https://pub.dev/packages/network_tools) [![Dart](https://github.com/osociety/network_tools/actions/workflows/dart.yml/badge.svg)](https://github.com/osociety/network_tools/actions/workflows/dart.yml) [![codecov](https://codecov.io/gh/osociety/network_tools/graph/badge.svg?token=J9G2472GQZ)](https://codecov.io/gh/osociety/network_tools)
+[![pub package](https://img.shields.io/pub/v/network_tools.svg)](https://pub.dev/packages/network_tools) [![Dart](https://github.com/osociety/network_tools/actions/workflows/dart.yml/badge.svg)](https://github.com/osociety/network_tools/actions/workflows/dart.yml) [![Code Coverage](https://github.com/osociety/network_tools/actions/workflows/static.yml/badge.svg)](https://osociety.github.io/network_tools) [![codecov](https://codecov.io/gh/osociety/network_tools/graph/badge.svg?token=J9G2472GQZ)](https://codecov.io/gh/osociety/network_tools)
 
 Network Tools Supported
 

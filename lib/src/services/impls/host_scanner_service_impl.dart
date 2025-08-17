@@ -6,7 +6,7 @@ import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
-import 'package:network_tools/src/services/repository.dart';
+import 'package:network_tools/src/repository/repository.dart';
 import 'package:universal_io/io.dart';
 
 /// Scans for all hosts in a subnet.

@@ -4,7 +4,7 @@ import 'package:drift/native.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/database/database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
-import 'package:network_tools/src/services/impls/vendor_repository_impl.dart';
+import 'package:network_tools/src/repository/vendor_repository_impl.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
