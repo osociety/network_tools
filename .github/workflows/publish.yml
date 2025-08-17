@@ -51,7 +51,7 @@ jobs:
         run: dart pub publish --dry-run
       
       - name: Upload Coverage to CodeCov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: coverage/coverage.lcov

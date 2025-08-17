@@ -1,0 +1,4 @@
+coverage:
+  ignore:
+    - '*/lib/src/*.g.dart'
+    - '*/lib/src/models/drift/*'

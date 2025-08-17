@@ -73,14 +73,14 @@ jobs:
       - name: Format Coverage
         run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
             
-      - name: Excluded generated files
-        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
+      # - name: Excluded generated files
+      #   run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
 
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
         
       - name: Upload Coverage to CodeCov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: coverage/coverage.lcov
