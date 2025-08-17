@@ -1,6 +1,0 @@
-codecov:
-  token: f9fffd95-6797-465a-ad25-4f058712f952
-coverage:
-  ignore:
-    - '*/lib/src/*.g.dart'
-    - '*/lib/src/models/drift/*'
