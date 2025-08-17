@@ -5,10 +5,10 @@ import 'package:network_tools/network_tools.dart' as packages_page;
 import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/models/arp_data.dart';
 import 'package:network_tools/src/models/vendor.dart';
+import 'package:network_tools/src/repository/repository.dart';
 import 'package:network_tools/src/services/impls/host_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/mdns_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart';
-import 'package:network_tools/src/repository/repository.dart';
 
 /// Configures the network tools package for Dart native platforms.
 ///
