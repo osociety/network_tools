@@ -30,6 +30,6 @@
 .pub-cache/
 .pub/
 **/build/
-
+**/coverage/
 # Downloaded files
 /mac-vendors-export.csv
