@@ -1,16 +1,17 @@
 import 'dart:io';
-import 'package:path/path.dart' as p;
+
 import 'package:drift/native.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/database/database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
 import 'package:network_tools/src/services/impls/vendor_repository_impl.dart';
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 // Minimal DatabaseService for testing
 class TestDatabaseService extends DatabaseService<AppDatabase> {
-  final AppDatabase db;
   TestDatabaseService(this.db);
+  final AppDatabase db;
   @override
   Future<AppDatabase?> open() async => db;
 }
@@ -25,12 +26,11 @@ void main() {
     dbDirectory = tempDir.path;
     // Write a minimal mac-vendors-export.csv file
     final csvFile = File(p.join(dbDirectory, 'mac-vendors-export.csv'));
-    await csvFile.writeAsString(
-      '''macPrefix,vendorName,private,blockType,lastUpdate
+    await csvFile.writeAsString('''
+macPrefix,vendorName,private,blockType,lastUpdate
 00:11:22,TestVendor,,,
 33:44:55,AnotherVendor,,,
-''',
-    );
+''');
     realDb = AppDatabase(NativeDatabase.memory());
     repository = VendorRepository(TestDatabaseService(realDb));
   });
@@ -142,10 +142,10 @@ void main() {
 
 // Helper to test close
 class _TestAppDatabaseWithClose extends AppDatabase {
-  final AppDatabase _delegate;
-  final void Function() onClose;
   _TestAppDatabaseWithClose(this._delegate, this.onClose)
     : super(NativeDatabase.memory());
+  final AppDatabase _delegate;
+  final void Function() onClose;
   @override
   Future<void> close() async {
     onClose();
