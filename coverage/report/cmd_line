@@ -1,1 +1,0 @@
-genhtml -o ./coverage/report ./coverage/coverage.lcov

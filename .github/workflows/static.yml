@@ -33,6 +33,24 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
+      - uses: dart-lang/setup-dart@v1.4
+
+      - name: Run tests
+        run: dart test --coverage="./coverage"
+
+      - name: Install coverage tools
+        run: dart pub global activate coverage
+
+      - name: Install lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
+
+      - name: Format Coverage
+        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
+
+      - name: Excluded generated files
+        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
