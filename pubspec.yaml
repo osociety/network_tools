@@ -27,7 +27,7 @@ dependencies:
   # Drift is a reactive persistence library for Flutter and Dart, built on top of SQLite.
   drift: ^2.28.1
   # Service locator
-  get_it: ^8.2.0
+  get_it: ">=8.2.0 <10.0.0"
   # A composable, Future-based library for making HTTP requests.
   http: ^1.2.2
   # Convenient code generator for get_it
