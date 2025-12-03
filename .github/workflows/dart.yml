@@ -45,23 +45,29 @@ jobs:
       - name: Analyze project source
         run: dart analyze --fatal-infos 
 
-      # Your project will need to have tests in test/ and a dependency on
-      # package:test for this step to succeed. Note that Flutter projects will
-      # want to change this to 'flutter test'.
-      - name: Run tests with coverage
-        run: dart test --coverage=coverage
+      - name: Run tests
+        run: dart test --coverage="./coverage"
 
-      - name: Convert coverage to lcov format
-        run: |
-          dart pub global activate coverage
-          dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --packages=.packages --report-on=lib
+      - name: Install coverage tools
+        run: dart pub global activate coverage
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Install lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
+
+      - name: Format Coverage
+        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
+
+      - name: Excluded generated files
+        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
+
+      - name: Generate HTML coverage report
+        run: genhtml -o ./coverage/report ./coverage/coverage.lcov
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
+          # Upload entire repository
+          path: './coverage/report'
         
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
