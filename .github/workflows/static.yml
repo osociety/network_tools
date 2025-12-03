@@ -59,6 +59,14 @@ jobs:
         with:
           # Upload entire repository
           path: './coverage/report'
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage.lcov
+          flags: unittests
+          name: codecov-umbrella
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
