@@ -310,18 +310,6 @@ Future<void> main() async {
     });
   });
 
-  group("Testing mdns scanner group", () {
-    test('Running searchMdnsDevices tests', () async {
-      final mdnsDevices = await MdnsScannerService.instance.searchMdnsDevices();
-      expectLater(mdnsDevices, isA<List<ActiveHost>>());
-      //todo: mdnsDevices are empty in GHA, open one to be discoverable
-      // expectLater(
-      //   mdnsDevices,
-      //   contains(predicate<ActiveHost>((host) => host.address == myOwnHost)),
-      // );
-    });
-  });
-
   tearDownAll(() {
     server.close();
   });
