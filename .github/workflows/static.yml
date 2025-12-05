@@ -65,6 +65,18 @@ jobs:
           # Upload entire repository
           path: './coverage/report'
 
+      - name: Debug - Check Codecov repo API
+        run: |
+          echo "Checking Codecov API for osociety/network_tools"
+          http_code=$(curl -s -H "Authorization: token ${{ secrets.CODECOV_TOKEN }}" -w "%{http_code}" -o /tmp/codecov_resp.json https://codecov.io/api/gh/osociety/network_tools)
+          echo "HTTP status: $http_code"
+          if [ -s /tmp/codecov_resp.json ]; then
+            echo "Response snippet:"
+            head -n 20 /tmp/codecov_resp.json
+          else
+            echo "No response body saved"
+          fi
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
