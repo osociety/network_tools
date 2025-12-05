@@ -69,28 +69,15 @@ jobs:
         if: runner.os == 'Linux'
         run: lcov --remove ./coverage/lcov.info '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/lcov.info
 
-      - name: Debug - Check Codecov repo API (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          echo "Checking Codecov API for osociety/network_tools"
-          http_code=$(curl -s -H "Authorization: token ${{ secrets.CODECOV_TOKEN }}" -w "%{http_code}" -o /tmp/codecov_resp.json https://codecov.io/api/gh/osociety/network_tools)
-          echo "HTTP status: $http_code"
-          if [ -s /tmp/codecov_resp.json ]; then
-            echo "Response snippet:"
-            head -n 20 /tmp/codecov_resp.json
-          else
-            echo "No response body saved"
-          fi
-
       - name: Upload coverage to Codecov (Linux)
         if: runner.os == 'Linux'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: osociety/network_tools
           files: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
+          fail_ci_if_error: true
           verbose: true
 
       - name: Check Publish Warnings
