@@ -69,6 +69,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: osociety/network_tools
           files: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
