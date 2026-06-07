@@ -155,6 +155,21 @@ void main() {
         );
       });
     });
+
+    group('Real execution and coverage', () {
+      test(
+        'findingMdnsWithAddress runs and handles exceptions gracefully',
+        () async {
+          if (!dbInitialized) {
+            return;
+          }
+          final result = await mdnsScannerService.findingMdnsWithAddress(
+            '_http._tcp',
+          );
+          expect(result, isA<List<ActiveHost>>());
+        },
+      );
+    });
   });
 }
 
