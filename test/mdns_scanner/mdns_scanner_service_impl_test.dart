@@ -1,7 +1,8 @@
+import 'dart:io';
+
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/services/impls/mdns_scanner_service_impl.dart';
 import 'package:test/test.dart';
-import 'dart:io';
 
 void main() {
   group('MdnsScannerServiceImpl Unit Tests', () {
