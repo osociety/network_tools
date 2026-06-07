@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
@@ -69,50 +70,65 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
     );
 
     final List<ActiveHost> listOfActiveHost = [];
-    try {
-      await client.start();
+    final Completer<void> completer = Completer<void>();
 
-      await for (final PtrResourceRecord ptr
-          in client.lookup<PtrResourceRecord>(
-            ResourceRecordQuery.serverPointer(serviceType),
-          )) {
-        await for (final SrvResourceRecord srv
-            in client.lookup<SrvResourceRecord>(
-              ResourceRecordQuery.service(ptr.domainName),
-            )) {
-          await for (final TxtResourceRecord txtRecords
-              in client.lookup<TxtResourceRecord>(
-                ResourceRecordQuery.text(ptr.domainName),
+    runZonedGuarded(
+      () async {
+        try {
+          await client.start();
+
+          await for (final PtrResourceRecord ptr
+              in client.lookup<PtrResourceRecord>(
+                ResourceRecordQuery.serverPointer(serviceType),
               )) {
-            listOfActiveHost.addAll(
-              await findAllActiveHostForSrv(
-                addressType: InternetAddress.anyIPv4,
-                client: client,
-                ptr: ptr,
-                srv: srv,
-                txt: txtRecords,
-              ),
-            );
-            listOfActiveHost.addAll(
-              await findAllActiveHostForSrv(
-                addressType: InternetAddress.anyIPv6,
-                client: client,
-                ptr: ptr,
-                srv: srv,
-                txt: txtRecords,
-              ),
-            );
+            await for (final SrvResourceRecord srv
+                in client.lookup<SrvResourceRecord>(
+                  ResourceRecordQuery.service(ptr.domainName),
+                )) {
+              await for (final TxtResourceRecord txtRecords
+                  in client.lookup<TxtResourceRecord>(
+                    ResourceRecordQuery.text(ptr.domainName),
+                  )) {
+                listOfActiveHost.addAll(
+                  await findAllActiveHostForSrv(
+                    addressType: InternetAddress.anyIPv4,
+                    client: client,
+                    ptr: ptr,
+                    srv: srv,
+                    txt: txtRecords,
+                  ),
+                );
+                listOfActiveHost.addAll(
+                  await findAllActiveHostForSrv(
+                    addressType: InternetAddress.anyIPv6,
+                    client: client,
+                    ptr: ptr,
+                    srv: srv,
+                    txt: txtRecords,
+                  ),
+                );
+              }
+            }
           }
+        } catch (e) {
+          logger.severe(
+            'Error finding mdns devices for serviceType $serviceType: $e',
+          );
+        } finally {
+          client.stop();
+          if (!completer.isCompleted) completer.complete();
         }
-      }
-    } catch (e) {
-      logger.severe(
-        'Error finding mdns devices for serviceType $serviceType: $e',
-      );
-    } finally {
-      client.stop();
-    }
+      },
+      (Object error, StackTrace stack) {
+        logger.severe(
+          'Unhandled async error in findingMdnsWithAddress for $serviceType: $error',
+        );
+        client.stop();
+        if (!completer.isCompleted) completer.complete();
+      },
+    );
 
+    await completer.future;
     return listOfActiveHost;
   }
 
