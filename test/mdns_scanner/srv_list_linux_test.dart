@@ -61,10 +61,7 @@ void main() {
       () {
         if (Platform.isLinux) {
           // Should not throw even if avahi-browse is not installed
-          expect(
-            () => SrvListLinux.runAvahiBrowseCommand(),
-            returnsNormally,
-          );
+          expect(() => SrvListLinux.runAvahiBrowseCommand(), returnsNormally);
         }
       },
     );
@@ -76,43 +73,28 @@ void main() {
       }
     });
 
-    test(
-      'runMdnsScanCommand should handle missing mdns-scan gracefully',
-      () {
-        if (Platform.isLinux) {
-          // Should not throw even if mdns-scan is not installed
-          expect(
-            () => SrvListLinux.runMdnsScanCommand(),
-            returnsNormally,
-          );
-        }
-      },
-    );
+    test('runMdnsScanCommand should handle missing mdns-scan gracefully', () {
+      if (Platform.isLinux) {
+        // Should not throw even if mdns-scan is not installed
+        expect(() => SrvListLinux.runMdnsScanCommand(), returnsNormally);
+      }
+    });
 
     test('getSrvRecordList should not throw exception', () {
       if (Platform.isLinux) {
-        expect(
-          () => SrvListLinux.getSrvRecordList(),
-          returnsNormally,
-        );
+        expect(() => SrvListLinux.getSrvRecordList(), returnsNormally);
       }
     });
 
     test('runAvahiBrowseCommand should not throw exception', () {
       if (Platform.isLinux) {
-        expect(
-          () => SrvListLinux.runAvahiBrowseCommand(),
-          returnsNormally,
-        );
+        expect(() => SrvListLinux.runAvahiBrowseCommand(), returnsNormally);
       }
     });
 
     test('runMdnsScanCommand should not throw exception', () {
       if (Platform.isLinux) {
-        expect(
-          () => SrvListLinux.runMdnsScanCommand(),
-          returnsNormally,
-        );
+        expect(() => SrvListLinux.runMdnsScanCommand(), returnsNormally);
       }
     });
 
