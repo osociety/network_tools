@@ -21,13 +21,13 @@ funding:
   
 dependencies:
   # A dart csv to list converter.
-  csv: ">=5.1.1 <7.0.0"
+  csv: ">=5.1.1 <9.0.0"
   # Multi-platform network ping utility.
   dart_ping: ^9.0.1
   # Drift is a reactive persistence library for Flutter and Dart, built on top of SQLite.
   drift: ^2.28.1
   # Service locator
-  get_it: ^8.2.0
+  get_it: ">=8.2.0 <10.0.0"
   # A composable, Future-based library for making HTTP requests.
   http: ^1.2.2
   # Convenient code generator for get_it
@@ -43,7 +43,7 @@ dependencies:
   # Process run helpers
   process_run: ^1.2.2
   # sqlite3 is a pure Dart implementation of SQLite.
-  sqlite3: ^2.8.0
+  sqlite3: ">=2.8.0 <4.0.0"
   # Cross-platform 'dart:io' that works in all platforms.
   universal_io: ^2.2.2
   

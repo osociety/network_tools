@@ -42,23 +42,39 @@ jobs:
       - name: Install coverage tools
         run: dart pub global activate coverage
 
+      - name: Format Coverage
+        run: dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+
       - name: Install lcov
         run: sudo apt-get update && sudo apt-get install -y lcov
 
-      - name: Format Coverage
-        run: dart pub global run coverage:format_coverage --packages=.dart_tool/package_config.json --report-on=lib --lcov -o ./coverage/coverage.lcov -i ./coverage
-
       - name: Excluded generated files
-        run: lcov --remove ./coverage/coverage.lcov '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/coverage.lcov
+        run: lcov --remove ./coverage/lcov.info '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/lcov.info
+
+      - name: Debug - Check coverage file
+        run: |
+          ls -lah ./coverage/
+          wc -l ./coverage/lcov.info
 
       - name: Generate HTML coverage report
-        run: genhtml -o ./coverage/report ./coverage/coverage.lcov
+        run: genhtml -o ./coverage/report ./coverage/lcov.info
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
           path: './coverage/report'
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
