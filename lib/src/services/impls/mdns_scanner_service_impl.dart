@@ -69,41 +69,48 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
     );
 
     final List<ActiveHost> listOfActiveHost = [];
-    await client.start();
+    try {
+      await client.start();
 
-    await for (final PtrResourceRecord ptr in client.lookup<PtrResourceRecord>(
-      ResourceRecordQuery.serverPointer(serviceType),
-    )) {
-      await for (final SrvResourceRecord srv
-          in client.lookup<SrvResourceRecord>(
-            ResourceRecordQuery.service(ptr.domainName),
-          )) {
-        await for (final TxtResourceRecord txtRecords
-            in client.lookup<TxtResourceRecord>(
-              ResourceRecordQuery.text(ptr.domainName),
+      await for (final PtrResourceRecord ptr in client.lookup<PtrResourceRecord>(
+        ResourceRecordQuery.serverPointer(serviceType),
+      )) {
+        await for (final SrvResourceRecord srv
+            in client.lookup<SrvResourceRecord>(
+              ResourceRecordQuery.service(ptr.domainName),
             )) {
-          listOfActiveHost.addAll(
-            await findAllActiveHostForSrv(
-              addressType: InternetAddress.anyIPv4,
-              client: client,
-              ptr: ptr,
-              srv: srv,
-              txt: txtRecords,
-            ),
-          );
-          listOfActiveHost.addAll(
-            await findAllActiveHostForSrv(
-              addressType: InternetAddress.anyIPv6,
-              client: client,
-              ptr: ptr,
-              srv: srv,
-              txt: txtRecords,
-            ),
-          );
+          await for (final TxtResourceRecord txtRecords
+              in client.lookup<TxtResourceRecord>(
+                ResourceRecordQuery.text(ptr.domainName),
+              )) {
+            listOfActiveHost.addAll(
+              await findAllActiveHostForSrv(
+                addressType: InternetAddress.anyIPv4,
+                client: client,
+                ptr: ptr,
+                srv: srv,
+                txt: txtRecords,
+              ),
+            );
+            listOfActiveHost.addAll(
+              await findAllActiveHostForSrv(
+                addressType: InternetAddress.anyIPv6,
+                client: client,
+                ptr: ptr,
+                srv: srv,
+                txt: txtRecords,
+              ),
+            );
+          }
         }
       }
+    } catch (e) {
+      logger.severe(
+        'Error finding mdns devices for serviceType $serviceType: $e',
+      );
+    } finally {
+      client.stop();
     }
-    client.stop();
 
     return listOfActiveHost;
   }

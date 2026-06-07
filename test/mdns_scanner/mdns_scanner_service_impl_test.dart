@@ -87,28 +87,30 @@ void main() {
     group('Method signatures', () {
       test(
         'searchMdnsDevices accepts forceUseOfSavedSrvRecordList parameter',
-        () {
+        () async {
           if (!dbInitialized) {
             return; // Skip if database not initialized (likely locked on CI)
           }
+          final mockService = MockMdnsScannerServiceImpl();
           // Test that the method can be called with the parameter
-          expect(() {
-            // Don't await to avoid network timeout
-            mdnsScannerService.searchMdnsDevices(
+          await expectLater(
+            mockService.searchMdnsDevices(
               forceUseOfSavedSrvRecordList: true,
-            );
-          }, returnsNormally);
+            ),
+            completes,
+          );
         },
       );
 
-      test('searchMdnsDevices can be called without parameters', () {
+      test('searchMdnsDevices can be called without parameters', () async {
         if (!dbInitialized) {
           return; // Skip if database not initialized (likely locked on CI)
         }
-        expect(() {
-          // Don't await to avoid network timeout
-          mdnsScannerService.searchMdnsDevices();
-        }, returnsNormally);
+        final mockService = MockMdnsScannerServiceImpl();
+        await expectLater(
+          mockService.searchMdnsDevices(),
+          completes,
+        );
       });
     });
 
@@ -159,4 +161,11 @@ void main() {
       });
     });
   });
+}
+
+class MockMdnsScannerServiceImpl extends MdnsScannerServiceImpl {
+  @override
+  Future<List<ActiveHost>> findingMdnsWithAddress(String serviceType) async {
+    return [];
+  }
 }
