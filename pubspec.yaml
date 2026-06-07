@@ -21,7 +21,7 @@ funding:
   
 dependencies:
   # A dart csv to list converter.
-  csv: ">=5.1.1 <7.0.0"
+  csv: ">=5.1.1 <9.0.0"
   # Multi-platform network ping utility.
   dart_ping: ^9.0.1
   # Drift is a reactive persistence library for Flutter and Dart, built on top of SQLite.
