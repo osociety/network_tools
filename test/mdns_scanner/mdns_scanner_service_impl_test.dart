@@ -94,9 +94,7 @@ void main() {
           final mockService = MockMdnsScannerServiceImpl();
           // Test that the method can be called with the parameter
           await expectLater(
-            mockService.searchMdnsDevices(
-              forceUseOfSavedSrvRecordList: true,
-            ),
+            mockService.searchMdnsDevices(forceUseOfSavedSrvRecordList: true),
             completes,
           );
         },
@@ -107,10 +105,7 @@ void main() {
           return; // Skip if database not initialized (likely locked on CI)
         }
         final mockService = MockMdnsScannerServiceImpl();
-        await expectLater(
-          mockService.searchMdnsDevices(),
-          completes,
-        );
+        await expectLater(mockService.searchMdnsDevices(), completes);
       });
     });
 

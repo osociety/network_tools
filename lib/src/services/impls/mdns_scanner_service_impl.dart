@@ -72,9 +72,10 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
     try {
       await client.start();
 
-      await for (final PtrResourceRecord ptr in client.lookup<PtrResourceRecord>(
-        ResourceRecordQuery.serverPointer(serviceType),
-      )) {
+      await for (final PtrResourceRecord ptr
+          in client.lookup<PtrResourceRecord>(
+            ResourceRecordQuery.serverPointer(serviceType),
+          )) {
         await for (final SrvResourceRecord srv
             in client.lookup<SrvResourceRecord>(
               ResourceRecordQuery.service(ptr.domainName),
