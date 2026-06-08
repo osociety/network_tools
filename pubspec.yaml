@@ -31,7 +31,7 @@ dependencies:
   # A composable, Future-based library for making HTTP requests.
   http: ^1.2.2
   # Convenient code generator for get_it
-  injectable: ^2.5.1
+  injectable: ">=2.5.1 <4.0.0"
   # Defines the annotations used by json_serializable.
   json_annotation: ^4.9.0
   # Debugging and error logging.
@@ -54,7 +54,7 @@ dev_dependencies:
   # Drift is a reactive persistence library for Flutter and Dart, built on top of SQLite.
   drift_dev: ^2.28.1
   # Injectable is a convenient code generator for get_it. Inspired by Angular DI, Guice DI and inject.dart.
-  injectable_generator: ^2.8.1
+  injectable_generator: ">=2.8.1 <4.0.0"
   # Provides Dart Build System builders for handling JSON.
   json_serializable: ^6.10.0
   # Set of lint rules for Dart.
