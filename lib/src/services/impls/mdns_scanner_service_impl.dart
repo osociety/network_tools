@@ -5,6 +5,42 @@ import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart'
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
 
+/// Resolves the bind target for [RawDatagramSocket.bind].
+///
+/// On Windows, binding with an [InternetAddress] whose hostname is empty fails
+/// with errno 10049. Always use the numeric address string instead.
+dynamic _mdnsDatagramBindHost(dynamic host) {
+  if (host is InternetAddress) {
+    return host.address;
+  }
+  return host;
+}
+
+Future<RawDatagramSocket> _mdnsRawDatagramSocketFactory(
+  dynamic host,
+  int port, {
+  bool? reuseAddress,
+  bool? reusePort,
+  int? ttl,
+}) {
+  return RawDatagramSocket.bind(
+    _mdnsDatagramBindHost(host),
+    port,
+    reuseAddress: reuseAddress ?? true,
+    reusePort: !(Platform.isWindows || Platform.isAndroid) && (reusePort ?? true),
+    ttl: ttl ?? 255,
+  );
+}
+
+Future<Iterable<NetworkInterface>> _mdnsNetworkInterfacesFactory(
+  InternetAddressType type,
+) {
+  return NetworkInterface.list(
+    includeLinkLocal: !Platform.isWindows,
+    type: type,
+  );
+}
+
 class MdnsScannerServiceImpl extends MdnsScannerService {
   /// This method searching for all the mdns devices in the network.
   /// TODO: The implementation is **Lacking!** and will not find all the
@@ -52,21 +88,7 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
   @override
   Future<List<ActiveHost>> findingMdnsWithAddress(String serviceType) async {
     final MDnsClient client = MDnsClient(
-      rawDatagramSocketFactory:
-          (
-            dynamic host,
-            int port, {
-            bool? reuseAddress,
-            bool? reusePort,
-            int? ttl,
-          }) {
-            return RawDatagramSocket.bind(
-              host,
-              port,
-              reusePort: !Platform.isWindows && !Platform.isAndroid,
-              ttl: ttl!,
-            );
-          },
+      rawDatagramSocketFactory: _mdnsRawDatagramSocketFactory,
     );
 
     final List<ActiveHost> listOfActiveHost = [];
@@ -75,7 +97,10 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
     runZonedGuarded(
       () async {
         try {
-          await client.start();
+          await client.start(
+            listenAddress: InternetAddress.anyIPv4,
+            interfacesFactory: _mdnsNetworkInterfacesFactory,
+          );
 
           await for (final PtrResourceRecord ptr
               in client.lookup<PtrResourceRecord>(
