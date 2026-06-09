@@ -27,7 +27,8 @@ Future<RawDatagramSocket> _mdnsRawDatagramSocketFactory(
     _mdnsDatagramBindHost(host),
     port,
     reuseAddress: reuseAddress ?? true,
-    reusePort: !(Platform.isWindows || Platform.isAndroid) && (reusePort ?? true),
+    reusePort:
+        !(Platform.isWindows || Platform.isAndroid) && (reusePort ?? true),
     ttl: ttl ?? 255,
   );
 }
