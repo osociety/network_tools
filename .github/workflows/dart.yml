@@ -45,11 +45,40 @@ jobs:
       - name: Analyze project source
         run: dart analyze --fatal-infos 
 
-      # Your project will need to have tests in test/ and a dependency on
-      # package:test for this step to succeed. Note that Flutter projects will
-      # want to change this to 'flutter test'.
-      - name: Run tests
+      - name: Run tests (Linux)
+        if: runner.os == 'Linux'
+        run: dart test --coverage="./coverage"
+
+      - name: Run tests (non-Linux)
+        if: runner.os != 'Linux'
         run: dart test
-        
+
+      - name: Install coverage tools (Linux)
+        if: runner.os == 'Linux'
+        run: dart pub global activate coverage
+
+      - name: Install lcov (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y lcov
+
+      - name: Format coverage and generate lcov (Linux)
+        if: runner.os == 'Linux'
+        run: dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+
+      - name: Remove generated files from lcov (Linux)
+        if: runner.os == 'Linux'
+        run: lcov --remove ./coverage/lcov.info '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/lcov.info
+
+      - name: Upload coverage to Codecov (Linux)
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
+
       - name: Check Publish Warnings
         run: dart pub publish --dry-run

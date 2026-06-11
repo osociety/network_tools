@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.6
+Dependency update, bug fixes, example tab fix.
+
 ## 6.0.5
 Bug fixes and improvements
 
