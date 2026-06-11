@@ -1,0 +1,17 @@
+{
+  "name": "network-tools-helper-plugin",
+  "version": "1.0.0",
+  "description": "Helper tools and skills for the network_tools repository",
+  "author": {
+    "name": "Antigravity Agent"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "dart",
+    "flutter",
+    "network_tools",
+    "testing",
+    "analysis",
+    "formatting"
+  ]
+}
