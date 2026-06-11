@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.8
+Fix for missing example tab.
+
 ## 6.0.7
 Csv upgrade and downgrade fix.
 
