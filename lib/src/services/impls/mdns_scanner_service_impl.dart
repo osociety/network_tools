@@ -1,8 +1,46 @@
+import 'dart:async';
 import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
+
+/// Resolves the bind target for [RawDatagramSocket.bind].
+///
+/// On Windows, binding with an [InternetAddress] whose hostname is empty fails
+/// with errno 10049. Always use the numeric address string instead.
+dynamic _mdnsDatagramBindHost(dynamic host) {
+  if (host is InternetAddress) {
+    return host.address;
+  }
+  return host;
+}
+
+Future<RawDatagramSocket> _mdnsRawDatagramSocketFactory(
+  dynamic host,
+  int port, {
+  bool? reuseAddress,
+  bool? reusePort,
+  int? ttl,
+}) {
+  return RawDatagramSocket.bind(
+    _mdnsDatagramBindHost(host),
+    port,
+    reuseAddress: reuseAddress ?? true,
+    reusePort:
+        !(Platform.isWindows || Platform.isAndroid) && (reusePort ?? true),
+    ttl: ttl ?? 255,
+  );
+}
+
+Future<Iterable<NetworkInterface>> _mdnsNetworkInterfacesFactory(
+  InternetAddressType type,
+) {
+  return NetworkInterface.list(
+    includeLinkLocal: !Platform.isWindows,
+    type: type,
+  );
+}
 
 class MdnsScannerServiceImpl extends MdnsScannerService {
   /// This method searching for all the mdns devices in the network.
@@ -51,60 +89,72 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
   @override
   Future<List<ActiveHost>> findingMdnsWithAddress(String serviceType) async {
     final MDnsClient client = MDnsClient(
-      rawDatagramSocketFactory:
-          (
-            dynamic host,
-            int port, {
-            bool? reuseAddress,
-            bool? reusePort,
-            int? ttl,
-          }) {
-            return RawDatagramSocket.bind(
-              host,
-              port,
-              reusePort: !Platform.isWindows && !Platform.isAndroid,
-              ttl: ttl!,
-            );
-          },
+      rawDatagramSocketFactory: _mdnsRawDatagramSocketFactory,
     );
 
     final List<ActiveHost> listOfActiveHost = [];
-    await client.start();
+    final Completer<void> completer = Completer<void>();
 
-    await for (final PtrResourceRecord ptr in client.lookup<PtrResourceRecord>(
-      ResourceRecordQuery.serverPointer(serviceType),
-    )) {
-      await for (final SrvResourceRecord srv
-          in client.lookup<SrvResourceRecord>(
-            ResourceRecordQuery.service(ptr.domainName),
-          )) {
-        await for (final TxtResourceRecord txtRecords
-            in client.lookup<TxtResourceRecord>(
-              ResourceRecordQuery.text(ptr.domainName),
-            )) {
-          listOfActiveHost.addAll(
-            await findAllActiveHostForSrv(
-              addressType: InternetAddress.anyIPv4,
-              client: client,
-              ptr: ptr,
-              srv: srv,
-              txt: txtRecords,
-            ),
+    runZonedGuarded(
+      () async {
+        try {
+          await client.start(
+            listenAddress: InternetAddress.anyIPv4,
+            interfacesFactory: _mdnsNetworkInterfacesFactory,
           );
-          listOfActiveHost.addAll(
-            await findAllActiveHostForSrv(
-              addressType: InternetAddress.anyIPv6,
-              client: client,
-              ptr: ptr,
-              srv: srv,
-              txt: txtRecords,
-            ),
+
+          await for (final PtrResourceRecord ptr
+              in client.lookup<PtrResourceRecord>(
+                ResourceRecordQuery.serverPointer(serviceType),
+              )) {
+            await for (final SrvResourceRecord srv
+                in client.lookup<SrvResourceRecord>(
+                  ResourceRecordQuery.service(ptr.domainName),
+                )) {
+              await for (final TxtResourceRecord txtRecords
+                  in client.lookup<TxtResourceRecord>(
+                    ResourceRecordQuery.text(ptr.domainName),
+                  )) {
+                listOfActiveHost.addAll(
+                  await findAllActiveHostForSrv(
+                    addressType: InternetAddress.anyIPv4,
+                    client: client,
+                    ptr: ptr,
+                    srv: srv,
+                    txt: txtRecords,
+                  ),
+                );
+                listOfActiveHost.addAll(
+                  await findAllActiveHostForSrv(
+                    addressType: InternetAddress.anyIPv6,
+                    client: client,
+                    ptr: ptr,
+                    srv: srv,
+                    txt: txtRecords,
+                  ),
+                );
+              }
+            }
+          }
+        } catch (e) {
+          logger.severe(
+            'Error finding mdns devices for serviceType $serviceType: $e',
           );
+        } finally {
+          client.stop();
+          if (!completer.isCompleted) completer.complete();
         }
-      }
-    }
-    client.stop();
+      },
+      (Object error, StackTrace stack) {
+        logger.severe(
+          'Unhandled async error in findingMdnsWithAddress for $serviceType: $error',
+        );
+        client.stop();
+        if (!completer.isCompleted) completer.complete();
+      },
+    );
 
+    await completer.future;
     return listOfActiveHost;
   }
 
