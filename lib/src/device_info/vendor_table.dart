@@ -37,9 +37,8 @@ class VendorTable {
     }
 
     final input = file.openRead();
-    const codec = CsvToListConverter(eol: '\n');
     List<List<String>> fields =
-        (await input.transform(utf8.decoder).transform(codec).toList())
+        (await input.transform(utf8.decoder).transform(csv.decoder).toList())
             .map<List<String>>((row) => row.map((e) => e.toString()).toList())
             .toList();
     // Remove header from csv
