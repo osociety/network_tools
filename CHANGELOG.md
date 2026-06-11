@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.7
+Csv upgrade and downgrade fix.
+
 ## 6.0.6
 Dependency update, bug fixes, example tab fix.
 
