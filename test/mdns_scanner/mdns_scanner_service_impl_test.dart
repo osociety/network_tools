@@ -1,8 +1,9 @@
-import 'dart:io';
+import 'dart:io' as dart_io;
 
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/services/impls/mdns_scanner_service_impl.dart';
 import 'package:test/test.dart';
+import 'package:universal_io/io.dart' as universal_io;
 
 void main() {
   group('MdnsScannerServiceImpl Unit Tests', () {
@@ -13,7 +14,7 @@ void main() {
       dbInitialized = false;
       // Use unique database directory per test to avoid lock contention on parallel test runs
       final testDbDir =
-          'build/test_db_mdns_impl_${pid}_${DateTime.now().millisecondsSinceEpoch}';
+          'build/test_db_mdns_impl_${dart_io.pid}_${DateTime.now().millisecondsSinceEpoch}';
       try {
         await configureNetworkTools(testDbDir);
         dbInitialized = true;
@@ -171,17 +172,64 @@ void main() {
       );
     });
 
+    group('mDNS address compatibility', () {
+      test('normalizes dart:io addresses into universal_io addresses', () {
+        final dartAddress = dart_io.InternetAddress('192.168.1.10');
+
+        final normalizedAddress = normalizeInternetAddress(dartAddress);
+
+        expect(normalizedAddress, isA<universal_io.InternetAddress>());
+        expect(normalizedAddress.address, '192.168.1.10');
+      });
+
+      test('normalizes string addresses into universal_io addresses', () {
+        final normalizedAddress = normalizeInternetAddress('192.168.1.10');
+
+        expect(normalizedAddress, isA<universal_io.InternetAddress>());
+        expect(normalizedAddress.address, '192.168.1.10');
+      });
+
+      test('normalizes address-like objects via their address property', () {
+        final normalizedAddress = normalizeInternetAddress(
+          _AddressLikeObject('192.168.1.10'),
+        );
+
+        expect(normalizedAddress, isA<universal_io.InternetAddress>());
+        expect(normalizedAddress.address, '192.168.1.10');
+      });
+
+      test('normalizes address-like objects via their rawAddress data', () {
+        final normalizedAddress = normalizeInternetAddress(
+          _RawAddressLikeObject([192, 168, 1, 10]),
+        );
+
+        expect(normalizedAddress, isA<universal_io.InternetAddress>());
+        expect(normalizedAddress.address, '192.168.1.10');
+      });
+
+      test('throws for unsupported address-like objects', () {
+        expect(
+          () => normalizeInternetAddress(_UnsupportedAddressLikeObject()),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+    });
+
     group('mDNS interface filtering', () {
       test('filters out loopback and link-local interfaces before startup', () {
         final filteredInterfaces = filterMdnsInterfaces(
-          <NetworkInterface>[
-            _FakeNetworkInterface('lo0', 1, [InternetAddress.loopbackIPv4]),
-            _FakeNetworkInterface('vEthernet', 2, [
-              InternetAddress('169.254.0.1'),
+          <universal_io.NetworkInterface>[
+            _FakeNetworkInterface('lo0', 1, [
+              universal_io.InternetAddress.loopbackIPv4,
             ]),
-            _FakeNetworkInterface('en0', 3, [InternetAddress('192.168.1.10')]),
+            _FakeNetworkInterface('vEthernet', 2, [
+              universal_io.InternetAddress('169.254.0.1'),
+            ]),
+            _FakeNetworkInterface('en0', 3, [
+              universal_io.InternetAddress('192.168.1.10'),
+            ]),
           ],
-          InternetAddressType.IPv4,
+          dart_io.InternetAddressType.IPv4,
           isWindows: true,
         );
 
@@ -199,7 +247,7 @@ class MockMdnsScannerServiceImpl extends MdnsScannerServiceImpl {
   }
 }
 
-class _FakeNetworkInterface implements NetworkInterface {
+class _FakeNetworkInterface implements universal_io.NetworkInterface {
   _FakeNetworkInterface(this.name, this.index, this.addresses);
 
   @override
@@ -209,5 +257,19 @@ class _FakeNetworkInterface implements NetworkInterface {
   final int index;
 
   @override
-  final List<InternetAddress> addresses;
+  final List<universal_io.InternetAddress> addresses;
 }
+
+class _AddressLikeObject {
+  _AddressLikeObject(this.address);
+
+  final String address;
+}
+
+class _RawAddressLikeObject {
+  _RawAddressLikeObject(this.rawAddress);
+
+  final List<int> rawAddress;
+}
+
+class _UnsupportedAddressLikeObject {}
