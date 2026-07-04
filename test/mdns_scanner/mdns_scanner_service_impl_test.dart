@@ -181,6 +181,38 @@ void main() {
         expect(normalizedAddress, isA<universal_io.InternetAddress>());
         expect(normalizedAddress.address, '192.168.1.10');
       });
+
+      test('normalizes string addresses into universal_io addresses', () {
+        final normalizedAddress = normalizeInternetAddress('192.168.1.10');
+
+        expect(normalizedAddress, isA<universal_io.InternetAddress>());
+        expect(normalizedAddress.address, '192.168.1.10');
+      });
+
+      test('normalizes address-like objects via their address property', () {
+        final normalizedAddress = normalizeInternetAddress(
+          _AddressLikeObject('192.168.1.10'),
+        );
+
+        expect(normalizedAddress, isA<universal_io.InternetAddress>());
+        expect(normalizedAddress.address, '192.168.1.10');
+      });
+
+      test('normalizes address-like objects via their rawAddress data', () {
+        final normalizedAddress = normalizeInternetAddress(
+          _RawAddressLikeObject([192, 168, 1, 10]),
+        );
+
+        expect(normalizedAddress, isA<universal_io.InternetAddress>());
+        expect(normalizedAddress.address, '192.168.1.10');
+      });
+
+      test('throws for unsupported address-like objects', () {
+        expect(
+          () => normalizeInternetAddress(_UnsupportedAddressLikeObject()),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
     });
 
     group('mDNS interface filtering', () {
@@ -227,3 +259,17 @@ class _FakeNetworkInterface implements universal_io.NetworkInterface {
   @override
   final List<universal_io.InternetAddress> addresses;
 }
+
+class _AddressLikeObject {
+  _AddressLikeObject(this.address);
+
+  final String address;
+}
+
+class _RawAddressLikeObject {
+  _RawAddressLikeObject(this.rawAddress);
+
+  final List<int> rawAddress;
+}
+
+class _UnsupportedAddressLikeObject {}
