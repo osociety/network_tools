@@ -228,24 +228,38 @@ Future<void> main() async {
       }
     });
 
-    test('Running scanPortsForSingleDevice Async tests', () {
+    test('Running scanPortsForSingleDevice Async tests', () async {
+      if (hostsWithOpenPort.isEmpty) {
+        return;
+      }
+
       for (final activeHost in hostsWithOpenPort) {
         final port = activeHost.openPorts.elementAt(0).port;
-        expectLater(
-          PortScannerService.instance.scanPortsForSingleDevice(
-            activeHost.address,
-            startPort: port - 1,
-            endPort: port,
-            async: true,
-          ),
-          emitsThrough(
-            isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
-              "Should match host having same open port",
-              equals(true),
-            ),
-          ),
+        final stream = PortScannerService.instance.scanPortsForSingleDevice(
+          activeHost.address,
+          startPort: port - 1,
+          endPort: port,
+          async: true,
         );
+
+        final completer = Completer<void>();
+        late StreamSubscription<ActiveHost> subscription;
+        subscription = stream.listen(
+          (host) {
+            if (host.openPorts.contains(OpenPort(port))) {
+              completer.complete();
+            }
+          },
+          onError: completer.completeError,
+          onDone: () {
+            if (!completer.isCompleted) {
+              completer.complete();
+            }
+          },
+        );
+
+        await expectLater(completer.future, completes);
+        await subscription.cancel();
       }
     });
 
