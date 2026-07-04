@@ -152,13 +152,29 @@ class ActiveHost {
       count: 1,
       timeout: timeoutInSeconds,
       forceCodepage: Platform.isWindows,
-    ).stream.listen((PingData event) {
-      final PingResponse? response = event.response;
+    ).stream.listen((Object? event) {
+      final PingResponse? response = _extractPingResponse(event);
       if (response != null && response.time != null) {
         tempPingData = response;
       }
     });
     return tempPingData;
+  }
+
+  static PingResponse? _extractPingResponse(Object? event) {
+    if (event is PingResponse) {
+      return event;
+    }
+    if (event == null) {
+      return null;
+    }
+
+    // dart_ping changed its stream payload type across versions.
+    // This compatibility bridge handles both the older and newer shapes.
+    final dynamic dynamicEvent = event;
+    // ignore: avoid_dynamic_calls
+    final Object? response = dynamicEvent.response;
+    return response is PingResponse ? response : null;
   }
 
   /// Try to find the host name of this device, if not exist host name will

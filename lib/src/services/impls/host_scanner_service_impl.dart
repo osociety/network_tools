@@ -102,6 +102,22 @@ class HostScannerServiceImpl extends HostScannerService {
     }
   }
 
+  static PingResponse? _extractPingResponse(Object? event) {
+    if (event is PingResponse) {
+      return event;
+    }
+    if (event == null) {
+      return null;
+    }
+
+    // dart_ping changed its stream payload type across versions.
+    // This compatibility bridge handles both the older and newer shapes.
+    final dynamic dynamicEvent = event;
+    // ignore: avoid_dynamic_calls
+    final Object? response = dynamicEvent.response;
+    return response is PingResponse ? response : null;
+  }
+
   Future<SendableActiveHost?> getHostFromPing({
     required String host,
     required StreamController<SendableActiveHost> activeHostsController,
@@ -109,13 +125,13 @@ class HostScannerServiceImpl extends HostScannerService {
   }) async {
     SendableActiveHost? tempSendableActivateHost;
 
-    await for (final PingData event in Ping(
+    await for (final Object? event in Ping(
       host,
       count: 1,
       timeout: timeoutInSeconds,
       forceCodepage: Platform.isWindows,
     ).stream) {
-      final PingResponse? pingResponse = event.response;
+      final PingResponse? pingResponse = _extractPingResponse(event);
       if (pingResponse != null && pingResponse.time != null) {
         // Check if ping succeeded
         logger.fine("Pingable device found: $host");
