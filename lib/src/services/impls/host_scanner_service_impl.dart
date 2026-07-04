@@ -117,7 +117,7 @@ class HostScannerServiceImpl extends HostScannerService {
       // ignore: avoid_dynamic_calls
       final Object? response = dynamicEvent.response;
       return response is PingResponse ? response : null;
-    } on Exception {
+    } catch (error) {
       return null;
     }
   }
