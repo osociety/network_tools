@@ -12,7 +12,7 @@ class ActiveHost {
     required this.internetAddress,
     this.openPorts = const [],
     String? macAddress,
-    PingData? pingData,
+    PingEvent? pingData,
     MdnsInfo? mdnsInfoVar,
   }) {
     _macAddress = macAddress;
@@ -58,7 +58,7 @@ class ActiveHost {
     required String address,
     String? macAddress,
     List<OpenPort> openPorts = const [],
-    PingData? pingData,
+    PingEvent? pingData,
     MdnsInfo? mdnsInfo,
   }) {
     final InternetAddress? internetAddressTemp = InternetAddress.tryParse(
@@ -108,7 +108,7 @@ class ActiveHost {
   /// not follow any internet protocol property
   late Future<String?> hostName;
   late String weirdHostName;
-  late final PingData _pingData;
+  late final PingEvent? _pingData;
 
   /// Mdns information of this device
   late Future<MdnsInfo?> mdnsInfo;
@@ -134,26 +134,29 @@ class ActiveHost {
   /// This value **can change after the object got created** since getting
   /// host name of device is running async function.
   late Future<String> deviceName;
-  PingData get pingData => _pingData;
-  Duration? get responseTime => _pingData.response?.time;
+  PingEvent? get pingData => _pingData;
+  Duration? get responseTime {
+    final event = _pingData;
+    if (event is PingResponse) return event.time;
+    return null;
+  }
+
   String get address => internetAddress.address;
 
-  static PingData getPingData(String host) {
+  static PingEvent? getPingData(String host) {
     const int timeoutInSeconds = 1;
-
-    PingData tempPingData = const PingData();
+    PingEvent? tempPingData;
 
     Ping(
       host,
       count: 1,
       timeout: timeoutInSeconds,
       forceCodepage: Platform.isWindows,
-    ).stream.listen((pingData) {
-      final PingResponse? response = pingData.response;
-      if (response != null) {
-        final Duration? time = response.time;
+    ).stream.listen((event) {
+      if (event is PingResponse) {
+        final Duration? time = event.time;
         if (time != null) {
-          tempPingData = pingData;
+          tempPingData = event;
         }
       }
     });
