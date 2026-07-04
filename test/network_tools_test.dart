@@ -308,6 +308,25 @@ Future<void> main() async {
       }
     });
 
+    test(
+      'connectToPort treats connection-refused errors as closed ports',
+      () async {
+        final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+        final closedPort = server.port;
+        await server.close();
+
+        await expectLater(
+          PortScannerService.instance.connectToPort(
+            address: InternetAddress.loopbackIPv4.address,
+            port: closedPort,
+            timeout: const Duration(milliseconds: 500),
+            activeHostsController: StreamController<ActiveHost>(),
+          ),
+          completion(isNull),
+        );
+      },
+    );
+
     test('Running isOpen tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(
