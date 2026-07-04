@@ -170,11 +170,15 @@ class ActiveHost {
     }
 
     // dart_ping changed its stream payload type across versions.
-    // This compatibility bridge handles both the older and newer shapes.
-    final dynamic dynamicEvent = event;
-    // ignore: avoid_dynamic_calls
-    final Object? response = dynamicEvent.response;
-    return response is PingResponse ? response : null;
+    // Some versions emit PingSummary or other payloads instead of a response.
+    try {
+      final dynamic dynamicEvent = event;
+      // ignore: avoid_dynamic_calls
+      final Object? response = dynamicEvent.response;
+      return response is PingResponse ? response : null;
+    } on Exception {
+      return null;
+    }
   }
 
   /// Try to find the host name of this device, if not exist host name will
