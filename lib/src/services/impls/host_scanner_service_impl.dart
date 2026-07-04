@@ -109,21 +109,22 @@ class HostScannerServiceImpl extends HostScannerService {
   }) async {
     SendableActiveHost? tempSendableActivateHost;
 
-    await for (final PingEvent event in Ping(
+    await for (final PingData event in Ping(
       host,
       count: 1,
       timeout: timeoutInSeconds,
       forceCodepage: Platform.isWindows,
     ).stream) {
-      if (event is PingResponse) {
+      final PingResponse? pingResponse = event.response;
+      if (pingResponse != null && pingResponse.time != null) {
         // Check if ping succeeded
-        final Duration? time = event.time;
-        if (time != null) {
-          logger.fine("Pingable device found: $host");
-          tempSendableActivateHost = SendableActiveHost(host, pingData: event);
-        } else {
-          logger.fine("Non pingable device found: $host");
-        }
+        logger.fine("Pingable device found: $host");
+        tempSendableActivateHost = SendableActiveHost(
+          host,
+          pingData: pingResponse,
+        );
+      } else {
+        logger.fine("Non pingable device found: $host");
       }
 
       if (tempSendableActivateHost == null) {
@@ -133,7 +134,10 @@ class HostScannerServiceImpl extends HostScannerService {
 
         if (data != null) {
           logger.fine("Successfully fetched arp entry for $host as $data");
-          tempSendableActivateHost = SendableActiveHost(host, pingData: event);
+          tempSendableActivateHost = SendableActiveHost(
+            host,
+            pingData: pingResponse,
+          );
         } else {
           logger.fine("Problem in fetching arp entry for $host");
         }

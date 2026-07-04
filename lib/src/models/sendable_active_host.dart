@@ -5,6 +5,6 @@ import 'package:network_tools/network_tools.dart';
 class SendableActiveHost {
   SendableActiveHost(this.address, {this.pingData, this.openPorts = const []});
   final String address;
-  final PingEvent? pingData;
+  final PingResponse? pingData;
   List<OpenPort> openPorts;
 }

@@ -12,7 +12,7 @@ class ActiveHost {
     required this.internetAddress,
     this.openPorts = const [],
     String? macAddress,
-    PingEvent? pingData,
+    PingResponse? pingData,
     MdnsInfo? mdnsInfoVar,
   }) {
     _macAddress = macAddress;
@@ -58,7 +58,7 @@ class ActiveHost {
     required String address,
     String? macAddress,
     List<OpenPort> openPorts = const [],
-    PingEvent? pingData,
+    PingResponse? pingData,
     MdnsInfo? mdnsInfo,
   }) {
     final InternetAddress? internetAddressTemp = InternetAddress.tryParse(
@@ -108,7 +108,7 @@ class ActiveHost {
   /// not follow any internet protocol property
   late Future<String?> hostName;
   late String weirdHostName;
-  late final PingEvent? _pingData;
+  late final PingResponse? _pingData;
 
   /// Mdns information of this device
   late Future<MdnsInfo?> mdnsInfo;
@@ -134,7 +134,7 @@ class ActiveHost {
   /// This value **can change after the object got created** since getting
   /// host name of device is running async function.
   late Future<String> deviceName;
-  PingEvent? get pingData => _pingData;
+  PingResponse? get pingData => _pingData;
   Duration? get responseTime {
     final event = _pingData;
     if (event is PingResponse) return event.time;
@@ -143,21 +143,19 @@ class ActiveHost {
 
   String get address => internetAddress.address;
 
-  static PingEvent? getPingData(String host) {
+  static PingResponse? getPingData(String host) {
     const int timeoutInSeconds = 1;
-    PingEvent? tempPingData;
+    PingResponse? tempPingData;
 
     Ping(
       host,
       count: 1,
       timeout: timeoutInSeconds,
       forceCodepage: Platform.isWindows,
-    ).stream.listen((event) {
-      if (event is PingResponse) {
-        final Duration? time = event.time;
-        if (time != null) {
-          tempPingData = event;
-        }
+    ).stream.listen((PingData event) {
+      final PingResponse? response = event.response;
+      if (response != null && response.time != null) {
+        tempPingData = response;
       }
     });
     return tempPingData;

@@ -170,6 +170,25 @@ void main() {
         },
       );
     });
+
+    group('mDNS interface filtering', () {
+      test('filters out loopback and link-local interfaces before startup', () {
+        final filteredInterfaces = filterMdnsInterfaces(
+          <NetworkInterface>[
+            _FakeNetworkInterface('lo0', 1, [InternetAddress.loopbackIPv4]),
+            _FakeNetworkInterface('vEthernet', 2, [
+              InternetAddress('169.254.0.1'),
+            ]),
+            _FakeNetworkInterface('en0', 3, [InternetAddress('192.168.1.10')]),
+          ],
+          InternetAddressType.IPv4,
+          isWindows: true,
+        );
+
+        expect(filteredInterfaces, hasLength(1));
+        expect(filteredInterfaces.single.name, 'en0');
+      });
+    });
   });
 }
 
@@ -178,4 +197,17 @@ class MockMdnsScannerServiceImpl extends MdnsScannerServiceImpl {
   Future<List<ActiveHost>> findingMdnsWithAddress(String serviceType) async {
     return [];
   }
+}
+
+class _FakeNetworkInterface implements NetworkInterface {
+  _FakeNetworkInterface(this.name, this.index, this.addresses);
+
+  @override
+  final String name;
+
+  @override
+  final int index;
+
+  @override
+  final List<InternetAddress> addresses;
 }

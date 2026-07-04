@@ -33,13 +33,39 @@ Future<RawDatagramSocket> _mdnsRawDatagramSocketFactory(
   );
 }
 
+Iterable<NetworkInterface> filterMdnsInterfaces(
+  Iterable<NetworkInterface> interfaces,
+  InternetAddressType type, {
+  bool isWindows = false,
+}) {
+  return interfaces
+      .where((interface) {
+        final addresses = interface.addresses.where((address) {
+          if (address.type != type) {
+            return false;
+          }
+          if (address.isLoopback) {
+            return false;
+          }
+          if (isWindows && address.isLinkLocal) {
+            return false;
+          }
+          return true;
+        });
+
+        return addresses.isNotEmpty;
+      })
+      .toList(growable: false);
+}
+
 Future<Iterable<NetworkInterface>> _mdnsNetworkInterfacesFactory(
   InternetAddressType type,
-) {
-  return NetworkInterface.list(
+) async {
+  final interfaces = await NetworkInterface.list(
     includeLinkLocal: !Platform.isWindows,
     type: type,
   );
+  return filterMdnsInterfaces(interfaces, type, isWindows: Platform.isWindows);
 }
 
 class MdnsScannerServiceImpl extends MdnsScannerService {
