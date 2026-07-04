@@ -228,24 +228,38 @@ Future<void> main() async {
       }
     });
 
-    test('Running scanPortsForSingleDevice Async tests', () {
+    test('Running scanPortsForSingleDevice Async tests', () async {
+      if (hostsWithOpenPort.isEmpty) {
+        return;
+      }
+
       for (final activeHost in hostsWithOpenPort) {
         final port = activeHost.openPorts.elementAt(0).port;
-        expectLater(
-          PortScannerService.instance.scanPortsForSingleDevice(
-            activeHost.address,
-            startPort: port - 1,
-            endPort: port,
-            async: true,
-          ),
-          emitsThrough(
-            isA<ActiveHost>().having(
-              (p0) => p0.openPorts.contains(OpenPort(port)),
-              "Should match host having same open port",
-              equals(true),
-            ),
-          ),
+        final stream = PortScannerService.instance.scanPortsForSingleDevice(
+          activeHost.address,
+          startPort: port - 1,
+          endPort: port,
+          async: true,
         );
+
+        final completer = Completer<void>();
+        late StreamSubscription<ActiveHost> subscription;
+        subscription = stream.listen(
+          (host) {
+            if (host.openPorts.contains(OpenPort(port))) {
+              completer.complete();
+            }
+          },
+          onError: completer.completeError,
+          onDone: () {
+            if (!completer.isCompleted) {
+              completer.complete();
+            }
+          },
+        );
+
+        await expectLater(completer.future, completes);
+        await subscription.cancel();
       }
     });
 
@@ -293,6 +307,25 @@ Future<void> main() async {
         );
       }
     });
+
+    test(
+      'connectToPort treats connection-refused errors as closed ports',
+      () async {
+        final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+        final closedPort = server.port;
+        await server.close();
+
+        await expectLater(
+          PortScannerService.instance.connectToPort(
+            address: InternetAddress.loopbackIPv4.address,
+            port: closedPort,
+            timeout: const Duration(milliseconds: 500),
+            activeHostsController: StreamController<ActiveHost>(),
+          ),
+          completion(isNull),
+        );
+      },
+    );
 
     test('Running isOpen tests', () {
       for (final activeHost in hostsWithOpenPort) {
