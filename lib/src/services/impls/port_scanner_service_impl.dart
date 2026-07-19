@@ -271,8 +271,13 @@ class PortScannerServiceImpl extends PortScannerService {
         rethrow;
       }
 
-      // Check if connection timed out or we got one of predefined errors
-      if (e.osError == null || _errorCodes.contains(e.osError?.errorCode)) {
+      // Check if connection timed out or we got one of predefined errors.
+      // Windows can surface refusal errors with different codes/messages, so
+      // treat those as closed ports as well.
+      final errorCode = e.osError?.errorCode;
+      if (e.osError == null ||
+          _errorCodes.contains(errorCode) ||
+          e.message.toLowerCase().contains('refused')) {
         return null;
       }
 
@@ -299,5 +304,18 @@ class PortScannerServiceImpl extends PortScannerService {
     }
   }
 
-  final _errorCodes = [13, 49, 61, 64, 65, 101, 110, 111, 113, 10060];
+  final _errorCodes = [
+    13,
+    49,
+    61,
+    64,
+    65,
+    101,
+    110,
+    111,
+    113,
+    10060,
+    10061,
+    1225,
+  ];
 }

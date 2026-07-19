@@ -102,6 +102,26 @@ class HostScannerServiceImpl extends HostScannerService {
     }
   }
 
+  static PingResponse? _extractPingResponse(Object? event) {
+    if (event is PingResponse) {
+      return event;
+    }
+    if (event == null) {
+      return null;
+    }
+
+    // dart_ping changed its stream payload type across versions.
+    // Some versions emit PingSummary or other payloads instead of a response.
+    try {
+      final dynamic dynamicEvent = event;
+      // ignore: avoid_dynamic_calls
+      final Object? response = dynamicEvent.response;
+      return response is PingResponse ? response : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
   Future<SendableActiveHost?> getHostFromPing({
     required String host,
     required StreamController<SendableActiveHost> activeHostsController,
@@ -109,29 +129,24 @@ class HostScannerServiceImpl extends HostScannerService {
   }) async {
     SendableActiveHost? tempSendableActivateHost;
 
-    await for (final PingData pingData in Ping(
+    await for (final Object? event in Ping(
       host,
       count: 1,
       timeout: timeoutInSeconds,
       forceCodepage: Platform.isWindows,
     ).stream) {
-      final PingResponse? response = pingData.response;
-      final PingError? pingError = pingData.error;
-      if (response != null) {
+      final PingResponse? pingResponse = _extractPingResponse(event);
+      if (pingResponse != null && pingResponse.time != null) {
         // Check if ping succeeded
-        if (pingError == null) {
-          final Duration? time = response.time;
-          if (time != null) {
-            logger.fine("Pingable device found: $host");
-            tempSendableActivateHost = SendableActiveHost(
-              host,
-              pingData: pingData,
-            );
-          } else {
-            logger.fine("Non pingable device found: $host");
-          }
-        }
+        logger.fine("Pingable device found: $host");
+        tempSendableActivateHost = SendableActiveHost(
+          host,
+          pingData: pingResponse,
+        );
+      } else {
+        logger.fine("Non pingable device found: $host");
       }
+
       if (tempSendableActivateHost == null) {
         // Check if it's there in arp table
 
@@ -141,7 +156,7 @@ class HostScannerServiceImpl extends HostScannerService {
           logger.fine("Successfully fetched arp entry for $host as $data");
           tempSendableActivateHost = SendableActiveHost(
             host,
-            pingData: pingData,
+            pingData: pingResponse,
           );
         } else {
           logger.fine("Problem in fetching arp entry for $host");

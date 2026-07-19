@@ -1,9 +1,50 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/mdns_scanner/get_srv_list_by_os/srv_list.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:universal_io/io.dart';
+
+/// Converts a network address coming from either the Dart IO or universal_io
+/// implementation into the package's [InternetAddress] type.
+InternetAddress normalizeInternetAddress(dynamic address) {
+  if (address is InternetAddress) {
+    return address;
+  }
+
+  if (address is String) {
+    final parsedAddress = InternetAddress.tryParse(address);
+    if (parsedAddress != null) {
+      return parsedAddress;
+    }
+  }
+
+  if (address is Object) {
+    try {
+      final dynamic addressValue = (address as dynamic).address;
+      if (addressValue is String) {
+        final parsedAddress = InternetAddress.tryParse(addressValue);
+        if (parsedAddress != null) {
+          return parsedAddress;
+        }
+      }
+    } catch (_) {}
+
+    try {
+      final dynamic rawAddress = (address as dynamic).rawAddress;
+      if (rawAddress is List<int>) {
+        return InternetAddress.fromRawAddress(Uint8List.fromList(rawAddress));
+      }
+    } catch (_) {}
+  }
+
+  throw ArgumentError.value(
+    address,
+    'address',
+    'Unsupported InternetAddress implementation',
+  );
+}
 
 /// Resolves the bind target for [RawDatagramSocket.bind].
 ///
@@ -13,7 +54,12 @@ dynamic _mdnsDatagramBindHost(dynamic host) {
   if (host is InternetAddress) {
     return host.address;
   }
-  return host;
+
+  try {
+    return normalizeInternetAddress(host).address;
+  } catch (_) {
+    return host;
+  }
 }
 
 Future<RawDatagramSocket> _mdnsRawDatagramSocketFactory(
@@ -33,13 +79,39 @@ Future<RawDatagramSocket> _mdnsRawDatagramSocketFactory(
   );
 }
 
+Iterable<NetworkInterface> filterMdnsInterfaces(
+  Iterable<NetworkInterface> interfaces,
+  InternetAddressType type, {
+  bool isWindows = false,
+}) {
+  return interfaces
+      .where((interface) {
+        final addresses = interface.addresses.where((address) {
+          if (address.type != type) {
+            return false;
+          }
+          if (address.isLoopback) {
+            return false;
+          }
+          if (isWindows && address.isLinkLocal) {
+            return false;
+          }
+          return true;
+        });
+
+        return addresses.isNotEmpty;
+      })
+      .toList(growable: false);
+}
+
 Future<Iterable<NetworkInterface>> _mdnsNetworkInterfacesFactory(
   InternetAddressType type,
-) {
-  return NetworkInterface.list(
+) async {
+  final interfaces = await NetworkInterface.list(
     includeLinkLocal: !Platform.isWindows,
     type: type,
   );
+  return filterMdnsInterfaces(interfaces, type, isWindows: Platform.isWindows);
 }
 
 class MdnsScannerServiceImpl extends MdnsScannerService {
@@ -182,9 +254,7 @@ class MdnsScannerServiceImpl extends MdnsScannerService {
       await for (final IPAddressResourceRecord ip
           in iPAddressResourceRecordStream) {
         final ActiveHost activeHost = convertSrvToHostName(
-          internetAddress: InternetAddress.fromRawAddress(
-            ip.address.rawAddress,
-          ),
+          internetAddress: normalizeInternetAddress(ip.address),
           ptr: ptr,
           srv: srv,
           txt: txt,
