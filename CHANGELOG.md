@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.9
+Bug fixes and improvements.
+
 ## 6.0.8
 Fix for missing example tab.
 
