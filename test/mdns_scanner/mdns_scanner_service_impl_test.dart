@@ -1,4 +1,5 @@
 import 'dart:io' as dart_io;
+import 'dart:typed_data';
 
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/services/impls/mdns_scanner_service_impl.dart';
@@ -220,13 +221,25 @@ void main() {
         final filteredInterfaces = filterMdnsInterfaces(
           <universal_io.NetworkInterface>[
             _FakeNetworkInterface('lo0', 1, [
-              universal_io.InternetAddress.loopbackIPv4,
+              _FakeInterfaceAddress(
+                ipAddress: universal_io
+                    .InternetAddress
+                    .loopbackIPv4
+                    .address, // '127.0.0.1'
+                prefixLength: 8,
+              ),
             ]),
             _FakeNetworkInterface('vEthernet', 2, [
-              universal_io.InternetAddress('169.254.0.1'),
+              _FakeInterfaceAddress(ipAddress: '169.254.0.1', prefixLength: 16),
             ]),
             _FakeNetworkInterface('en0', 3, [
-              universal_io.InternetAddress('192.168.1.10'),
+              _FakeInterfaceAddress(
+                ipAddress: '192.168.1.10',
+                prefixLength: 24,
+                broadcast: universal_io.InternetAddress(
+                  '192.168.1.255',
+                ), // Optional broadcast
+              ),
             ]),
           ],
           dart_io.InternetAddressType.IPv4,
@@ -257,7 +270,50 @@ class _FakeNetworkInterface implements universal_io.NetworkInterface {
   final int index;
 
   @override
-  final List<universal_io.InternetAddress> addresses;
+  final List<universal_io.InterfaceAddress> addresses;
+}
+
+class _FakeInterfaceAddress implements universal_io.InterfaceAddress {
+  _FakeInterfaceAddress({
+    required String ipAddress,
+    required this.prefixLength,
+    this.broadcast,
+  }) : _realAddress = universal_io.InternetAddress(ipAddress);
+
+  // The actual backing instance that does the heavy lifting for InternetAddress
+  final universal_io.InternetAddress _realAddress;
+
+  // --- InterfaceAddress Properties ---
+  @override
+  final int prefixLength;
+
+  @override
+  final universal_io.InternetAddress? broadcast;
+
+  // --- InternetAddress Fall-through Properties & Methods ---
+  @override
+  String get address => _realAddress.address;
+
+  @override
+  String get host => _realAddress.host;
+
+  @override
+  universal_io.InternetAddressType get type => _realAddress.type;
+
+  @override
+  Uint8List get rawAddress => _realAddress.rawAddress;
+
+  @override
+  bool get isLinkLocal => _realAddress.isLinkLocal;
+
+  @override
+  bool get isLoopback => _realAddress.isLoopback;
+
+  @override
+  bool get isMulticast => _realAddress.isMulticast;
+
+  @override
+  Future<universal_io.InternetAddress> reverse() => _realAddress.reverse();
 }
 
 class _AddressLikeObject {
