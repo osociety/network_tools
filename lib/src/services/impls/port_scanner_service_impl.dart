@@ -27,7 +27,7 @@ class PortScannerServiceImpl extends PortScannerService {
     );
     if (address.isNotEmpty) {
       final String hostAddress = address[0].address;
-      return connectToPort(
+      return await connectToPort(
         activeHostsController: StreamController<ActiveHost>(),
         address: hostAddress,
         port: port,
@@ -291,7 +291,7 @@ class PortScannerServiceImpl extends PortScannerService {
 
         await Future.delayed(timeout + const Duration(milliseconds: 250));
 
-        return _connectToPort<T>(
+        return await _connectToPort<T>(
           address: address,
           port: port,
           timeout: timeout,

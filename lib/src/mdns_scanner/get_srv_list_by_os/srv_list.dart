@@ -4,7 +4,7 @@ import 'package:universal_io/io.dart';
 /// This class is common interface for executing functions on different os
 class SrvList {
   /// Will get the srv record in the local network.
-  static Future<List<String>?> getSrvRecordList() async {
+  static Future<List<String>?> getSrvRecordList() {
     if (Platform.isLinux) {
       return SrvListLinux.getSrvRecordList();
     }
@@ -16,6 +16,6 @@ class SrvList {
     // }
 
     // Get srv record list is not supported on this os
-    return [];
+    return Future.value([]);
   }
 }
