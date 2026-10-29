@@ -275,11 +275,11 @@ void main() {
     });
 
     test('ignores neighbor table entries outside the requested ids', () async {
-      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.99')]);
+      final helper = _FakeARPTableHelper([_arpEntry('192.0.2.99')]);
       final progress = <double>[];
       final hosts = await scannerWith(helper)
           .getAllSendablePingableDevices(
-            '127.0.0',
+            '192.0.2',
             hostIds: [1],
             progressCallback: progress.add,
           )
@@ -287,6 +287,22 @@ void main() {
 
       expect(hosts, isEmpty);
       expect(progress, isEmpty);
+    });
+
+    test('adds the scanning machine when it is inside the range', () async {
+      // Reproduces CI: the neighbor table holds other hosts, but none of the
+      // requested ids, and the local address is absent from the table.
+      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.99')]);
+      final hosts = await scannerWith(helper)
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            hostIds: [1],
+            timeoutInSeconds: 3,
+          )
+          .toList();
+
+      expect(hosts.single.address, '127.0.0.1');
+      expect(hosts.single.pingData, isNotNull);
     });
 
     test('reports full progress for a single-host range', () async {

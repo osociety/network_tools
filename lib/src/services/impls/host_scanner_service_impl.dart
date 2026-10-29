@@ -153,6 +153,40 @@ class HostScannerServiceImpl extends HostScannerService {
     );
   }
 
+  /// Host ids in [idsToScan] that belong to this machine.
+  ///
+  /// Linux and Windows do not list the local address in their own neighbor
+  /// table, so ARP discovery would otherwise drop the device the scan runs on.
+  Future<Set<int>> _localHostIds(String subnet, Iterable<int> idsToScan) async {
+    final Set<int> requested = idsToScan.toSet();
+    final Set<int> localIds = <int>{};
+    try {
+      final List<NetworkInterface> interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+        includeLinkLocal: true,
+        includeLoopback: true,
+      );
+      for (final NetworkInterface interface in interfaces) {
+        for (final InternetAddress address in interface.addresses) {
+          if (!address.address.startsWith('$subnet.')) {
+            continue;
+          }
+          final int? id = int.tryParse(address.address.split('.').last);
+          if (id != null && requested.contains(id)) {
+            localIds.add(id);
+          }
+        }
+      }
+    } catch (error, stackTrace) {
+      logger.fine(
+        'Unable to inspect local addresses for $subnet: $error',
+        error,
+        stackTrace,
+      );
+    }
+    return localIds;
+  }
+
   /// Primes the neighbor cache for [idsToScan] and returns the matching rows.
   Future<List<ARPData>> _readNeighborTable(
     String subnet,
@@ -186,28 +220,35 @@ class HostScannerServiceImpl extends HostScannerService {
     final Map<String, ARPData> byAddress = <String, ARPData>{
       for (final ARPData entry in table) entry.iPAddress: entry,
     };
+    // A machine is never listed in its own Linux and Windows neighbor table,
+    // so add it explicitly when it falls inside the requested range.
+    final Set<int> localIds = await _localHostIds(subnet, idsToScan);
     // Keep the requested order; hostIds are not necessarily sorted.
     final List<int> candidates = <int>[
       for (final int id in idsToScan)
-        if (byAddress.containsKey('$subnet.$id')) id,
+        if (byAddress.containsKey('$subnet.$id') || localIds.contains(id)) id,
     ];
     if (candidates.isEmpty) {
       return;
     }
 
-    final Stream<ConcurrentResult<SendableActiveHost>> results =
-        mapConcurrently<int, SendableActiveHost>(
-          candidates,
-          (int id) => _verifyARPHost(
-            '$subnet.$id',
-            byAddress['$subnet.$id']!,
-            timeoutInSeconds,
-          ),
-          maxConcurrency: hostLookupConcurrency,
-        );
+    final Stream<ConcurrentResult<SendableActiveHost?>> results =
+        mapConcurrently<int, SendableActiveHost?>(candidates, (int id) {
+          final String host = '$subnet.$id';
+          final ARPData? arpData = byAddress[host];
+          if (arpData != null) {
+            return _verifyARPHost(host, arpData, timeoutInSeconds);
+          }
+          return getHostFromPing(
+            activeHostsController: null,
+            host: host,
+            timeoutInSeconds: timeoutInSeconds,
+          );
+        }, maxConcurrency: hostLookupConcurrency);
 
     if (!resultsInAddressAscendingOrder) {
-      await for (final ConcurrentResult<SendableActiveHost> result in results) {
+      await for (final ConcurrentResult<SendableActiveHost?> result
+          in results) {
         final SendableActiveHost? host = result.value;
         if (host != null) {
           yield host;
@@ -220,7 +261,7 @@ class HostScannerServiceImpl extends HostScannerService {
     // been emitted so the ascending-order contract is preserved.
     final Map<int, SendableActiveHost?> pending = <int, SendableActiveHost?>{};
     int nextIndex = 0;
-    await for (final ConcurrentResult<SendableActiveHost> result in results) {
+    await for (final ConcurrentResult<SendableActiveHost?> result in results) {
       pending[result.index] = result.value;
       while (pending.containsKey(nextIndex)) {
         final SendableActiveHost? host = pending.remove(nextIndex);
