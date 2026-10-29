@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:isolate';
-import 'dart:math';
 
 import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/concurrency.dart';
 import 'package:universal_io/io.dart';
 
 /// Scans open port for a target Address or domain.
@@ -28,7 +28,6 @@ class PortScannerServiceImpl extends PortScannerService {
     if (address.isNotEmpty) {
       final String hostAddress = address[0].address;
       return await connectToPort(
-        activeHostsController: StreamController<ActiveHost>(),
         address: hostAddress,
         port: port,
         timeout: timeout,
@@ -42,8 +41,9 @@ class PortScannerServiceImpl extends PortScannerService {
   ///
   /// Progress can be retrieved by [progressCallback].
   /// Tries connecting ports until [timeout] is reached for each port.
-  /// If [resultsInAddressAscendingOrder] is false, results may be returned faster but not in ascending order and without [progressCallback].
-  /// If [async] is true, scanning is performed in isolates for better performance on large port lists.
+  /// If [resultsInAddressAscendingOrder] is false, results may be returned faster but not in ascending order.
+  /// If [async] is true, scanning is performed in an isolate.
+  /// [maxConcurrency] limits how many ports are probed at the same time.
   @override
   Stream<ActiveHost> customDiscover(
     String target, {
@@ -52,6 +52,7 @@ class PortScannerServiceImpl extends PortScannerService {
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
     bool async = false,
+    int maxConcurrency = PortScannerService.defaultMaxConcurrency,
   }) async* {
     if (!async) {
       // If async is false then run on main isolate
@@ -61,39 +62,40 @@ class PortScannerServiceImpl extends PortScannerService {
         progressCallback: progressCallback,
         timeout: timeout,
         resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+        maxConcurrency: maxConcurrency,
       );
     } else {
-      const int scanRangeForIsolate = 1000;
-      for (int i = 0; i <= portList.length; i += scanRangeForIsolate + 1) {
-        final limit = min(i + scanRangeForIsolate, portList.length);
-        final receivePort = ReceivePort();
-        final isolate = await Isolate.spawn(
-          _startSearchingPorts,
-          receivePort.sendPort,
-        );
+      final receivePort = ReceivePort();
+      final isolate = await Isolate.spawn(
+        _startSearchingPorts,
+        receivePort.sendPort,
+      );
 
+      try {
         await for (final message in receivePort) {
           if (message is SendPort) {
             message.send(<dynamic>[
               target,
-              portList.sublist(i, limit),
+              portList,
               timeout,
               resultsInAddressAscendingOrder.toString(),
-              dbDirectory,
-              enableDebugging.toString(),
+              maxConcurrency,
             ]);
           } else if (message is SendableActiveHost) {
-            progressCallback?.call(i * 100 / (portList.length));
-            final activeHostFound = ActiveHost.fromSendableActiveHost(
+            // Resolution is lazy on ActiveHost, so result creation stays cheap.
+            yield ActiveHost.fromSendableActiveHost(
               sendableActiveHost: message,
             );
-            await activeHostFound.resolveInfo();
-            yield activeHostFound;
+          } else if (message is List && message.first == 'progress') {
+            progressCallback?.call((message[1] as num).toDouble());
           } else if (message is String && message == 'Done') {
-            isolate.kill();
             break;
           }
         }
+      } finally {
+        // Also runs when the consumer cancels the stream early.
+        isolate.kill();
+        receivePort.close();
       }
     }
   }
@@ -109,18 +111,22 @@ class PortScannerServiceImpl extends PortScannerService {
         final List<int> portList = message[1] as List<int>;
         final Duration timeout = message[2] as Duration;
         final bool resultsInAddressAscendingOrder = message[3] == "true";
-        final String dbDirectory = message[4] as String;
-        final bool enableDebugging = message[5] == "true";
-        // configure again
-        await configureNetworkTools(
-          dbDirectory,
-          enableDebugging: enableDebugging,
-        );
+        final int maxConcurrency = message[4] as int;
+
+        double lastProgress = -1;
         final openPortsForTarget = _customDiscover<SendableActiveHost>(
           target,
           portList: portList,
           timeout: timeout,
           resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+          maxConcurrency: maxConcurrency,
+          progressCallback: (double progress) {
+            // Avoid flooding the main isolate with one message per port.
+            if ((progress - lastProgress).abs() >= 1) {
+              lastProgress = progress;
+              sendPort.send(<dynamic>['progress', progress]);
+            }
+          },
         );
 
         await for (final SendableActiveHost activeHostFound
@@ -138,46 +144,58 @@ class PortScannerServiceImpl extends PortScannerService {
     ProgressCallback? progressCallback,
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
+    int maxConcurrency = PortScannerService.defaultMaxConcurrency,
   }) async* {
     final List<InternetAddress> address = await InternetAddress.lookup(
       target,
       type: InternetAddressType.IPv4,
     );
-    if (address.isNotEmpty) {
-      final String hostAddress = address[0].address;
-      final List<Future<T?>> openPortList = [];
-      final StreamController<T> activeHostsController = StreamController<T>();
-
-      for (int k = 0; k < portList.length; k++) {
-        if (portList[k] >= 0 && portList[k] <= 65535) {
-          openPortList.add(
-            _connectToPort<T>(
-              address: hostAddress,
-              port: portList[k],
-              timeout: timeout,
-              activeHostsController: activeHostsController,
-            ),
-          );
-        }
-      }
-
-      if (!resultsInAddressAscendingOrder) {
-        yield* activeHostsController.stream;
-      }
-
-      int counter = 0;
-
-      for (final Future<T?> openPortFuture in openPortList) {
-        final T? openPort = await openPortFuture;
-        if (openPort == null) {
-          continue;
-        }
-        progressCallback?.call(counter * 100 / portList.length);
-        yield openPort;
-        counter++;
-      }
-    } else {
+    if (address.isEmpty) {
       throw 'Name can not be resolved';
+    }
+    final String hostAddress = address[0].address;
+    final List<int> ports = portList
+        .where((int port) => port >= 0 && port <= 65535)
+        .toList();
+    if (ports.isEmpty) {
+      return;
+    }
+
+    // A bounded pool keeps the number of open sockets low. Without it, a full
+    // 0-65535 scan opens tens of thousands of sockets at once, hits the
+    // file-descriptor limit and falls back to slow retries.
+    final Stream<ConcurrentResult<T>> results = mapConcurrently<int, T>(
+      ports,
+      (int port) =>
+          _connectToPort<T>(address: hostAddress, port: port, timeout: timeout),
+      maxConcurrency: maxConcurrency,
+      onCompleted: (int completed) =>
+          progressCallback?.call(completed * 100 / ports.length),
+    );
+
+    if (!resultsInAddressAscendingOrder) {
+      await for (final ConcurrentResult<T> result in results) {
+        final T? value = result.value;
+        if (value != null) {
+          yield value;
+        }
+      }
+      return;
+    }
+
+    // Results complete out of order; buffer them and emit by port index so the
+    // ascending-order contract is preserved while still running in parallel.
+    final Map<int, T?> pending = <int, T?>{};
+    int nextIndex = 0;
+    await for (final ConcurrentResult<T> result in results) {
+      pending[result.index] = result.value;
+      while (pending.containsKey(nextIndex)) {
+        final T? value = pending.remove(nextIndex);
+        nextIndex++;
+        if (value != null) {
+          yield value;
+        }
+      }
     }
   }
 
@@ -185,8 +203,9 @@ class PortScannerServiceImpl extends PortScannerService {
   ///
   /// Progress can be retrieved by [progressCallback].
   /// Tries connecting ports until [timeout] is reached for each port.
-  /// If [resultsInAddressAscendingOrder] is false, results may be returned faster but not in ascending order and without [progressCallback].
-  /// If [async] is true, scanning is performed in isolates for better performance on large port ranges.
+  /// If [resultsInAddressAscendingOrder] is false, results may be returned faster but not in ascending order.
+  /// If [async] is true, scanning is performed in an isolate.
+  /// [maxConcurrency] limits how many ports are probed at the same time.
   @override
   Stream<ActiveHost> scanPortsForSingleDevice(
     String target, {
@@ -196,6 +215,7 @@ class PortScannerServiceImpl extends PortScannerService {
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
     bool async = false,
+    int maxConcurrency = PortScannerService.defaultMaxConcurrency,
   }) async* {
     if (startPort < 0 ||
         endPort < 0 ||
@@ -219,6 +239,7 @@ class PortScannerServiceImpl extends PortScannerService {
       timeout: timeout,
       resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
       async: async,
+      maxConcurrency: maxConcurrency,
     );
   }
 
@@ -230,7 +251,7 @@ class PortScannerServiceImpl extends PortScannerService {
     required String address,
     required int port,
     required Duration timeout,
-    required StreamController<ActiveHost> activeHostsController,
+    StreamController<ActiveHost>? activeHostsController,
     int recursionCount = 0,
   }) async {
     return await _connectToPort<ActiveHost>(
@@ -245,7 +266,7 @@ class PortScannerServiceImpl extends PortScannerService {
     required String address,
     required int port,
     required Duration timeout,
-    required StreamController<T> activeHostsController,
+    StreamController<T>? activeHostsController,
     int recursionCount = 0,
   }) async {
     try {
@@ -257,14 +278,18 @@ class PortScannerServiceImpl extends PortScannerService {
           address,
           openPorts: [OpenPort(port)],
         );
-        activeHostsController.add(sendableActiveHost as T);
+        if (activeHostsController != null && !activeHostsController.isClosed) {
+          activeHostsController.add(sendableActiveHost as T);
+        }
         return sendableActiveHost as T;
       }
       final ActiveHost activeHost = ActiveHost.buildWithAddress(
         address: address,
         openPorts: [OpenPort(port)],
       );
-      activeHostsController.add(activeHost as T);
+      if (activeHostsController != null && !activeHostsController.isClosed) {
+        activeHostsController.add(activeHost as T);
+      }
       return activeHost as T;
     } catch (e) {
       if (e is! SocketException) {
@@ -316,6 +341,9 @@ class PortScannerServiceImpl extends PortScannerService {
     113,
     10060,
     10061,
+    // WSAENOTCONN: Windows reports this when a pending connect is destroyed on
+    // timeout, so the port never opened.
+    10057,
     1225,
   ];
 }

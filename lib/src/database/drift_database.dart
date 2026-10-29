@@ -18,6 +18,21 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 2;
 
+  /// Creates lookup indexes for the repository queries.
+  ///
+  /// Without them every MAC vendor lookup scans the full ~50k row vendor table
+  /// and every ARP lookup scans the whole ARP table.
+  Future<void> ensureIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_vendor_mac_prefix '
+      'ON vendor_drift (mac_prefix)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_arp_ip_address '
+      'ON a_r_p_drift (i_p_address)',
+    );
+  }
+
   static QueryExecutor _openConnection() {
     return NativeDatabase.createInBackground(
       File(path.join(dbDirectory, 'network_tools_v1')),

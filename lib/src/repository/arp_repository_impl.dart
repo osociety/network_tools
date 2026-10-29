@@ -19,29 +19,44 @@ class ARPRepository implements Repository<ARPData> {
   @override
   Future<void> build() async {
     final database = await _database.open();
-    final oldEntries = await this.entries();
-    if (oldEntries.isNotEmpty) {
+    // Counting is much cheaper than loading (and sorting) every entry.
+    final row = await database!
+        .customSelect('SELECT COUNT(*) AS arp_count FROM a_r_p_drift')
+        .getSingle();
+    if (row.read<int>('arp_count') > 0) {
       arpDriftLogger.fine("Skipping ARP table build, old entries found");
       return;
     }
     arpDriftLogger.fine("Building ARP table...");
-    final entries = (await ARPTableHelper().buildTable())
-        .map(
-          (e) => ARPDriftCompanion.insert(
-            iPAddress: e.iPAddress,
-            macAddress: e.macAddress,
-            hostname: e.hostname,
-            interfaceName: e.interfaceName,
-            interfaceType: e.interfaceType,
-            createdAt: DateTime.now(),
-          ),
-        )
-        .toList();
-    if (entries.isNotEmpty) {
-      await database!.batch((batch) {
-        batch.insertAll(database.aRPDrift, entries);
-      });
-      arpDriftLogger.fine("ARP table built with ${entries.length} entries");
+    try {
+      // Resolving every entry's host name here used to block startup for
+      // seconds on macOS. Host names are resolved per discovered host by the
+      // scanner instead, so only the numeric table is needed here.
+      final entries = (await ARPTableHelper().buildNumericTable())
+          .map(
+            (e) => ARPDriftCompanion.insert(
+              iPAddress: e.iPAddress,
+              macAddress: e.macAddress,
+              hostname: e.hostname,
+              interfaceName: e.interfaceName,
+              interfaceType: e.interfaceType,
+              createdAt: DateTime.now(),
+            ),
+          )
+          .toList();
+      if (entries.isNotEmpty) {
+        await database.batch((batch) {
+          batch.insertAll(database.aRPDrift, entries);
+        });
+        arpDriftLogger.fine("ARP table built with ${entries.length} entries");
+      }
+    } catch (error, stackTrace) {
+      arpDriftLogger.warning(
+        "Failed to build ARP table, MAC addresses and vendor names will be "
+        "unavailable: $error",
+        error,
+        stackTrace,
+      );
     }
   }
 

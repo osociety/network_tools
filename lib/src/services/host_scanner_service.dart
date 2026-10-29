@@ -1,6 +1,7 @@
 import 'package:network_tools/src/models/active_host.dart';
 import 'package:network_tools/src/models/callbacks.dart';
 import 'package:network_tools/src/models/sendable_active_host.dart';
+import 'package:network_tools/src/services/port_scanner_service.dart';
 
 /// Scans for all hosts in a subnet.
 abstract class HostScannerService {
@@ -62,5 +63,6 @@ abstract class HostScannerService {
     Duration timeout = const Duration(milliseconds: 2000),
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
+    int maxConcurrency = PortScannerService.defaultMaxConcurrency,
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/injection.dart';
@@ -14,6 +16,7 @@ class ActiveHost {
     String? macAddress,
     PingResponse? pingData,
     MdnsInfo? mdnsInfoVar,
+    String? hostName,
   }) {
     _macAddress = macAddress;
     final String tempAddress = internetAddress.address;
@@ -31,28 +34,20 @@ class ActiveHost {
     } else {
       hostId = '-1';
     }
-    pingData ??= getPingData(tempAddress);
     _pingData = pingData;
 
-    hostName = setHostInfo();
-
-    // For some reason when internetAddress.host get called before the reverse
-    // there is weired value
+    // Resolution (reverse DNS, ARP and vendor lookups) is intentionally lazy so
+    // that discovery returns hosts as fast as the network scan allows. The
+    // futures below are started on first access.
     weirdHostName = internetAddress.host;
 
-    if (mdnsInfoVar != null) {
-      mdnsInfo = Future.value(mdnsInfoVar);
-    } else {
-      mdnsInfo = setMdnsInfo();
+    if (_isUsefulName(hostName)) {
+      _hostName = Future.value(hostName);
     }
 
-    deviceName = setDeviceName();
-
-    // fetch entry from in memory arp table
-    arpData = setARPData();
-
-    // fetch vendor from in memory vendor table
-    vendor = setVendor();
+    if (mdnsInfoVar != null) {
+      _mdnsInfo = Future.value(mdnsInfoVar);
+    }
   }
   factory ActiveHost.buildWithAddress({
     required String address,
@@ -89,10 +84,11 @@ class ActiveHost {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
-      macAddress: macAddress,
+      macAddress: macAddress ?? sendableActiveHost.macAddress,
       openPorts: sendableActiveHost.openPorts,
       pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
+      hostName: sendableActiveHost.hostName,
     );
   }
 
@@ -105,20 +101,26 @@ class ActiveHost {
   late String hostId;
 
   /// Host name of the device, not to be confused with deviceName which does
-  /// not follow any internet protocol property
-  late Future<String?> hostName;
+  /// not follow any internet protocol property.
+  ///
+  /// The reverse DNS lookup starts lazily on first access.
+  Future<String?>? _hostName;
+  Future<String?> get hostName => _hostName ??= setHostInfo();
   late String weirdHostName;
   late final PingResponse? _pingData;
 
   /// Mdns information of this device
-  late Future<MdnsInfo?> mdnsInfo;
+  Future<MdnsInfo?>? _mdnsInfo;
+  Future<MdnsInfo?> get mdnsInfo => _mdnsInfo ??= setMdnsInfo();
 
   /// Resolve ARP data for this host.
   /// only supported on Linux, Macos and Windows otherwise null
-  late Future<ARPData?> arpData;
+  Future<ARPData?>? _arpData;
+  Future<ARPData?> get arpData => _arpData ??= setARPData();
 
   /// Only works if arpData is not null and have valid mac address.
-  late Future<Vendor?> vendor;
+  Future<Vendor?>? _vendor;
+  Future<Vendor?> get vendor => _vendor ??= setVendor();
 
   String? _macAddress;
   Future<String?> getMacAddress() async =>
@@ -133,7 +135,8 @@ class ActiveHost {
   /// value of [generic].
   /// This value **can change after the object got created** since getting
   /// host name of device is running async function.
-  late Future<String> deviceName;
+  Future<String>? _deviceName;
+  Future<String> get deviceName => _deviceName ??= setDeviceName();
   PingResponse? get pingData => _pingData;
   Duration? get responseTime {
     final event = _pingData;
@@ -181,6 +184,9 @@ class ActiveHost {
     }
   }
 
+  /// Maximum time to wait for a reverse DNS answer before giving up.
+  static const Duration reverseLookupTimeout = Duration(seconds: 2);
+
   /// Try to find the host name of this device, if not exist host name will
   /// stay null
   Future<String?> setHostInfo() async {
@@ -193,8 +199,18 @@ class ActiveHost {
     // https://github.com/flutter/flutter/issues/96755
 
     try {
-      internetAddress = await internetAddress.reverse();
-      return internetAddress.host;
+      final InternetAddress resolved = await internetAddress.reverse().timeout(
+        reverseLookupTimeout,
+      );
+      final String host = resolved.host;
+      // Some platforms return the IP itself when no PTR record exists.
+      if (host.isEmpty || host == address) {
+        return null;
+      }
+      internetAddress = resolved;
+      return host;
+    } on TimeoutException {
+      logger.fine('Reverse DNS lookup timed out for $address');
     } catch (e) {
       if (e is SocketException &&
           e.osError != null &&
@@ -240,15 +256,27 @@ class ActiveHost {
   /// Will try couple of names, if all are null will just return [generic]
   Future<String> setDeviceName() async {
     final String? hostNameTemp = await hostName;
-
-    if (hostNameTemp != null) {
-      return hostNameTemp;
+    if (_isUsefulName(hostNameTemp)) {
+      return hostNameTemp!;
     }
     final MdnsInfo? mdnsTemp = await mdnsInfo;
-    if (mdnsTemp != null) {
-      return mdnsTemp.getOnlyTheStartOfMdnsName();
+    final String? mdnsName = mdnsTemp?.getOnlyTheStartOfMdnsName();
+    if (_isUsefulName(mdnsName)) {
+      return mdnsName!;
+    }
+    // ARP tables on Linux and macOS usually contain the peer host name.
+    final String? arpHostName = (await arpData)?.hostname;
+    if (_isUsefulName(arpHostName)) {
+      return arpHostName!;
     }
     return generic;
+  }
+
+  bool _isUsefulName(String? name) {
+    if (name == null || name.isEmpty || name == '?') {
+      return false;
+    }
+    return name != address;
   }
 
   @override

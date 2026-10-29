@@ -1,6 +1,5 @@
 # See https://dart.dev/tools/pub/publishing#what-files-are-published
 
-**/example
 **/doc/api/
 .dart_tool/
 .flutter-plugins
@@ -11,7 +10,9 @@
 **/coverage/
 **/build/
 **/test/
+**/tool/
 **/donation/
+**/.DS_Store
+/network_tools
 *.sh
 *.csv
-

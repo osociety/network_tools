@@ -15,6 +15,11 @@ abstract class PortScannerService {
   static const int defaultStartPort = 1;
   static const int defaultEndPort = 1024;
 
+  /// Maximum number of sockets opened at the same time while scanning ports.
+  /// Keeping this bounded avoids running into file-descriptor limits, which
+  /// makes large scans both faster and more reliable.
+  static const int defaultMaxConcurrency = 128;
+
   static const List<int> commonPorts = [
     20,
     21,
@@ -54,7 +59,8 @@ abstract class PortScannerService {
   /// retrieved by [progressCallback]
   /// Tries connecting ports before until [timeout] reached.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
-  /// ascending order and without [progressCallback].
+  /// ascending order.
+  /// [maxConcurrency] limits how many ports are probed at the same time.
   Stream<ActiveHost> customDiscover(
     String target, {
     List<int> portList = commonPorts,
@@ -62,11 +68,15 @@ abstract class PortScannerService {
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
     bool async = false,
+    int maxConcurrency = defaultMaxConcurrency,
   });
 
   /// Scans port from [startPort] to [endPort] of [target]. Progress can be
   /// retrieved by [progressCallback]
   /// Tries connecting ports before until [timeout] reached.
+  /// [resultsInAddressAscendingOrder] = false will return results faster but not in
+  /// ascending order.
+  /// [maxConcurrency] limits how many ports are probed at the same time.
   Stream<ActiveHost> scanPortsForSingleDevice(
     String target, {
     int startPort = defaultStartPort,
@@ -75,13 +85,18 @@ abstract class PortScannerService {
     Duration timeout = const Duration(milliseconds: 2000),
     bool resultsInAddressAscendingOrder = true,
     bool async = false,
+    int maxConcurrency = defaultMaxConcurrency,
   });
 
+  /// Connects to [port] on [address].
+  ///
+  /// [activeHostsController] is optional and only used by callers that want the
+  /// result pushed into a stream as well.
   Future<ActiveHost?> connectToPort({
     required String address,
     required int port,
     required Duration timeout,
-    required StreamController<ActiveHost> activeHostsController,
+    StreamController<ActiveHost>? activeHostsController,
     int recursionCount = 0,
   });
 }

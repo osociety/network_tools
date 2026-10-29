@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/database/database_service.dart';
@@ -17,6 +18,9 @@ class TestDatabaseService extends DatabaseService<AppDatabase> {
 }
 
 void main() {
+  // Each test gets its own in-memory database, which drift flags by default.
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+
   late AppDatabase realDb;
   late VendorRepository repository;
 

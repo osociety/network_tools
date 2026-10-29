@@ -18,31 +18,43 @@ class VendorRepository implements Repository<Vendor> {
   @override
   Future<void> build() async {
     final database = await _database.open();
-    final oldEntries = await this.entries();
-    if (oldEntries.isNotEmpty) {
+    // Counting is much cheaper than loading (and sorting) every MAC prefix.
+    final row = await database!
+        .customSelect('SELECT COUNT(*) AS vendor_count FROM vendor_drift')
+        .getSingle();
+    if (row.read<int>('vendor_count') > 0) {
       vendorDriftLogger.fine(
         "Skipping Mac Vendor table build, old entries found",
       );
       return;
     }
     vendorDriftLogger.fine("Building Vendor table...");
-    final entries = (await VendorTable.fetchVendorTable())
-        .map(
-          (e) => VendorDriftCompanion.insert(
-            macPrefix: e.macPrefix,
-            vendorName: e.vendorName,
-            private: e.private,
-            blockType: e.blockType,
-            lastUpdate: e.lastUpdate,
-          ),
-        )
-        .toList();
-    if (entries.isNotEmpty) {
-      await database!.batch((batch) {
-        batch.insertAll(database.vendorDrift, entries);
-      });
-      vendorDriftLogger.fine(
-        "Mac Vendor table built with ${entries.length} entries",
+    try {
+      final entries = (await VendorTable.fetchVendorTable())
+          .map(
+            (e) => VendorDriftCompanion.insert(
+              macPrefix: e.macPrefix,
+              vendorName: e.vendorName,
+              private: e.private,
+              blockType: e.blockType,
+              lastUpdate: e.lastUpdate,
+            ),
+          )
+          .toList();
+      if (entries.isNotEmpty) {
+        await database.batch((batch) {
+          batch.insertAll(database.vendorDrift, entries);
+        });
+        vendorDriftLogger.fine(
+          "Mac Vendor table built with ${entries.length} entries",
+        );
+      }
+    } catch (error, stackTrace) {
+      vendorDriftLogger.warning(
+        "Failed to build Mac Vendor table, vendor names will be unavailable: "
+        "$error",
+        error,
+        stackTrace,
       );
     }
   }
