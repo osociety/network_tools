@@ -1,8 +1,12 @@
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:network_tools/src/database/drift_database.dart';
 import 'package:test/test.dart';
 
 void main() {
+  // Each test gets its own in-memory database, which drift flags by default.
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+
   late AppDatabase database;
 
   setUp(() {

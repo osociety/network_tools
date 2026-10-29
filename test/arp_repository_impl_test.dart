@@ -2,7 +2,7 @@
 
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Batch;
+import 'package:drift/drift.dart' show Batch, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:network_tools/src/database/database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
@@ -26,6 +26,9 @@ class _FailingBatchDatabase extends AppDatabase {
 }
 
 void main() {
+  // Each test gets its own in-memory database, which drift flags by default.
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+
   late AppDatabase realDb;
   late ARPRepository repository;
 
