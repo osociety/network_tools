@@ -56,6 +56,36 @@ void main() {
       );
     });
 
+    test('delivers results while the scan is still running', () async {
+      // The open port sits at index 0, so it resolves immediately while the
+      // remaining 20k ports are still being scanned.
+      final ports = <int>[
+        openPorts.first,
+        for (int port = 1; port <= 20000; port++) port,
+      ];
+
+      final watch = Stopwatch()..start();
+      int? firstResultAt;
+      int? firstResultPort;
+      var results = 0;
+      await for (final ActiveHost host
+          in PortScannerService.instance.customDiscover(
+            InternetAddress.loopbackIPv4.address,
+            portList: ports,
+            timeout: const Duration(milliseconds: 100),
+          )) {
+        firstResultAt ??= watch.elapsedMilliseconds;
+        firstResultPort ??= host.openPorts.single.port;
+        results++;
+      }
+      final completedAt = watch.elapsedMilliseconds;
+
+      expect(results, greaterThan(0));
+      expect(firstResultPort, openPorts.first);
+      expect(firstResultAt, isNotNull);
+      expect(firstResultAt, lessThan(completedAt ~/ 2));
+    });
+
     test('unordered mode still closes the stream', () async {
       final hosts = await PortScannerService.instance
           .customDiscover(

@@ -123,7 +123,14 @@ a separate isolate so the UI stays responsive:
 Scans open at most `maxConcurrency` sockets at once (128 by default), so large
 ranges complete quickly without hitting file-descriptor limits. Raise it for
 more throughput or lower it to be gentler on the network. Pass `async: true` to
-run the scan in an isolate:
+run the scan in an isolate.
+
+Results are streamed as each port resolves, so you can show open ports before
+the scan ends. In the default ordered mode a later result waits until every
+earlier port has resolved; pass `resultsInAddressAscendingOrder: false` when
+you want the earliest possible delivery and do not need a stable order.
+`maxConcurrency` also controls how soon results for later ports can appear on
+high-latency or filtered networks:
 
 ```dart
   await for (final ActiveHost host in PortScannerService.instance.scanPortsForSingleDevice(
