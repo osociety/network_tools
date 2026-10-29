@@ -1,5 +1,13 @@
 # Change Log
 
+## 6.0.11
+1. MAC vendor and ARP table failures are now non-fatal: vendor CSV download/parse errors are logged and skipped, ARP command errors no longer abort host discovery, and MAC prefixes are normalized before lookup.
+2. Faster scans: host details (hostname, MAC vendor, mDNS) resolve lazily, port scans use bounded concurrency (`maxConcurrency`, default 128), and subnet scans run in a single isolate.
+3. Added database indexes for vendor and ARP lookups.
+4. README updated with the current API, a working example (`example/main.dart`), and corrected Vernet repository and support/donate links.
+5. Improved hostname and MAC vendor resolution for `vernet` issues #119 and #121.
+6. Added regression tests, raising line coverage to 90%.
+
 ## 6.0.10
 Bug fixes and improvements.
 
