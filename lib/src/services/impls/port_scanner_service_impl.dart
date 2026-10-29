@@ -341,6 +341,9 @@ class PortScannerServiceImpl extends PortScannerService {
     113,
     10060,
     10061,
+    // WSAENOTCONN: Windows reports this when a pending connect is destroyed on
+    // timeout, so the port never opened.
+    10057,
     1225,
   ];
 }
