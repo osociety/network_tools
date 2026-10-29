@@ -1,6 +1,6 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 6.0.10
+version: 6.0.11
 issue_tracker: https://github.com/osociety/network_tools/issues
 repository: https://github.com/osociety/network_tools
 example: example/main.dart
@@ -17,7 +17,7 @@ topics:
 
 funding:
   - https://liberapay.com/OpenSociety/donate
-  - https://ko-fi.com/fs0c13ty
+  - https://ko-fi.com/op3nsoc13ty
   
 dependencies:
   # A dart csv to list converter.

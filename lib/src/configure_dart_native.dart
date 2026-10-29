@@ -14,10 +14,16 @@ import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart'
 ///
 /// Sets up the database directory, enables debugging if specified, and initializes
 /// all required service implementations and vendor tables for network operations.
+///
+/// [buildVendorTable] should stay `false` in worker isolates. The vendor table
+/// can trigger a slow first-use download, vendor lookups happen in the isolate
+/// that created the host objects, and host discovery only needs the ARP
+/// repository.
 Future<void> configureNetworkTools(
   String dbDirectory, {
   bool enableDebugging = false,
   bool rebuildData = false,
+  bool buildVendorTable = true,
 }) async {
   final logger = Logger('configure_network_tools');
   packages_page.enableDebugging = enableDebugging;
@@ -45,15 +51,20 @@ Future<void> configureNetworkTools(
   PortScannerServiceImpl();
   MdnsScannerServiceImpl();
 
-  await initializeNetworkTools(rebuildData);
+  await initializeNetworkTools(rebuildData, buildVendorTable: buildVendorTable);
 }
 
 /// Initializes the ARP table and vendor table map for network operations.
-Future<void> initializeNetworkTools(bool rebuildData) async {
+Future<void> initializeNetworkTools(
+  bool rebuildData, {
+  bool buildVendorTable = true,
+}) async {
   configureDependencies(Env.prod);
   if (rebuildData) {
     await getIt<Repository<ARPData>>().clear();
   }
   await getIt<Repository<ARPData>>().build();
-  await getIt<Repository<Vendor>>().build();
+  if (buildVendorTable) {
+    await getIt<Repository<Vendor>>().build();
+  }
 }

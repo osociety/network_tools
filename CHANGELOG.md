@@ -1,5 +1,17 @@
 # Change Log
 
+## 6.0.11
+1. Much faster host discovery on Linux, macOS and Windows: the scanner primes the neighbour cache with UDP and reads the numeric ARP table once (`arp -an`, `/proc/net/arp`, numeric `arp -a`) instead of spawning a `ping` process per address. Hosts that ignore ICMP are still found, the device the scan runs on is included when it falls in the range, broadcast and multicast MAC rows are filtered out, and mobile platforms or non-local subnets fall back to the ICMP sweep.
+2. Host names now resolve concurrently for the discovered hosts (250 ms budget during the scan, plus a lazy retry on first access) instead of relying on the serial reverse lookups `arp -a` performs. Networks without reverse DNS return no name, and `deviceName` falls back to mDNS, the ARP entry, then `Generic Device`.
+3. `getAllPingableDevicesAsync` no longer builds the vendor table inside its isolate, removing a multi-second first-use vendor CSV download from the start of a scan. `configureNetworkTools` gained a `buildVendorTable` option for worker isolates.
+4. Scan progress now reports 100 when discovery completes, including on the async API.
+5. MAC vendor and ARP table failures are non-fatal: vendor CSV download/parse errors are logged and skipped, ARP command errors no longer abort host discovery, and MAC prefixes are normalized before lookup.
+6. Faster scans: host details (hostname, MAC vendor, mDNS) resolve lazily, port scans use bounded concurrency (`maxConcurrency`, default 128), and subnet scans run in a single isolate.
+7. Added database indexes for vendor and ARP lookups.
+8. README updated with the current API, a working example (`example/main.dart`), the discovery and hostname behavior, mobile permission notes, and corrected Vernet repository and support/donate links.
+9. Improved hostname and MAC vendor resolution for `vernet` issues #119 and #121.
+10. Added regression tests, raising line coverage to 92%.
+
 ## 6.0.10
 Bug fixes and improvements.
 

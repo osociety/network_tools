@@ -1,5 +1,8 @@
 // dart
 
+import 'dart:async';
+
+import 'package:drift/drift.dart' show Batch, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:network_tools/src/database/database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
@@ -14,7 +17,18 @@ class TestDatabaseService extends DatabaseService<AppDatabase> {
   Future<AppDatabase?> open() async => db;
 }
 
+class _FailingBatchDatabase extends AppDatabase {
+  _FailingBatchDatabase() : super(NativeDatabase.memory());
+
+  @override
+  Future<void> batch(FutureOr<void> Function(Batch) action) =>
+      throw StateError('batch failed');
+}
+
 void main() {
+  // Each test gets its own in-memory database, which drift flags by default.
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+
   late AppDatabase realDb;
   late ARPRepository repository;
 
@@ -129,6 +143,25 @@ void main() {
     test('clear returns false if no entries', () async {
       final result = await repository.clear();
       expect(result, isFalse);
+    });
+
+    test('build tolerates batch insert failures', () async {
+      final db = _FailingBatchDatabase();
+      final repo = ARPRepository(TestDatabaseService(db));
+
+      await expectLater(repo.build(), completes);
+
+      await db.close();
+    });
+
+    test('close closes the underlying database', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final repo = ARPRepository(TestDatabaseService(db));
+
+      await repo.close();
+
+      // Closing an already closed database must stay a no-op.
+      await expectLater(db.close(), completes);
     });
   });
 }
