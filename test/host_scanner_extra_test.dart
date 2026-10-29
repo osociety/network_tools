@@ -191,7 +191,7 @@ void main() {
         expect(hosts.map((h) => h.address), contains('127.0.0.1'));
         expect(progress, isNotEmpty);
       } finally {
-        tempDirectory.deleteSync(recursive: true);
+        await _deleteTempDirectory(tempDirectory);
       }
     });
   });
@@ -263,4 +263,18 @@ void main() {
       );
     });
   });
+}
+
+/// The scan isolate opens the database inside the temporary directory, and
+/// Windows keeps that file locked until the killed isolate is fully gone.
+Future<void> _deleteTempDirectory(Directory directory) async {
+  for (var attempt = 0; attempt < 30; attempt++) {
+    try {
+      await directory.delete(recursive: true);
+      return;
+    } on FileSystemException {
+      if (attempt == 29) return;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+  }
 }
