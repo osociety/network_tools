@@ -12,5 +12,6 @@
 **/test/
 **/donation/
 **/.DS_Store
+/network_tools
 *.sh
 *.csv
