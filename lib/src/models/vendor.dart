@@ -14,12 +14,16 @@ class Vendor {
   });
 
   factory Vendor.fromCSVField(List<String> csvField) {
+    String fieldAt(int index) =>
+        index < csvField.length ? csvField[index].trim() : '';
     return Vendor(
-      macPrefix: csvField[0].split(":").join(),
-      vendorName: csvField[1],
-      private: csvField[2],
-      blockType: csvField[3],
-      lastUpdate: csvField[4],
+      macPrefix: csvField[0]
+          .replaceAll(RegExp('[^0-9a-fA-F]'), '')
+          .toUpperCase(),
+      vendorName: fieldAt(1),
+      private: fieldAt(2),
+      blockType: fieldAt(3),
+      lastUpdate: fieldAt(4),
     );
   }
   factory Vendor.fromJson(Map<String, dynamic> json) => _$VendorFromJson(json);

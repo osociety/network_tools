@@ -43,6 +43,26 @@ class MockArpTableHelper extends ARPTableHelper {
   }
 }
 
+/// Simulates a localized Windows ARP output where the header cannot be
+/// filtered by its English text.
+class LocalizedArpTableHelper extends ARPTableHelper {
+  LocalizedArpTableHelper() {
+    isMobilePlatform = false;
+    isMacOSPlatform = false;
+    isLinuxPlatform = false;
+  }
+
+  @override
+  List<String> executeARPCommand() {
+    return [
+      '接口: 192.168.1.10 --- 0x6',
+      'Internet 地址         物理地址              类型',
+      'garbage garbage garbage',
+      '192.168.1.1           00-11-22-33-44-55     dynamic',
+    ];
+  }
+}
+
 void main() {
   final mockArpTableHelper = MockArpTableHelper();
   group('ARPTableHelper', () {
@@ -102,6 +122,13 @@ void main() {
       expect(result[1].iPAddress, '192.168.1.2');
       expect(result[1].macAddress, 'ff-ff-ff-ff-ff-ff');
       expect(result[1].interfaceType, 'static');
+    });
+
+    test('Ignores localized headers and malformed rows', () async {
+      final result = await LocalizedArpTableHelper().buildTable();
+      expect(result.length, 1);
+      expect(result.first.iPAddress, '192.168.1.1');
+      expect(result.first.macAddress, '00-11-22-33-44-55');
     });
 
     test('ARPTableHelper return non empty result on any machine', () {

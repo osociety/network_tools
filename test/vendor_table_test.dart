@@ -28,6 +28,15 @@ void main() {
       test('parses mixed-case MAC', () {
         expect(VendorTable.noColonString('Aa:Bb:Cc:Dd:Ee:Ff'), 'AABBCC');
       });
+      test('parses dot-separated MAC', () {
+        expect(VendorTable.noColonString('aabb.ccdd.eeff'), 'AABBCC');
+      });
+      test('parses MAC without separators', () {
+        expect(VendorTable.noColonString('aabbccddeeff'), 'AABBCC');
+      });
+      test('keeps short input unchanged instead of throwing', () {
+        expect(VendorTable.noColonString('aabb'), 'AABB');
+      });
     });
 
     setUpAll(() {
@@ -109,6 +118,71 @@ void main() {
         expect(vendors.length, 4);
         expect(vendors.every((v) => v.macPrefix.length == 6), isTrue);
         expect(vendors.every((v) => v.macPrefix != 'Mac Prefix'), isTrue);
+      });
+
+      test(
+        'returns empty list when download fails with a non-200 status',
+        () async {
+          final mockClient = MockHttpClient();
+          when(
+            () => mockClient.get(any(), headers: any(named: 'headers')),
+          ).thenAnswer((_) async => http.Response('not found', 404));
+
+          final vendors = await VendorTable.fetchVendorTable(
+            client: mockClient,
+          );
+
+          expect(vendors, isEmpty);
+          expect(await testFile.exists(), isFalse);
+        },
+      );
+
+      test('returns empty list when the download throws', () async {
+        final mockClient = MockHttpClient();
+        when(
+          () => mockClient.get(any(), headers: any(named: 'headers')),
+        ).thenThrow(http.ClientException('network is unreachable'));
+
+        final vendors = await VendorTable.fetchVendorTable(client: mockClient);
+
+        expect(vendors, isEmpty);
+        expect(await testFile.exists(), isFalse);
+      });
+
+      test('removes a corrupt cache and returns empty list', () async {
+        // Invalid UTF-8 bytes make the CSV parsing fail.
+        await testFile.writeAsBytes([0xC3, 0x28, 0x0A]);
+
+        final vendors = await VendorTable.fetchVendorTable();
+
+        expect(vendors, isEmpty);
+        expect(await testFile.exists(), isFalse);
+      });
+
+      test('returns empty list for an empty file', () async {
+        await testFile.writeAsBytes([]);
+
+        final vendors = await VendorTable.fetchVendorTable();
+
+        expect(vendors, isEmpty);
+        expect(await testFile.exists(), isFalse);
+      });
+
+      test('parses rows with missing optional columns', () async {
+        await testFile.writeAsString(
+          'Mac Prefix,Vendor Name,Private,Block Type,Last Update\n'
+          '00:00:0C,Cisco\n'
+          '00:00:0D,Vendor2,false,MA-L,2015/11/17\n',
+        );
+
+        final vendors = await VendorTable.fetchVendorTable();
+
+        expect(vendors.length, 2);
+        expect(vendors[0].macPrefix, '00000C');
+        expect(vendors[0].vendorName, 'Cisco');
+        expect(vendors[0].private, '');
+        expect(vendors[0].blockType, '');
+        expect(vendors[0].lastUpdate, '');
       });
     });
   });

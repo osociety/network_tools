@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:dart_ping/dart_ping.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/concurrency.dart';
 import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/repository/repository.dart';
@@ -38,13 +39,12 @@ class HostScannerServiceImpl extends HostScannerService {
       resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
     );
     await for (final sendableActiveHost in stream) {
-      final activeHost = ActiveHost.fromSendableActiveHost(
+      // Host details (host name, ARP, vendor) resolve lazily, so they do not
+      // delay discovery. Awaiting each host's resolveInfo() here used to
+      // serialize a reverse DNS lookup per device.
+      yield ActiveHost.fromSendableActiveHost(
         sendableActiveHost: sendableActiveHost,
       );
-
-      await activeHost.resolveInfo();
-
-      yield activeHost;
     }
   }
 
@@ -83,7 +83,16 @@ class HostScannerServiceImpl extends HostScannerService {
     }
 
     if (!resultsInAddressAscendingOrder) {
+      // Close the controller once every ping future has completed, otherwise
+      // consumers iterating this stream would never see it finish.
+      unawaited(
+        Future.wait(activeHostsFuture).then(
+          (_) => activeHostsController.close(),
+          onError: (Object _) => activeHostsController.close(),
+        ),
+      );
       yield* activeHostsController.stream;
+      return;
     }
 
     int i = 0;
@@ -129,42 +138,52 @@ class HostScannerServiceImpl extends HostScannerService {
   }) async {
     SendableActiveHost? tempSendableActivateHost;
 
-    await for (final Object? event in Ping(
-      host,
-      count: 1,
-      timeout: timeoutInSeconds,
-      forceCodepage: Platform.isWindows,
-    ).stream) {
-      final PingResponse? pingResponse = _extractPingResponse(event);
-      if (pingResponse != null && pingResponse.time != null) {
-        // Check if ping succeeded
-        logger.fine("Pingable device found: $host");
-        tempSendableActivateHost = SendableActiveHost(
-          host,
-          pingData: pingResponse,
-        );
-      } else {
-        logger.fine("Non pingable device found: $host");
-      }
-
-      if (tempSendableActivateHost == null) {
-        // Check if it's there in arp table
-
-        final data = await getIt<Repository<ARPData>>().entryFor(host);
-
-        if (data != null) {
-          logger.fine("Successfully fetched arp entry for $host as $data");
+    try {
+      await for (final Object? event in Ping(
+        host,
+        count: 1,
+        timeout: timeoutInSeconds,
+        forceCodepage: Platform.isWindows,
+      ).stream) {
+        final PingResponse? pingResponse = _extractPingResponse(event);
+        if (pingResponse != null && pingResponse.time != null) {
+          // Check if ping succeeded
+          logger.fine("Pingable device found: $host");
           tempSendableActivateHost = SendableActiveHost(
             host,
             pingData: pingResponse,
           );
+          break;
+        }
+        logger.fine("Non pingable device found: $host");
+      }
+    } catch (error, stackTrace) {
+      // A failing ping for one host must not abort the whole subnet scan.
+      logger.warning("Ping failed for $host: $error", error, stackTrace);
+    }
+
+    if (tempSendableActivateHost == null) {
+      // Check if it's there in arp table
+      try {
+        final data = await getIt<Repository<ARPData>>().entryFor(host);
+        if (data != null) {
+          logger.fine("Successfully fetched arp entry for $host as $data");
+          tempSendableActivateHost = SendableActiveHost(host);
         } else {
           logger.fine("Problem in fetching arp entry for $host");
         }
+      } catch (error, stackTrace) {
+        logger.warning(
+          "Failed to fetch arp entry for $host: $error",
+          error,
+          stackTrace,
+        );
       }
+    }
 
-      if (tempSendableActivateHost != null) {
-        logger.fine("Successfully added to result $host");
+    if (tempSendableActivateHost != null) {
+      logger.fine("Successfully added to result $host");
+      if (!activeHostsController.isClosed) {
         activeHostsController.add(tempSendableActivateHost);
       }
     }
@@ -201,32 +220,29 @@ class HostScannerServiceImpl extends HostScannerService {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
-    const int scanRangeForIsolate = 51;
     final int lastValidSubnet = validateAndGetLastValidSubnet(
       subnet,
       firstHostId,
       lastHostId,
     );
-    for (
-      int i = firstHostId;
-      i <= lastValidSubnet;
-      i += scanRangeForIsolate + 1
-    ) {
-      final limit = min(i + scanRangeForIsolate, lastValidSubnet);
-      logger.fine('Scanning from $i to $limit');
+    // The whole scan happens in a single isolate. Previously the range was
+    // split into 51-host chunks, which meant spawning up to five isolates and
+    // running configureNetworkTools (database setup) in each of them.
+    logger.fine('Scanning from $firstHostId to $lastValidSubnet');
 
-      final receivePort = ReceivePort();
-      final isolate = await Isolate.spawn(
-        _startSearchingDevices,
-        receivePort.sendPort,
-      );
+    final receivePort = ReceivePort();
+    final isolate = await Isolate.spawn(
+      _startSearchingDevices,
+      receivePort.sendPort,
+    );
 
+    try {
       await for (final message in receivePort) {
         if (message is SendPort) {
           message.send(<String>[
             subnet,
-            i.toString(),
-            limit.toString(),
+            firstHostId.toString(),
+            lastValidSubnet.toString(),
             timeoutInSeconds.toString(),
             resultsInAddressAscendingOrder.toString(),
             dbDirectory,
@@ -237,17 +253,19 @@ class HostScannerServiceImpl extends HostScannerService {
           final activeHostFound = ActiveHost.fromSendableActiveHost(
             sendableActiveHost: message,
           );
-          await activeHostFound.resolveInfo();
-          final j = int.tryParse(activeHostFound.hostId) ?? i;
+          final j = int.tryParse(activeHostFound.hostId) ?? firstHostId;
           progressCallback?.call(
             (j - firstHostId) * 100 / (lastValidSubnet - firstHostId),
           );
           yield activeHostFound;
         } else if (message is String && message == 'Done') {
-          isolate.kill();
           break;
         }
       }
+    } finally {
+      // Also runs when the consumer cancels the stream early.
+      isolate.kill();
+      receivePort.close();
     }
   }
 
@@ -301,7 +319,8 @@ class HostScannerServiceImpl extends HostScannerService {
 
   /// Scans for all hosts that have the specific port that was given.
   /// [resultsInAddressAscendingOrder] = false will return results faster but not in
-  /// ascending order and without [progressCallback].
+  /// ascending order.
+  /// [maxConcurrency] limits how many hosts are probed at the same time.
   @override
   Stream<ActiveHost> scanDevicesForSinglePort(
     String subnet,
@@ -311,43 +330,58 @@ class HostScannerServiceImpl extends HostScannerService {
     Duration timeout = const Duration(milliseconds: 2000),
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
+    int maxConcurrency = PortScannerService.defaultMaxConcurrency,
   }) async* {
     final int lastValidSubnet = validateAndGetLastValidSubnet(
       subnet,
       firstHostId,
       lastHostId,
     );
-    final List<Future<ActiveHost?>> activeHostOpenPortList = [];
-    final StreamController<ActiveHost> activeHostsController =
-        StreamController<ActiveHost>();
-
-    for (int i = firstHostId; i <= lastValidSubnet; i++) {
-      final host = '$subnet.$i';
-      activeHostOpenPortList.add(
-        PortScannerService.instance.connectToPort(
-          address: host,
-          port: port,
-          timeout: timeout,
-          activeHostsController: activeHostsController,
-        ),
-      );
+    final List<int> hostIds = <int>[
+      for (int i = firstHostId; i <= lastValidSubnet; i++) i,
+    ];
+    if (hostIds.isEmpty) {
+      return;
     }
+
+    // Bound the number of concurrent connections so a /24 scan does not open a
+    // socket for every host at once.
+    final Stream<ConcurrentResult<ActiveHost>> results =
+        mapConcurrently<int, ActiveHost>(
+          hostIds,
+          (int id) => PortScannerService.instance.connectToPort(
+            address: '$subnet.$id',
+            port: port,
+            timeout: timeout,
+          ),
+          maxConcurrency: maxConcurrency,
+          onCompleted: (int completed) =>
+              progressCallback?.call(completed * 100 / hostIds.length),
+        );
 
     if (!resultsInAddressAscendingOrder) {
-      yield* activeHostsController.stream;
+      await for (final ConcurrentResult<ActiveHost> result in results) {
+        final ActiveHost? activeHost = result.value;
+        if (activeHost != null) {
+          yield activeHost;
+        }
+      }
+      return;
     }
 
-    int counter = firstHostId;
-    for (final Future<ActiveHost?> openPortActiveHostFuture
-        in activeHostOpenPortList) {
-      final ActiveHost? activeHost = await openPortActiveHostFuture;
-      if (activeHost != null) {
-        yield activeHost;
+    // Keep the ascending-order contract even though connections finish out of
+    // order by buffering results until every earlier host has been emitted.
+    final Map<int, ActiveHost?> pending = <int, ActiveHost?>{};
+    int nextIndex = 0;
+    await for (final ConcurrentResult<ActiveHost> result in results) {
+      pending[result.index] = result.value;
+      while (pending.containsKey(nextIndex)) {
+        final ActiveHost? activeHost = pending.remove(nextIndex);
+        nextIndex++;
+        if (activeHost != null) {
+          yield activeHost;
+        }
       }
-      progressCallback?.call(
-        (counter - firstHostId) * 100 / (lastValidSubnet - firstHostId),
-      );
-      counter++;
     }
   }
 

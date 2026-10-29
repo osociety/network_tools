@@ -6,13 +6,15 @@ Network Tools Supported
 
 1. Host Scanner
    1. Search all devices on subnet
-   2. Get mac address of devices on Linux, macOS and Windows.
+   2. Get hostname, MAC address and vendor of devices on Linux, macOS and Windows.
    3. Search devices for a specific port open.
+   4. Isolate based scanning for large subnets.
 
 2. Port Scanner
    1. Single Port scan
    2. Range
    3. Custom
+   4. Bounded concurrency to scan fast without exhausting file descriptors.
 
 Partly Work:
 
@@ -75,6 +77,28 @@ Future<void> main() async {
   }); // Don't forget to cancel the stream when not in use.
 ```
 
+Host details (hostname, MAC address and vendor) are resolved lazily on first
+access, so discovery is not slowed down by additional lookups:
+
+```dart
+  await for (final ActiveHost host in HostScannerService.instance.getAllPingableDevices(subnet)) {
+    final String deviceName = await host.deviceName;
+    final String? macAddress = await host.getMacAddress();
+    final Vendor? vendor = await host.vendor;
+    print('${host.address} $deviceName $macAddress ${vendor?.vendorName}');
+  }
+```
+
+For large subnets use `getAllPingableDevicesAsync`, which runs the whole scan in
+a separate isolate so the UI stays responsive:
+
+```dart
+  await for (final ActiveHost host
+      in HostScannerService.instance.getAllPingableDevicesAsync('192.168.1')) {
+    print('Found device: ${host.address}');
+  }
+```
+
 ### Port Scanner
 
 ```dart
@@ -91,9 +115,26 @@ Future<void> main() async {
     print('Scan completed');
   });
   //2. Single
-  bool isOpen = (await PortScanner.isOpen(target, 80)) == null;
+  final bool isOpen = (await PortScannerService.instance.isOpen(target, 80)) != null;
   //3. Custom
-  PortScanner.customDiscover(target, portList: const [22, 80, 139]);
+  PortScannerService.instance.customDiscover(target, portList: const [22, 80, 139]);
+```
+
+Scans open at most `maxConcurrency` sockets at once (128 by default), so large
+ranges complete quickly without hitting file-descriptor limits. Raise it for
+more throughput or lower it to be gentler on the network. Pass `async: true` to
+run the scan in an isolate:
+
+```dart
+  await for (final ActiveHost host in PortScannerService.instance.scanPortsForSingleDevice(
+    target,
+    startPort: 1,
+    endPort: 65535,
+    maxConcurrency: 512,
+    async: true,
+  )) {
+    print('Open ports on ${host.address}: ${host.openPorts}');
+  }
 ```
 
 ### Mdns Scanner
@@ -112,27 +153,24 @@ Future<void> main() async {
 
 ### Run examples
 
-1. Run host scan : `dart example/host_scan.dart`
-2. Run port scan : `dart example/port_scan.dart`
-3. Run mdns scan : `dart example/mdns_scan.dart`
+1. Run all examples : `dart run example/main.dart`
+2. Run host scan : `dart run example/lib/scan/host_scan.dart`
+3. Run port scan : `dart run example/lib/scan/port_scan.dart`
+4. Run mdns scan : `dart run example/lib/scan/mdns_scan.dart`
 
 
 ## Sample App
 
-[Vernet](https://github.com/git-elliot/vernet) is the open source app built on top of this library.
+[Vernet](https://github.com/osociety/vernet) is the open source cross platform
+network analysis and monitoring app built on top of this library.
 You can check out the code and implementation for more detailed use case of this package.
 
 ## Support and Donate
 
-1. Support this project by becoming stargazer of this project.
-2. Buy me a coffee.
+1. Support this project by becoming a stargazer of this project.
+2. Donate via Liberapay: [liberapay.com/OpenSociety/donate](https://liberapay.com/OpenSociety/donate)
+3. Support Open Society on Ko-fi:
 
-    | Librepay | 
-    |----------|
-    |<noscript><a href="https://liberapay.com/OpenSociety/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a></noscript>|
-
-3. Support me on Ko-Fi
-
-   [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/fs0c13ty)
+   [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/op3nsoc13ty)
 
 Inspired from [ping_discover_network](https://github.com/andrey-ushakov/ping_discover_network)

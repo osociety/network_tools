@@ -25,12 +25,26 @@ class ARPTableHelper {
       arpLogger.warning("ARP command is not supported on mobile platforms.");
       return [];
     }
-    final result = Process.runSync('arp', ['-a']);
-    if (result.exitCode != 0) {
-      arpLogger.severe("Failed to execute ARP command: ${result.stderr}");
+    try {
+      final result = Process.runSync('arp', ['-a']);
+      if (result.exitCode != 0) {
+        arpLogger.warning("Failed to execute ARP command: ${result.stderr}");
+        return [];
+      }
+      return const LineSplitter().convert(result.stdout.toString());
+    } on ProcessException catch (error) {
+      // The arp binary can be missing on minimal systems (containers, some
+      // Linux images). Host discovery still works, only MAC data is missing.
+      arpLogger.warning("ARP command is unavailable: $error");
+      return [];
+    } catch (error, stackTrace) {
+      arpLogger.warning(
+        "Unexpected error while running ARP command: $error",
+        error,
+        stackTrace,
+      );
       return [];
     }
-    return const LineSplitter().convert(result.stdout.toString());
   }
 
   RegExp _getARPCmdRegExPattern() {
@@ -65,6 +79,7 @@ class ARPTableHelper {
     }
 
     final pattern = _getARPCmdRegExPattern();
+    final macPattern = RegExp(r'^([0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}$');
 
     for (final entry in entries) {
       // Skip Windows header and interface lines
@@ -74,12 +89,27 @@ class ARPTableHelper {
         continue;
       }
       final match = pattern.firstMatch(entry);
-      if (match != null) {
+      if (match == null) {
+        continue;
+      }
+      try {
         final arpData = ARPData.fromRegExpMatch(match);
-        if (arpData.macAddress != '(incomplete)') {
-          arpLogger.fine("Adding entry to table -> $arpData");
-          arpEntries[arpData.iPAddress] = arpData;
+        final String macAddress = arpData.macAddress;
+        if (macAddress == '(incomplete)' || macAddress == '<incomplete>') {
+          continue;
         }
+        // Localized headers can accidentally match the Windows pattern. Only
+        // accept entries that actually contain a MAC address.
+        if (!macPattern.hasMatch(macAddress)) {
+          arpLogger.fine(
+            "Skipping ARP entry with unrecognized MAC address: $entry",
+          );
+          continue;
+        }
+        arpLogger.fine("Adding entry to table -> $arpData");
+        arpEntries[arpData.iPAddress] = arpData;
+      } catch (error) {
+        arpLogger.fine("Skipping unparsable ARP entry: $entry ($error)");
       }
     }
     arpLogger.fine(
