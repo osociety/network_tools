@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/device_info/arp_table_helper.dart';
 import 'package:network_tools/src/device_info/vendor_table.dart';
 import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/repository/repository.dart';
@@ -36,6 +37,52 @@ class _ThrowingARPRepository extends _FakeARPRepository {
   @override
   Future<ARPData?> entryFor(String address) =>
       throw StateError('arp lookup failed');
+}
+
+class _FakeARPTableHelper extends ARPTableHelper {
+  _FakeARPTableHelper(this.entries, {this.supported = true}) {
+    isMobilePlatform = !supported;
+    isMacOSPlatform = false;
+    isLinuxPlatform = false;
+  }
+
+  final List<ARPData> entries;
+  final bool supported;
+  int primeCount = 0;
+
+  @override
+  bool get isARPSupported => supported;
+
+  @override
+  Future<void> primeARPCache(
+    Iterable<String> hosts, {
+    Duration settleDelay = ARPTableHelper.defaultPrimingDelay,
+    int port = 9,
+  }) async {
+    primeCount++;
+  }
+
+  @override
+  Future<List<ARPData>> buildNumericTable() async => entries;
+}
+
+class _ThrowingARPTableHelper extends _FakeARPTableHelper {
+  _ThrowingARPTableHelper() : super(const <ARPData>[]);
+
+  @override
+  Future<List<ARPData>> buildNumericTable() async =>
+      throw StateError('neighbor table unavailable');
+}
+
+ARPData _arpEntry(String address, {String mac = 'aa:bb:cc:dd:ee:ff'}) {
+  return ARPData(
+    hostname: '',
+    iPAddress: address,
+    macAddress: mac,
+    interfaceName: 'en0',
+    interfaceType: 'ether',
+    createdAt: DateTime.now(),
+  );
 }
 
 void main() {
@@ -169,6 +216,153 @@ void main() {
     });
   });
 
+  group('ARP-first discovery', () {
+    HostScannerServiceImpl scannerWith(
+      ARPTableHelper helper, {
+      bool localSubnet = true,
+    }) {
+      return HostScannerServiceImpl(
+        arpTableHelper: helper,
+        isLocalSubnet: (_) async => localSubnet,
+      );
+    }
+
+    test('yields neighbor table hosts in ascending order', () async {
+      final helper = _FakeARPTableHelper([
+        _arpEntry('127.0.0.1'),
+        _arpEntry('127.0.0.3', mac: '11:22:33:44:55:66'),
+      ]);
+      final progress = <double>[];
+      final hosts = await scannerWith(helper)
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 4,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      expect(hosts.map((h) => h.address), ['127.0.0.1', '127.0.0.3']);
+      expect(hosts.first.macAddress, 'aa:bb:cc:dd:ee:ff');
+      expect(hosts.last.macAddress, '11:22:33:44:55:66');
+      expect(helper.primeCount, 1);
+      expect(progress.last, 100);
+    });
+
+    test('yields neighbor table hosts in unordered mode', () async {
+      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.1')]);
+      final hosts = await scannerWith(helper)
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            hostIds: [1],
+            resultsInAddressAscendingOrder: false,
+          )
+          .toList();
+
+      expect(hosts.single.address, '127.0.0.1');
+      expect(hosts.single.macAddress, 'aa:bb:cc:dd:ee:ff');
+      expect(helper.primeCount, 1);
+    });
+
+    test('keeps neighbor table hosts that ignore ICMP', () async {
+      final helper = _FakeARPTableHelper([_arpEntry('192.0.2.1')]);
+      final hosts = await scannerWith(
+        helper,
+      ).getAllSendablePingableDevices('192.0.2', hostIds: [1]).toList();
+
+      expect(hosts.single.address, '192.0.2.1');
+      expect(hosts.single.pingData, isNull);
+      expect(hosts.single.macAddress, 'aa:bb:cc:dd:ee:ff');
+    });
+
+    test('ignores neighbor table entries outside the requested ids', () async {
+      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.99')]);
+      final progress = <double>[];
+      final hosts = await scannerWith(helper)
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            hostIds: [1],
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      expect(hosts, isEmpty);
+      expect(progress, isEmpty);
+    });
+
+    test('reports full progress for a single-host range', () async {
+      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.1')]);
+      final progress = <double>[];
+      await scannerWith(helper)
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      expect(progress, isNotEmpty);
+      expect(progress.every((value) => value == 100), isTrue);
+    });
+
+    test('falls back to pinging when the neighbor table is empty', () async {
+      final helper = _FakeARPTableHelper(const <ARPData>[]);
+      final hosts = await scannerWith(
+        helper,
+      ).getAllSendablePingableDevices('127.0.0', hostIds: [1]).toList();
+
+      expect(hosts.single.address, '127.0.0.1');
+      expect(hosts.single.pingData, isNotNull);
+      expect(helper.primeCount, 1);
+    });
+
+    test('falls back to pinging when the neighbor table read fails', () async {
+      final helper = _ThrowingARPTableHelper();
+      final hosts = await scannerWith(
+        helper,
+      ).getAllSendablePingableDevices('127.0.0', hostIds: [1]).toList();
+
+      expect(hosts.single.address, '127.0.0.1');
+      expect(hosts.single.pingData, isNotNull);
+    });
+
+    test('uses the ping sweep when ARP is unsupported', () async {
+      final helper = _FakeARPTableHelper([
+        _arpEntry('127.0.0.1'),
+      ], supported: false);
+      final hosts = await scannerWith(
+        helper,
+      ).getAllSendablePingableDevices('127.0.0', hostIds: [1]).toList();
+
+      expect(hosts.single.address, '127.0.0.1');
+      expect(helper.primeCount, 0);
+    });
+
+    test('uses the ping sweep when the subnet is not local', () async {
+      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.1')]);
+      final hosts = await scannerWith(
+        helper,
+        localSubnet: false,
+      ).getAllSendablePingableDevices('127.0.0', hostIds: [1]).toList();
+
+      expect(hosts.single.address, '127.0.0.1');
+      expect(helper.primeCount, 0);
+    });
+
+    test(
+      'getAllPingableDevices exposes the neighbor table MAC address',
+      () async {
+        final helper = _FakeARPTableHelper([
+          _arpEntry('127.0.0.1', mac: 'de:ad:be:ef:00:01'),
+        ]);
+        final hosts = await scannerWith(
+          helper,
+        ).getAllPingableDevices('127.0.0', hostIds: [1]).toList();
+
+        expect(await hosts.single.getMacAddress(), 'de:ad:be:ef:00:01');
+      },
+    );
+  });
+
   group('getAllPingableDevicesAsync', () {
     test('reports progress while scanning in an isolate', () async {
       final tempDirectory = await Directory.systemTemp.createTemp('nt_async_');
@@ -190,6 +384,7 @@ void main() {
 
         expect(hosts.map((h) => h.address), contains('127.0.0.1'));
         expect(progress, isNotEmpty);
+        expect(progress.last, 100);
       } finally {
         await _deleteTempDirectory(tempDirectory);
       }

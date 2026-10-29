@@ -6,7 +6,9 @@ import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/database/drfit_database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
+import 'package:network_tools/src/device_info/vendor_table.dart';
 import 'package:network_tools/src/injection.dart';
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
@@ -16,11 +18,25 @@ void main() {
   late Directory tempDirectory;
   late AppDatabase database;
 
-  setUp(() async {
-    await getIt.reset();
+  // The database service caches its connection, so all tests in this file share
+  // one database and reset its rows instead of replacing the connection.
+  setUpAll(() async {
     tempDirectory = await Directory.systemTemp.createTemp('network_tools_cfg_');
     database = AppDatabase(NativeDatabase.memory());
     DriftDatabaseService.appDatabase = database;
+  });
+
+  tearDownAll(() async {
+    await database.close();
+    if (tempDirectory.existsSync()) {
+      tempDirectory.deleteSync(recursive: true);
+    }
+  });
+
+  setUp(() async {
+    await getIt.reset();
+    await database.delete(database.vendorDrift).go();
+    await database.delete(database.aRPDrift).go();
 
     // Seed the vendor table so configuration never downloads the CSV, and add
     // a stale ARP entry that rebuildData should clear.
@@ -49,13 +65,6 @@ void main() {
         );
   });
 
-  tearDown(() async {
-    await database.close();
-    if (tempDirectory.existsSync()) {
-      tempDirectory.deleteSync(recursive: true);
-    }
-  });
-
   test(
     'configures the package, rebuilds data and logs through the debug listener',
     () async {
@@ -80,4 +89,17 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
     },
   );
+
+  test('skips the vendor table for worker isolates', () async {
+    await database.delete(database.vendorDrift).go();
+
+    await configureNetworkTools(tempDirectory.path, buildVendorTable: false);
+
+    final vendorRows = await database.select(database.vendorDrift).get();
+    expect(vendorRows, isEmpty);
+    expect(
+      File(p.join(tempDirectory.path, VendorTable.fileName)).existsSync(),
+      isFalse,
+    );
+  });
 }

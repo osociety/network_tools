@@ -135,6 +135,29 @@ void main() {
       expect(await host.getMacAddress(), 'aa:bb:cc:dd:ee:ff');
     });
 
+    test('fromSendableActiveHost uses the discovered MAC and name', () async {
+      final host = ActiveHost.fromSendableActiveHost(
+        sendableActiveHost: SendableActiveHost(
+          '192.168.1.44',
+          macAddress: '11:22:33:44:55:66',
+          hostName: 'printer.local',
+        ),
+      );
+
+      expect(await host.hostName, 'printer.local');
+      expect(await host.deviceName, 'printer.local');
+      expect(await host.getMacAddress(), '11:22:33:44:55:66');
+    });
+
+    test('ignores a prefilled host name that is just the address', () async {
+      final host = ActiveHost(
+        internetAddress: InternetAddress.loopbackIPv4,
+        hostName: '127.0.0.1',
+      );
+
+      expect(await host.hostName, isNot('127.0.0.1'));
+    });
+
     test('exposes the mdns info passed at construction', () async {
       final info = mdnsInfo();
       final host = ActiveHost.buildWithAddress(

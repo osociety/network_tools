@@ -29,7 +29,10 @@ class ARPRepository implements Repository<ARPData> {
     }
     arpDriftLogger.fine("Building ARP table...");
     try {
-      final entries = (await ARPTableHelper().buildTable())
+      // Resolving every entry's host name here used to block startup for
+      // seconds on macOS. Host names are resolved per discovered host by the
+      // scanner instead, so only the numeric table is needed here.
+      final entries = (await ARPTableHelper().buildNumericTable())
           .map(
             (e) => ARPDriftCompanion.insert(
               iPAddress: e.iPAddress,

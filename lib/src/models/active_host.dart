@@ -16,6 +16,7 @@ class ActiveHost {
     String? macAddress,
     PingResponse? pingData,
     MdnsInfo? mdnsInfoVar,
+    String? hostName,
   }) {
     _macAddress = macAddress;
     final String tempAddress = internetAddress.address;
@@ -39,6 +40,10 @@ class ActiveHost {
     // that discovery returns hosts as fast as the network scan allows. The
     // futures below are started on first access.
     weirdHostName = internetAddress.host;
+
+    if (_isUsefulName(hostName)) {
+      _hostName = Future.value(hostName);
+    }
 
     if (mdnsInfoVar != null) {
       _mdnsInfo = Future.value(mdnsInfoVar);
@@ -79,10 +84,11 @@ class ActiveHost {
     }
     return ActiveHost(
       internetAddress: internetAddressTemp,
-      macAddress: macAddress,
+      macAddress: macAddress ?? sendableActiveHost.macAddress,
       openPorts: sendableActiveHost.openPorts,
       pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
+      hostName: sendableActiveHost.hostName,
     );
   }
 

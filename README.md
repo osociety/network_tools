@@ -54,6 +54,11 @@ Future<void> main() async {
 }
 ```
 
+Pass `buildVendorTable: false` from worker isolate entry points. The vendor
+table downloads a multi-megabyte CSV on first use, and vendor lookups happen in
+the isolate that receives the hosts, not the one that starts the scan. Scans
+started through `getAllPingableDevicesAsync` already do this.
+
 ## Usage
 
 ### Host Scanner
@@ -98,6 +103,31 @@ a separate isolate so the UI stays responsive:
     print('Found device: ${host.address}');
   }
 ```
+
+#### How discovery works
+
+On Linux, macOS and Windows a scan primes the neighbour cache by sending a UDP
+datagram to every address in the range, then reads the numeric ARP table once
+(`arp -an` on macOS, `/proc/net/arp` on Linux, `arp -a` on Windows). This
+replaces one `ping` process per address, so a /24 scan typically finishes in
+about a second and still reports hosts that ignore ICMP. Broadcast and
+multicast MAC rows are discarded. Mobile platforms and non-local subnets fall
+back to the ICMP sweep.
+
+ARP itself carries no host names, so `hostName` and `deviceName` are resolved
+separately for the hosts that were actually found: a concurrent reverse DNS
+lookup with a short budget during the scan, and a fresh attempt when the name is
+first accessed. Networks without reverse DNS (most home routers) simply return
+no name; `deviceName` then falls back to mDNS, then the ARP table entry, then
+`Generic Device`. MAC vendor lookups still work on those networks.
+
+On Android and iOS names depend on platform multicast and local-network
+permissions:
+
+- **Android**: hold a `MulticastLock` (`CHANGE_WIFI_MULTICAST_STATE`) for mDNS,
+  and request `ACCESS_FINE_LOCATION` for Wi-Fi details.
+- **iOS**: enable the multicast networking entitlement and request local
+  network permission (`NSLocalNetworkUsageDescription`).
 
 ### Port Scanner
 
