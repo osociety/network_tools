@@ -7,8 +7,12 @@ import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/repository/repository.dart';
 import 'package:universal_io/io.dart';
 
-/// ActiveHost which implements comparable
-/// By default sort by hostId ascending
+/// A device found on the network.
+///
+/// Host details are resolved lazily and cached: [hostName], [deviceName],
+/// [mdnsInfo], [arpData], [vendor] and [getMacAddress] only perform their
+/// lookup when first accessed, unless discovery already filled them in.
+/// Implements [Comparable] ordering by host id ascending.
 class ActiveHost {
   ActiveHost({
     required this.internetAddress,
@@ -100,28 +104,47 @@ class ActiveHost {
   /// last dot, in IPv6 the numbers after the last colon
   late String hostId;
 
-  /// Host name of the device, not to be confused with deviceName which does
-  /// not follow any internet protocol property.
-  ///
-  /// The reverse DNS lookup starts lazily on first access.
   Future<String?>? _hostName;
+
+  /// Host name of the device, resolved through reverse DNS (PTR).
+  ///
+  /// The lookup starts lazily on first access with a short timeout and is
+  /// cached. Discovery may already have resolved it, in which case this
+  /// completes immediately. Returns null when the network has no reverse DNS
+  /// or the address has no PTR record, and never returns the bare address.
+  ///
+  /// Not to be confused with [deviceName], which is a display name and does not
+  /// follow any internet protocol property.
   Future<String?> get hostName => _hostName ??= setHostInfo();
   late String weirdHostName;
   late final PingResponse? _pingData;
 
-  /// Mdns information of this device
   Future<MdnsInfo?>? _mdnsInfo;
+
+  /// mDNS information for this device, when discovery found any.
+  ///
+  /// Resolved lazily on first access; currently mDNS results come from the
+  /// mDNS scanner and are null for hosts found by the host scanner.
   Future<MdnsInfo?> get mdnsInfo => _mdnsInfo ??= setMdnsInfo();
 
-  /// Resolve ARP data for this host.
-  /// only supported on Linux, Macos and Windows otherwise null
   Future<ARPData?>? _arpData;
+
+  /// The neighbor table entry for this address, or null when unavailable.
+  ///
+  /// Only supported on Linux, macOS and Windows. Resolved lazily from the ARP
+  /// repository unless discovery already attached the MAC address.
   Future<ARPData?> get arpData => _arpData ??= setARPData();
 
-  /// Only works if arpData is not null and have valid mac address.
   Future<Vendor?>? _vendor;
+
+  /// The vendor that owns this device's MAC prefix, or null when the MAC
+  /// address or vendor table is unavailable. Resolved lazily.
   Future<Vendor?> get vendor => _vendor ??= setVendor();
 
+  /// MAC address of the device, or null when it cannot be determined.
+  ///
+  /// Hosts found through the neighbor table already carry their MAC address,
+  /// so this completes without another read on Linux, macOS and Windows.
   String? _macAddress;
   Future<String?> getMacAddress() async =>
       _macAddress ?? (await arpData)?.macAddress;
@@ -129,21 +152,28 @@ class ActiveHost {
   /// List of all the open port of this device
   List<OpenPort> openPorts;
 
-  /// This device name does not following any guideline and is just some name
-  /// that we can show for the device.
-  /// Preferably hostName, if not than mDNS name, if not than will get the
-  /// value of [generic].
-  /// This value **can change after the object got created** since getting
-  /// host name of device is running async function.
   Future<String>? _deviceName;
+
+  /// A human-readable name for the device, suitable for display.
+  ///
+  /// Tries [hostName], then the mDNS name, then the name recorded in the
+  /// neighbor table, and finally falls back to [generic]. Resolved lazily and
+  /// cached, so this may complete immediately when discovery already resolved
+  /// the name and otherwise performs the lookup on first access.
   Future<String> get deviceName => _deviceName ??= setDeviceName();
+
+  /// The ICMP response recorded during discovery, or null when the host was
+  /// found through the neighbor table without answering ping.
   PingResponse? get pingData => _pingData;
+
+  /// Round-trip time of the discovery ping, or null without [pingData].
   Duration? get responseTime {
     final event = _pingData;
     if (event is PingResponse) return event.time;
     return null;
   }
 
+  /// The device's IPv4 or IPv6 address as a string.
   String get address => internetAddress.address;
 
   static PingResponse? getPingData(String host) {
@@ -225,6 +255,10 @@ class ActiveHost {
     return null;
   }
 
+  /// Resolves every lazy detail of this host: neighbor table entry, device
+  /// name, mDNS info and host name.
+  ///
+  /// Prefer awaiting the individual getters when only some details are needed.
   Future<void> resolveInfo() async {
     await arpData;
     // await vendor;

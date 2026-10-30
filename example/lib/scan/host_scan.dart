@@ -20,6 +20,9 @@ Future<void> main() async {
 
   // You can set [firstHostId] and scan will start from this host in the network.
   // Similarly set [lastHostId] and scan will end at this host in the network.
+  // On desktop the scan reads the neighbor table once instead of pinging every
+  // address, so it also finds devices that ignore ICMP. This whole scan runs in
+  // an isolate; use getAllPingableDevices to stay on the current isolate.
   final stream = HostScannerService.instance.getAllPingableDevicesAsync(
     subnet,
     // firstHostId: 1,

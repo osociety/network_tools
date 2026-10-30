@@ -15,6 +15,11 @@ import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart'
 /// Sets up the database directory, enables debugging if specified, and initializes
 /// all required service implementations and vendor tables for network operations.
 ///
+/// Call this once before using any scanner, usually from `main` after resolving
+/// a writable [dbDirectory] such as the application documents directory.
+/// [enableDebugging] forwards package logs to [Logger.root] at [Level.FINE];
+/// [rebuildData] clears stale cached ARP entries before rebuilding the table.
+///
 /// [buildVendorTable] should stay `false` in worker isolates. The vendor table
 /// can trigger a slow first-use download, vendor lookups happen in the isolate
 /// that created the host objects, and host discovery only needs the ARP
@@ -55,6 +60,10 @@ Future<void> configureNetworkTools(
 }
 
 /// Initializes the ARP table and vendor table map for network operations.
+///
+/// Prefer [configureNetworkTools], which also registers the service instances
+/// and sets up logging. [buildVendorTable] is forwarded from there; pass
+/// `false` in worker isolates so the vendor CSV is not downloaded there.
 Future<void> initializeNetworkTools(
   bool rebuildData, {
   bool buildVendorTable = true,

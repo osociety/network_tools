@@ -11,7 +11,7 @@ import 'package:network_tools/network_tools.dart';
 /// ```
 ///
 /// More focused examples live in `example/lib/scan/`:
-/// - `host_scan.dart` for ping discovery
+/// - `host_scan.dart` for ARP-first host discovery
 /// - `port_scan.dart` for open port scans
 /// - `mdns_scan.dart` for mDNS discovery
 Future<void> main() async {
