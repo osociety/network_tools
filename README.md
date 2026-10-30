@@ -5,10 +5,11 @@
 Network Tools Supported
 
 1. Host Scanner
-   1. Search all devices on subnet
+   1. Search all devices on subnet.
    2. Get hostname, MAC address and vendor of devices on Linux, macOS and Windows.
-   3. Search devices for a specific port open.
-   4. Isolate based scanning for large subnets.
+   3. ARP-first discovery on desktop: one numeric neighbor table read instead of a `ping` process per address, so a /24 scan takes about a second and still finds hosts that ignore ICMP.
+   4. Search devices for a specific port open.
+   5. Isolate based scanning for large subnets.
 
 2. Port Scanner
    1. Single Port scan
