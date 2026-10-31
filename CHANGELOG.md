@@ -1,5 +1,9 @@
 # Change Log
 
+## 6.0.13
+1. Build hook refined: removed unused `data_assets` dependency, added comprehensive tests for generated vendor map (6 new tests verifying structure, count, and known entries).
+2. Hybrid approach for vendor map: committed minimal stub file that build hook replaces with full 34,451-entry map during `dart pub get`. Reduces repository size while ensuring package works immediately after cloning.
+
 ## 6.0.12
 1. Isolate failures no longer hang a scan: `getAllPingableDevicesAsync` and `customDiscover(async: true)` spawn their isolate with error and exit ports, so an uncaught error or an early isolate exit surfaces to the caller instead of leaving the stream open forever.
 2. Both isolate entry points now catch failures and report them, so a bad database directory or an unresolvable target arrives as an exception rather than a silent isolate death.
