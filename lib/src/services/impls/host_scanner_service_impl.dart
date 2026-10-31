@@ -11,16 +11,44 @@ import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/repository/repository.dart';
 import 'package:universal_io/io.dart';
 
+/// Spawns the host scan isolate with its error and exit ports wired up.
+Future<Isolate> _spawnHostScanIsolate(
+  void Function(SendPort) entryPoint,
+  SendPort sendPort,
+  SendPort errorPort,
+  SendPort exitPort,
+) => Isolate.spawn(entryPoint, sendPort, onError: errorPort, onExit: exitPort);
+
 /// Scans for all hosts in a subnet.
 class HostScannerServiceImpl extends HostScannerService {
   HostScannerServiceImpl({
     ARPTableHelper? arpTableHelper,
     Future<bool> Function(String subnet)? isLocalSubnet,
+    Future<Isolate> Function(
+      void Function(SendPort) entryPoint,
+      SendPort sendPort,
+      SendPort errorPort,
+      SendPort exitPort,
+    )?
+    spawnScanIsolate,
   }) : _arpTableHelper = arpTableHelper ?? ARPTableHelper(),
-       _isLocalSubnet = isLocalSubnet ?? _defaultIsLocalSubnet;
+       _isLocalSubnet = isLocalSubnet ?? _defaultIsLocalSubnet,
+       _spawnScanIsolate = spawnScanIsolate ?? _spawnHostScanIsolate;
 
   final ARPTableHelper _arpTableHelper;
   final Future<bool> Function(String subnet) _isLocalSubnet;
+
+  /// Spawns the isolate behind [getAllPingableDevicesAsync].
+  ///
+  /// Replaceable so tests can simulate an isolate that crashes or exits before
+  /// the scan finishes.
+  final Future<Isolate> Function(
+    void Function(SendPort) entryPoint,
+    SendPort sendPort,
+    SendPort errorPort,
+    SendPort exitPort,
+  )
+  _spawnScanIsolate;
 
   /// Budget for the host name lookup that runs during discovery.
   ///
@@ -512,12 +540,26 @@ class HostScannerServiceImpl extends HostScannerService {
     logger.fine('Scanning from $firstHostId to $lastValidSubnet');
 
     final receivePort = ReceivePort();
-    final isolate = await Isolate.spawn(
-      _startSearchingDevices,
-      receivePort.sendPort,
-    );
+    final errorPort = ReceivePort();
+    final exitPort = ReceivePort();
+    // An isolate that dies before sending 'Done' would otherwise leave this
+    // stream waiting forever, so both failure channels feed the message stream.
+    final errorSubscription = errorPort.listen((dynamic error) {
+      receivePort.sendPort.send(<Object?>['runtimeError', error]);
+    });
+    final exitSubscription = exitPort.listen((dynamic _) {
+      receivePort.sendPort.send(<Object?>['runtimeError', 'isolate exited']);
+    });
+    Isolate? isolate;
 
     try {
+      isolate = await _spawnScanIsolate(
+        _startSearchingDevices,
+        receivePort.sendPort,
+        errorPort.sendPort,
+        exitPort.sendPort,
+      );
+
       await for (final message in receivePort) {
         if (message is SendPort) {
           message.send(<String>[
@@ -537,16 +579,26 @@ class HostScannerServiceImpl extends HostScannerService {
           final j = int.tryParse(activeHostFound.hostId) ?? firstHostId;
           progressCallback?.call(_progressFor(j, firstHostId, lastValidSubnet));
           yield activeHostFound;
+        } else if (message is List && message.first == 'runtimeError') {
+          throw Exception('Host scan isolate failed: ${message[1]}');
         } else if (message is String && message == 'Done') {
           // The isolate sends one message per host, so the scan can finish on
           // host ids below 254 without the last host reporting 100.
           progressCallback?.call(100);
           break;
+        } else if (message is String && message.startsWith('Error:')) {
+          throw Exception(
+            'Host scan isolate failed: ${message.substring(6).trim()}',
+          );
         }
       }
     } finally {
       // Also runs when the consumer cancels the stream early.
-      isolate.kill();
+      await errorSubscription.cancel();
+      await exitSubscription.cancel();
+      errorPort.close();
+      exitPort.close();
+      isolate?.kill();
       receivePort.close();
     }
   }
@@ -559,45 +611,49 @@ class HostScannerServiceImpl extends HostScannerService {
 
     await for (final message in port) {
       if (message is List<String>) {
-        final String subnetIsolate = message[0];
-        final int firstSubnetIsolate = int.parse(message[1]);
-        final int lastSubnetIsolate = int.parse(message[2]);
-        final int timeoutInSeconds = int.parse(message[3]);
-        final bool resultsInAddressAscendingOrder = message[4] == "true";
-        final String dbDirectory = message[5];
-        final bool enableDebugging = message[6] == "true";
-        final String joinedIds = message[7];
-        final List<int> hostIds = joinedIds
-            .split(',')
-            .where((e) => e.isNotEmpty)
-            .map(int.parse)
-            .toList();
-        // Configure again. The vendor table is skipped here: building it can
-        // trigger a multi-second first-use download, and vendor lookups run in
-        // the isolate that receives the hosts, not in this one.
-        await configureNetworkTools(
-          dbDirectory,
-          enableDebugging: enableDebugging,
-          buildVendorTable: false,
-        );
+        try {
+          final String subnetIsolate = message[0];
+          final int firstSubnetIsolate = int.parse(message[1]);
+          final int lastSubnetIsolate = int.parse(message[2]);
+          final int timeoutInSeconds = int.parse(message[3]);
+          final bool resultsInAddressAscendingOrder = message[4] == "true";
+          final String dbDirectory = message[5];
+          final bool enableDebugging = message[6] == "true";
+          final String joinedIds = message[7];
+          final List<int> hostIds = joinedIds
+              .split(',')
+              .where((e) => e.isNotEmpty)
+              .map(int.parse)
+              .toList();
+          // Configure again. The vendor table is skipped here: building it can
+          // trigger a multi-second first-use download, and vendor lookups run in
+          // the isolate that receives the hosts, not in this one.
+          await configureNetworkTools(
+            dbDirectory,
+            enableDebugging: enableDebugging,
+            buildVendorTable: false,
+          );
 
-        /// Will contain all the hosts that got discovered in the network, will
-        /// be use inorder to cancel on dispose of the page.
-        final Stream<SendableActiveHost> hostsDiscoveredInNetwork =
-            HostScannerService.instance.getAllSendablePingableDevices(
-              subnetIsolate,
-              firstHostId: firstSubnetIsolate,
-              lastHostId: lastSubnetIsolate,
-              hostIds: hostIds,
-              timeoutInSeconds: timeoutInSeconds,
-              resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
-            );
+          /// Will contain all the hosts that got discovered in the network, will
+          /// be use inorder to cancel on dispose of the page.
+          final Stream<SendableActiveHost> hostsDiscoveredInNetwork =
+              HostScannerService.instance.getAllSendablePingableDevices(
+                subnetIsolate,
+                firstHostId: firstSubnetIsolate,
+                lastHostId: lastSubnetIsolate,
+                hostIds: hostIds,
+                timeoutInSeconds: timeoutInSeconds,
+                resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+              );
 
-        await for (final SendableActiveHost activeHostFound
-            in hostsDiscoveredInNetwork) {
-          sendPort.send(activeHostFound);
+          await for (final SendableActiveHost activeHostFound
+              in hostsDiscoveredInNetwork) {
+            sendPort.send(activeHostFound);
+          }
+          sendPort.send('Done');
+        } catch (error) {
+          sendPort.send('Error: $error');
         }
-        sendPort.send('Done');
       }
     }
   }
