@@ -1,100 +1,43 @@
-import 'dart:async';
-
-import 'package:drift/drift.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logging/logging.dart';
-import 'package:network_tools/network_tools.dart';
-import 'package:network_tools/src/database/database_service.dart';
-import 'package:network_tools/src/database/drift_database.dart';
+import 'package:network_tools/src/device_info/vendor_map.dart';
 import 'package:network_tools/src/device_info/vendor_table.dart';
+import 'package:network_tools/src/models/vendor.dart';
 import 'package:network_tools/src/repository/repository.dart';
 
 @Injectable(as: Repository<Vendor>)
 class VendorRepository implements Repository<Vendor> {
-  VendorRepository(this._database);
-  static final vendorDriftLogger = Logger("vendor-drift-logger");
-  final DatabaseService<AppDatabase> _database;
+  static final _logger = Logger('VendorRepository');
 
   @override
   Future<void> build() async {
-    final database = await _database.open();
-    // Counting is much cheaper than loading (and sorting) every MAC prefix.
-    final row = await database!
-        .customSelect('SELECT COUNT(*) AS vendor_count FROM vendor_drift')
-        .getSingle();
-    if (row.read<int>('vendor_count') > 0) {
-      vendorDriftLogger.fine(
-        "Skipping Mac Vendor table build, old entries found",
-      );
-      return;
-    }
-    vendorDriftLogger.fine("Building Vendor table...");
-    try {
-      final entries = (await VendorTable.fetchVendorTable())
-          .map(
-            (e) => VendorDriftCompanion.insert(
-              macPrefix: e.macPrefix,
-              vendorName: e.vendorName,
-              private: e.private,
-              blockType: e.blockType,
-              lastUpdate: e.lastUpdate,
-            ),
-          )
-          .toList();
-      if (entries.isNotEmpty) {
-        await database.batch((batch) {
-          batch.insertAll(database.vendorDrift, entries);
-        });
-        vendorDriftLogger.fine(
-          "Mac Vendor table built with ${entries.length} entries",
-        );
-      }
-    } catch (error, stackTrace) {
-      vendorDriftLogger.warning(
-        "Failed to build Mac Vendor table, vendor names will be unavailable: "
-        "$error",
-        error,
-        stackTrace,
-      );
-    }
+    _logger.fine('Vendor map loaded with ${kVendorMap.length} entries');
   }
 
   @override
-  Future<void> close() async {
-    final database = await _database.open();
-    database!.close();
-  }
+  Future<void> close() async {}
 
   @override
-  Future<List<String>> entries() async {
-    final database = await _database.open();
-    final records = await (database!.select(
-      database.vendorDrift,
-    )..orderBy([(t) => OrderingTerm(expression: t.id)])).get();
-
-    return records.map((e) => e.macPrefix).toList();
-  }
+  Future<List<String>> entries() async => kVendorMap.keys.toList();
 
   @override
   Future<Vendor?> entryFor(String address) async {
-    final database = await _database.open();
-    final records =
-        await (database!.select(database.vendorDrift)..where(
-              (t) => t.macPrefix.equals(VendorTable.noColonString(address)),
-            ))
-            .get();
-    if (records.isNotEmpty) {
-      vendorDriftLogger.fine("Found Vendor entry for address: $address");
-      return Vendor.fromDriftData(records.first);
+    final prefix = VendorTable.noColonString(address);
+    final data = kVendorMap[prefix];
+    if (data == null) {
+      _logger.fine('No Vendor entry found for address: $address');
+      return null;
     }
-    vendorDriftLogger.fine("No Vendor entry found for address: $address");
-    return null;
+    _logger.fine('Found Vendor entry for address: $address');
+    return Vendor(
+      macPrefix: prefix,
+      vendorName: data.$1,
+      private: data.$2,
+      blockType: data.$3,
+      lastUpdate: data.$4,
+    );
   }
 
   @override
-  Future<bool> clear() async {
-    final database = await _database.open();
-    await database!.delete(database.vendorDrift).go();
-    return true;
-  }
+  Future<bool> clear() async => true;
 }
