@@ -80,5 +80,8 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
+      - name: Revert generated vendor map to stub
+        run: git checkout HEAD -- lib/src/device_info/vendor_map.dart
+
       - name: Check Publish Warnings
         run: dart pub publish --dry-run
