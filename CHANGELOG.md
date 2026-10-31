@@ -4,6 +4,7 @@
 1. Isolate failures no longer hang a scan: `getAllPingableDevicesAsync` and `customDiscover(async: true)` spawn their isolate with error and exit ports, so an uncaught error or an early isolate exit surfaces to the caller instead of leaving the stream open forever.
 2. Both isolate entry points now catch failures and report them, so a bad database directory or an unresolvable target arrives as an exception rather than a silent isolate death.
 3. Added regression coverage for the async port scan failing on an unresolvable target.
+4. MAC vendor lookup moved from runtime CSV download to compile-time generation: build hook downloads the vendor CSV during `dart pub get` and generates a const map with 34,451 entries, providing O(1) lookups without runtime network dependency. Removed SQLite vendor table and unused dependencies (csv, http, data_assets). SDK constraint upgraded to >=3.10.0 for build hooks support.
 
 ## 6.0.11
 1. Much faster host discovery on Linux, macOS and Windows: the scanner primes the neighbour cache with UDP and reads the numeric ARP table once (`arp -an`, `/proc/net/arp`, numeric `arp -a`) instead of spawning a `ping` process per address. Hosts that ignore ICMP are still found, the device the scan runs on is included when it falls in the range, broadcast and multicast MAC rows are filtered out, and mobile platforms or non-local subnets fall back to the ICMP sweep.
