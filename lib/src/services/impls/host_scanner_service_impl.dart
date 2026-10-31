@@ -11,16 +11,44 @@ import 'package:network_tools/src/network_tools_utils.dart';
 import 'package:network_tools/src/repository/repository.dart';
 import 'package:universal_io/io.dart';
 
+/// Spawns the host scan isolate with its error and exit ports wired up.
+Future<Isolate> _spawnHostScanIsolate(
+  void Function(SendPort) entryPoint,
+  SendPort sendPort,
+  SendPort errorPort,
+  SendPort exitPort,
+) => Isolate.spawn(entryPoint, sendPort, onError: errorPort, onExit: exitPort);
+
 /// Scans for all hosts in a subnet.
 class HostScannerServiceImpl extends HostScannerService {
   HostScannerServiceImpl({
     ARPTableHelper? arpTableHelper,
     Future<bool> Function(String subnet)? isLocalSubnet,
+    Future<Isolate> Function(
+      void Function(SendPort) entryPoint,
+      SendPort sendPort,
+      SendPort errorPort,
+      SendPort exitPort,
+    )?
+    spawnScanIsolate,
   }) : _arpTableHelper = arpTableHelper ?? ARPTableHelper(),
-       _isLocalSubnet = isLocalSubnet ?? _defaultIsLocalSubnet;
+       _isLocalSubnet = isLocalSubnet ?? _defaultIsLocalSubnet,
+       _spawnScanIsolate = spawnScanIsolate ?? _spawnHostScanIsolate;
 
   final ARPTableHelper _arpTableHelper;
   final Future<bool> Function(String subnet) _isLocalSubnet;
+
+  /// Spawns the isolate behind [getAllPingableDevicesAsync].
+  ///
+  /// Replaceable so tests can simulate an isolate that crashes or exits before
+  /// the scan finishes.
+  final Future<Isolate> Function(
+    void Function(SendPort) entryPoint,
+    SendPort sendPort,
+    SendPort errorPort,
+    SendPort exitPort,
+  )
+  _spawnScanIsolate;
 
   /// Budget for the host name lookup that runs during discovery.
   ///
@@ -525,11 +553,11 @@ class HostScannerServiceImpl extends HostScannerService {
     Isolate? isolate;
 
     try {
-      isolate = await Isolate.spawn(
+      isolate = await _spawnScanIsolate(
         _startSearchingDevices,
         receivePort.sendPort,
-        onError: errorPort.sendPort,
-        onExit: exitPort.sendPort,
+        errorPort.sendPort,
+        exitPort.sendPort,
       );
 
       await for (final message in receivePort) {

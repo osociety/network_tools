@@ -5,8 +5,38 @@ import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/concurrency.dart';
 import 'package:universal_io/io.dart';
 
+/// Spawns the port scan isolate with its error and exit ports wired up.
+Future<Isolate> _spawnPortScanIsolate(
+  void Function(SendPort) entryPoint,
+  SendPort sendPort,
+  SendPort errorPort,
+  SendPort exitPort,
+) => Isolate.spawn(entryPoint, sendPort, onError: errorPort, onExit: exitPort);
+
 /// Scans open port for a target Address or domain.
 class PortScannerServiceImpl extends PortScannerService {
+  PortScannerServiceImpl({
+    Future<Isolate> Function(
+      void Function(SendPort) entryPoint,
+      SendPort sendPort,
+      SendPort errorPort,
+      SendPort exitPort,
+    )?
+    spawnScanIsolate,
+  }) : _spawnScanIsolate = spawnScanIsolate ?? _spawnPortScanIsolate;
+
+  /// Spawns the isolate behind [customDiscover] when `async` is true.
+  ///
+  /// Replaceable so tests can simulate an isolate that crashes or exits before
+  /// the scan finishes.
+  final Future<Isolate> Function(
+    void Function(SendPort) entryPoint,
+    SendPort sendPort,
+    SendPort errorPort,
+    SendPort exitPort,
+  )
+  _spawnScanIsolate;
+
   /// Checks if the single [port] is open or not for the [target].
   ///
   /// Returns an [ActiveHost] if the port is open, otherwise null.
@@ -79,11 +109,11 @@ class PortScannerServiceImpl extends PortScannerService {
       Isolate? isolate;
 
       try {
-        isolate = await Isolate.spawn(
+        isolate = await _spawnScanIsolate(
           _startSearchingPorts,
           receivePort.sendPort,
-          onError: errorPort.sendPort,
-          onExit: exitPort.sendPort,
+          errorPort.sendPort,
+          exitPort.sendPort,
         );
 
         await for (final message in receivePort) {
