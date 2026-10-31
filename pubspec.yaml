@@ -1,12 +1,12 @@
 name: network_tools
 description: Networking Tools library which can help you discover open ports, devices on subnet and many other things. 
-version: 6.0.12
+version: 6.0.13
 issue_tracker: https://github.com/osociety/network_tools/issues
 repository: https://github.com/osociety/network_tools
 example: example/main.dart
 
 environment:
-  sdk: ">=3.8.0 <4.0.0"
+  sdk: ">=3.10.0 <4.0.0"
 
 topics:
   - network
@@ -20,16 +20,14 @@ funding:
   - https://ko-fi.com/op3nsoc13ty
   
 dependencies:
-  # A dart csv to list converter.
-  csv: ^8.0.0
   # Multi-platform network ping utility.
   dart_ping: ">=9.0.1 <11.0.0"
   # Drift is a reactive persistence library for Flutter and Dart, built on top of SQLite.
   drift: ^2.34.0
   # Service locator
   get_it: ^9.2.1
-  # A composable, Future-based library for making HTTP requests.
-  http: ^1.6.0
+  # Dart build hook support for bundling data assets at compile time.
+  hooks: ^2.2.0
   # Convenient code generator for get_it
   injectable: ">=2.5.1 <4.0.0"
   # Defines the annotations used by json_serializable.

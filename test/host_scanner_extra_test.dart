@@ -2,12 +2,10 @@ import 'dart:io';
 
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/device_info/arp_table_helper.dart';
-import 'package:network_tools/src/device_info/vendor_table.dart';
 import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/repository/repository.dart';
 import 'package:network_tools/src/services/impls/host_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart';
-import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 class _FakeARPRepository implements Repository<ARPData> {
@@ -382,9 +380,6 @@ void main() {
   group('getAllPingableDevicesAsync', () {
     test('reports progress while scanning in an isolate', () async {
       final tempDirectory = await Directory.systemTemp.createTemp('nt_async_');
-      File(
-        p.join(tempDirectory.path, VendorTable.fileName),
-      ).writeAsStringSync('mac,vendor\nAABBCC,Test Vendor\n');
       dbDirectory = tempDirectory.path;
       enableDebugging = false;
 

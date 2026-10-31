@@ -6,9 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/database/drfit_database_service.dart';
 import 'package:network_tools/src/database/drift_database.dart';
-import 'package:network_tools/src/device_info/vendor_table.dart';
 import 'package:network_tools/src/injection.dart';
-import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
@@ -35,22 +33,9 @@ void main() {
 
   setUp(() async {
     await getIt.reset();
-    await database.delete(database.vendorDrift).go();
     await database.delete(database.aRPDrift).go();
 
-    // Seed the vendor table so configuration never downloads the CSV, and add
-    // a stale ARP entry that rebuildData should clear.
-    await database
-        .into(database.vendorDrift)
-        .insert(
-          VendorDriftCompanion.insert(
-            macPrefix: 'AABBCC',
-            vendorName: 'Test Vendor',
-            private: 'false',
-            blockType: 'MA-L',
-            lastUpdate: '2024-01-01',
-          ),
-        );
+    // Add a stale ARP entry that rebuildData should clear.
     await database
         .into(database.aRPDrift)
         .insert(
@@ -81,9 +66,6 @@ void main() {
       final arpRows = await database.select(database.aRPDrift).get();
       expect(arpRows.map((row) => row.iPAddress), isNot(contains('10.9.9.9')));
 
-      final vendorRows = await database.select(database.vendorDrift).get();
-      expect(vendorRows.single.macPrefix, 'AABBCC');
-
       // Exercise the debug log listener installed by configureNetworkTools.
       Logger('configure_network_tools').fine('listener exercise');
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -91,15 +73,8 @@ void main() {
   );
 
   test('skips the vendor table for worker isolates', () async {
-    await database.delete(database.vendorDrift).go();
-
     await configureNetworkTools(tempDirectory.path, buildVendorTable: false);
-
-    final vendorRows = await database.select(database.vendorDrift).get();
-    expect(vendorRows, isEmpty);
-    expect(
-      File(p.join(tempDirectory.path, VendorTable.fileName)).existsSync(),
-      isFalse,
-    );
+    // Vendor lookups now use a const map, so there is no file to check.
+    // This test verifies that buildVendorTable: false doesn't crash.
   });
 }
