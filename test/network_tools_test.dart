@@ -288,6 +288,25 @@ Future<void> main() async {
       }
     });
 
+    test('customDiscover Async finishes when the isolate target fails', () async {
+      // The DNS failure happens inside the scan isolate. Without the error and
+      // exit ports the isolate died silently and this stream stayed open.
+      try {
+        await PortScannerService.instance
+            .customDiscover(
+              'network-tools-unresolvable.invalid',
+              portList: [port],
+              async: true,
+            )
+            .drain()
+            .timeout(const Duration(seconds: 30));
+      } on TimeoutException {
+        fail('customDiscover(async: true) never finished for a bad target');
+      } catch (_) {
+        // Surfacing the isolate failure is the point of the test.
+      }
+    });
+
     test('Running connectToPort tests', () {
       for (final activeHost in hostsWithOpenPort) {
         expectLater(

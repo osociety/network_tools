@@ -66,12 +66,26 @@ class PortScannerServiceImpl extends PortScannerService {
       );
     } else {
       final receivePort = ReceivePort();
-      final isolate = await Isolate.spawn(
-        _startSearchingPorts,
-        receivePort.sendPort,
-      );
+      final errorPort = ReceivePort();
+      final exitPort = ReceivePort();
+      // An isolate that dies before sending 'Done' — an unresolvable target,
+      // for instance — would otherwise leave this stream waiting forever.
+      final errorSubscription = errorPort.listen((dynamic error) {
+        receivePort.sendPort.send(<Object?>['runtimeError', error]);
+      });
+      final exitSubscription = exitPort.listen((dynamic _) {
+        receivePort.sendPort.send(<Object?>['runtimeError', 'isolate exited']);
+      });
+      Isolate? isolate;
 
       try {
+        isolate = await Isolate.spawn(
+          _startSearchingPorts,
+          receivePort.sendPort,
+          onError: errorPort.sendPort,
+          onExit: exitPort.sendPort,
+        );
+
         await for (final message in receivePort) {
           if (message is SendPort) {
             message.send(<dynamic>[
@@ -88,13 +102,23 @@ class PortScannerServiceImpl extends PortScannerService {
             );
           } else if (message is List && message.first == 'progress') {
             progressCallback?.call((message[1] as num).toDouble());
+          } else if (message is List && message.first == 'runtimeError') {
+            throw Exception('Port scan isolate failed: ${message[1]}');
           } else if (message is String && message == 'Done') {
             break;
+          } else if (message is String && message.startsWith('Error:')) {
+            throw Exception(
+              'Port scan isolate failed: ${message.substring(6).trim()}',
+            );
           }
         }
       } finally {
         // Also runs when the consumer cancels the stream early.
-        isolate.kill();
+        await errorSubscription.cancel();
+        await exitSubscription.cancel();
+        errorPort.close();
+        exitPort.close();
+        isolate?.kill();
         receivePort.close();
       }
     }
@@ -107,33 +131,37 @@ class PortScannerServiceImpl extends PortScannerService {
 
     await for (final message in port) {
       if (message is List<dynamic>) {
-        final String target = message[0] as String;
-        final List<int> portList = message[1] as List<int>;
-        final Duration timeout = message[2] as Duration;
-        final bool resultsInAddressAscendingOrder = message[3] == "true";
-        final int maxConcurrency = message[4] as int;
+        try {
+          final String target = message[0] as String;
+          final List<int> portList = message[1] as List<int>;
+          final Duration timeout = message[2] as Duration;
+          final bool resultsInAddressAscendingOrder = message[3] == "true";
+          final int maxConcurrency = message[4] as int;
 
-        double lastProgress = -1;
-        final openPortsForTarget = _customDiscover<SendableActiveHost>(
-          target,
-          portList: portList,
-          timeout: timeout,
-          resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
-          maxConcurrency: maxConcurrency,
-          progressCallback: (double progress) {
-            // Avoid flooding the main isolate with one message per port.
-            if ((progress - lastProgress).abs() >= 1) {
-              lastProgress = progress;
-              sendPort.send(<dynamic>['progress', progress]);
-            }
-          },
-        );
+          double lastProgress = -1;
+          final openPortsForTarget = _customDiscover<SendableActiveHost>(
+            target,
+            portList: portList,
+            timeout: timeout,
+            resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
+            maxConcurrency: maxConcurrency,
+            progressCallback: (double progress) {
+              // Avoid flooding the main isolate with one message per port.
+              if ((progress - lastProgress).abs() >= 1) {
+                lastProgress = progress;
+                sendPort.send(<dynamic>['progress', progress]);
+              }
+            },
+          );
 
-        await for (final SendableActiveHost activeHostFound
-            in openPortsForTarget) {
-          sendPort.send(activeHostFound);
+          await for (final SendableActiveHost activeHostFound
+              in openPortsForTarget) {
+            sendPort.send(activeHostFound);
+          }
+          sendPort.send('Done');
+        } catch (error) {
+          sendPort.send('Error: $error');
         }
-        sendPort.send('Done');
       }
     }
   }

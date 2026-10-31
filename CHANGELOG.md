@@ -1,5 +1,10 @@
 # Change Log
 
+## 6.0.12
+1. Isolate failures no longer hang a scan: `getAllPingableDevicesAsync` and `customDiscover(async: true)` spawn their isolate with error and exit ports, so an uncaught error or an early isolate exit surfaces to the caller instead of leaving the stream open forever.
+2. Both isolate entry points now catch failures and report them, so a bad database directory or an unresolvable target arrives as an exception rather than a silent isolate death.
+3. Added regression coverage for the async port scan failing on an unresolvable target.
+
 ## 6.0.11
 1. Much faster host discovery on Linux, macOS and Windows: the scanner primes the neighbour cache with UDP and reads the numeric ARP table once (`arp -an`, `/proc/net/arp`, numeric `arp -a`) instead of spawning a `ping` process per address. Hosts that ignore ICMP are still found, the device the scan runs on is included when it falls in the range, broadcast and multicast MAC rows are filtered out, and mobile platforms or non-local subnets fall back to the ICMP sweep.
 2. Host names now resolve concurrently for the discovered hosts (250 ms budget during the scan, plus a lazy retry on first access) instead of relying on the serial reverse lookups `arp -a` performs. Networks without reverse DNS return no name, and `deviceName` falls back to mDNS, the ARP entry, then `Generic Device`.
