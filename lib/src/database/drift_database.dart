@@ -4,11 +4,10 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/models/drift/arp_data.dart';
-import 'package:network_tools/src/models/drift/vendor_data.dart';
 import 'package:path/path.dart' as path;
 part 'drift_database.g.dart';
 
-@DriftDatabase(tables: [ARPDrift, VendorDrift])
+@DriftDatabase(tables: [ARPDrift])
 class AppDatabase extends _$AppDatabase {
   // After generating code, this class needs to define a `schemaVersion` getter
   // and a constructor telling drift where the database should be stored.
@@ -20,13 +19,8 @@ class AppDatabase extends _$AppDatabase {
 
   /// Creates lookup indexes for the repository queries.
   ///
-  /// Without them every MAC vendor lookup scans the full ~50k row vendor table
-  /// and every ARP lookup scans the whole ARP table.
+  /// Without them every ARP lookup scans the whole ARP table.
   Future<void> ensureIndexes() async {
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_vendor_mac_prefix '
-      'ON vendor_drift (mac_prefix)',
-    );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_arp_ip_address '
       'ON a_r_p_drift (i_p_address)',

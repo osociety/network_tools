@@ -23,14 +23,13 @@ void main() {
     final rows = await database
         .customSelect(
           "SELECT name FROM sqlite_master "
-          "WHERE type = 'index' AND name IN "
-          "('idx_vendor_mac_prefix', 'idx_arp_ip_address')",
+          "WHERE type = 'index' AND name = 'idx_arp_ip_address'",
         )
         .get();
 
     expect(
       rows.map((row) => row.read<String>('name')),
-      containsAll(<String>['idx_vendor_mac_prefix', 'idx_arp_ip_address']),
+      contains('idx_arp_ip_address'),
     );
   });
 
@@ -41,7 +40,7 @@ void main() {
     final rows = await database
         .customSelect(
           "SELECT name FROM sqlite_master "
-          "WHERE type = 'index' AND name = 'idx_vendor_mac_prefix'",
+          "WHERE type = 'index' AND name = 'idx_arp_ip_address'",
         )
         .get();
 
