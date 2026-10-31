@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:drift/native.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:network_tools/src/database/drfit_database_service.dart';
+import 'package:network_tools/src/database/drift_database.dart';
 import 'package:network_tools/src/services/impls/host_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart';
 import 'package:test/test.dart';
@@ -16,13 +19,20 @@ void _crashImmediately(SendPort sendPort) {
 
 void main() {
   late Directory tempDirectory;
+  late AppDatabase database;
 
   setUpAll(() async {
     tempDirectory = await Directory.systemTemp.createTemp('nt_isolate_');
+    // Keep the database in memory. A file-backed database lives in
+    // [tempDirectory], and Windows refuses to delete a directory that still
+    // holds the open SQLite file, failing tearDownAll with errno 32.
+    database = AppDatabase(NativeDatabase.memory());
+    DriftDatabaseService.appDatabase = database;
     await configureNetworkTools(tempDirectory.path, buildVendorTable: false);
   });
 
   tearDownAll(() async {
+    await database.close();
     await tempDirectory.delete(recursive: true);
   });
 
