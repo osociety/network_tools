@@ -231,7 +231,8 @@ class HostScannerServiceImpl extends HostScannerService {
             .forEach((result) {
               completedProbes++;
               if (progressCallback != null && totalProbes > 0) {
-                final tcpProgress = (completedProbes / totalProbes) * 50;
+                // TCP phase covers 0-95% since it finds almost all devices
+                final tcpProgress = (completedProbes / totalProbes) * 95;
                 progressCallback(tcpProgress);
               }
             })
@@ -243,6 +244,10 @@ class HostScannerServiceImpl extends HostScannerService {
                     .where((id) => !foundHostIds.contains(id))
                     .toList();
                 if (missingHostIds.isEmpty) {
+                  // No ping fallback needed, jump to 100%
+                  if (progressCallback != null) {
+                    progressCallback(100);
+                  }
                   activeHostsController?.close();
                   return;
                 }
@@ -267,8 +272,9 @@ class HostScannerServiceImpl extends HostScannerService {
                     }
                     completedPings++;
                     if (progressCallback != null && totalPings > 0) {
+                      // Ping fallback covers 95-100%
                       final pingProgress =
-                          50 + (completedPings / totalPings) * 50;
+                          95 + (completedPings / totalPings) * 5;
                       progressCallback(pingProgress);
                     }
                     return pingResult;
@@ -314,8 +320,9 @@ class HostScannerServiceImpl extends HostScannerService {
                     }
                     completedPings++;
                     if (progressCallback != null && totalPings > 0) {
+                      // Ping fallback covers 95-100%
                       final pingProgress =
-                          50 + (completedPings / totalPings) * 50;
+                          95 + (completedPings / totalPings) * 5;
                       progressCallback(pingProgress);
                     }
                     return pingResult;
