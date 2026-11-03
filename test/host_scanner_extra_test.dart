@@ -264,11 +264,11 @@ void main() {
   group('Concurrency settings', () {
     test('hostLookupConcurrency returns platform-specific values', () {
       final concurrency = HostScannerServiceImpl.hostLookupConcurrency;
-      // On mobile (Android/iOS) it should be 56, on desktop 96
+      // On mobile (Android/iOS) it should be 32, on desktop 128
       if (Platform.isAndroid || Platform.isIOS) {
-        expect(concurrency, 56);
+        expect(concurrency, 32);
       } else {
-        expect(concurrency, 96);
+        expect(concurrency, 128);
       }
     });
   });

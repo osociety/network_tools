@@ -46,9 +46,9 @@ class HostScannerServiceImpl extends HostScannerService {
   /// Mobile platforms get lower concurrency to avoid overwhelming their network stacks.
   static int get hostLookupConcurrency {
     if (Platform.isAndroid || Platform.isIOS) {
-      return 56;
+      return 32;
     }
-    return 96;
+    return 128;
   }
 
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
