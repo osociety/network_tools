@@ -127,6 +127,15 @@ class ActiveHost {
   /// mDNS scanner and are null for hosts found by the host scanner.
   Future<MdnsInfo?> get mdnsInfo => _mdnsInfo ??= setMdnsInfo();
 
+  /// Attaches mDNS information discovered by a separate scan.
+  ///
+  /// This is used to merge results from [MdnsScannerService] into hosts found
+  /// by [HostScannerService], so that device names can be resolved from mDNS
+  /// advertisements when reverse DNS fails.
+  void attachMdnsInfo(MdnsInfo info) {
+    _mdnsInfo = Future.value(info);
+  }
+
   Future<ARPData?>? _arpData;
 
   /// The neighbor table entry for this address, or null when unavailable.
