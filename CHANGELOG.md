@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.18
+1. Platform-specific concurrency tuning: mobile uses 40 concurrent connections (balanced for speed without overwhelming network stack), desktop uses 80 (faster scan on capable hardware).
+
 ## 6.0.17
 1. Immediate progress feedback: scan reports 0% progress as soon as it starts, before any TCP probes complete. Prevents UI from appearing frozen during initial setup.
 
