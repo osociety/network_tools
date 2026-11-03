@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.14
+1. Tuned scan timeout and concurrency for cross-platform consistency: default timeout increased from 1s to 2s to catch slow-responding devices, desktop concurrency reduced from 128 to 64 to match mobile behavior. These adjustments help Android and macOS discover the same devices.
+
 ## 6.0.13
 1. Build hook refined: removed unused `data_assets` dependency, added comprehensive tests for generated vendor map (6 new tests verifying structure, count, and known entries).
 2. Hybrid approach for vendor map: committed minimal stub file that build hook replaces with full 34,451-entry map during `dart pub get`. Reduces repository size while ensuring package works immediately after cloning.
