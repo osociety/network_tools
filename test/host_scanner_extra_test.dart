@@ -342,7 +342,6 @@ void main() {
           .getAllSendablePingableDevices(
             '127.0.0',
             lastHostId: 1,
-            timeoutInSeconds: 2,
           )
           .toList();
 
