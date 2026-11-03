@@ -336,6 +336,65 @@ void main() {
       expect(progress, isNotEmpty);
       expect(progress.last, 100.0);
     });
+
+    test('TCP probe finds localhost', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            timeoutInSeconds: 2,
+          )
+          .toList();
+
+      // Should find at least localhost
+      expect(hosts, isNotEmpty);
+      expect(hosts.any((h) => h.address == '127.0.0.1'), isTrue);
+    });
+
+    test('scan with custom timeout completes', () async {
+      final progress = <double>[];
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            timeoutInSeconds: 1,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should complete with 1s timeout
+      expect(progress.last, 100.0);
+      expect(hosts, isNotEmpty);
+    });
+
+    test('progress callback receives multiple updates', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 3,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should have multiple progress updates (0%, intermediate, 100%)
+      expect(progress.length, greaterThan(2));
+      expect(progress.first, 0.0);
+      expect(progress.last, 100.0);
+    });
+
+    test('scan with hostIds parameter', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            hostIds: [1],
+          )
+          .toList();
+
+      // Should only scan host 1
+      expect(hosts, isNotEmpty);
+      expect(hosts.every((h) => h.address.endsWith('.1')), isTrue);
+    });
   });
 }
 
