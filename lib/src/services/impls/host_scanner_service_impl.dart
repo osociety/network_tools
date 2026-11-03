@@ -59,7 +59,13 @@ class HostScannerServiceImpl extends HostScannerService {
   static const Duration preferredHostNameTimeout = Duration(milliseconds: 250);
 
   /// Upper bound for concurrent per-host verification and name lookups.
-  static const int hostLookupConcurrency = 64;
+  /// Mobile platforms get lower concurrency to avoid overwhelming their network stacks.
+  static int get hostLookupConcurrency {
+    if (Platform.isAndroid || Platform.isIOS) {
+      return 32;
+    }
+    return 128;
+  }
 
   static Future<bool> _defaultIsLocalSubnet(String subnet) async {
     // Loopback has no ARP table; pinging it is cheaper and always works.
@@ -105,6 +111,12 @@ class HostScannerServiceImpl extends HostScannerService {
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
+    // Start the mDNS scan in parallel with the host scan. The results are
+    // merged by IP address so that devices like Android phones that don't
+    // register reverse DNS records can still get their names from mDNS
+    // advertisements.
+    final Future<Map<String, MdnsInfo>> mdnsMapFuture = _buildMdnsMap();
+
     final stream = getAllSendablePingableDevices(
       subnet,
       firstHostId: firstHostId,
@@ -114,13 +126,50 @@ class HostScannerServiceImpl extends HostScannerService {
       progressCallback: progressCallback,
       resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
     );
+
+    // Wait for the mDNS scan to complete before yielding hosts, so that every
+    // host can be enriched with mDNS info if available.
+    final Map<String, MdnsInfo> mdnsMap = await mdnsMapFuture;
+
     await for (final sendableActiveHost in stream) {
       // Host details (host name, ARP, vendor) resolve lazily, so they do not
       // delay discovery. Awaiting each host's resolveInfo() here used to
       // serialize a reverse DNS lookup per device.
-      yield ActiveHost.fromSendableActiveHost(
+      final host = ActiveHost.fromSendableActiveHost(
         sendableActiveHost: sendableActiveHost,
       );
+      // Attach mDNS info if we found this host in the mDNS scan.
+      final mdnsInfo = mdnsMap[host.address];
+      if (mdnsInfo != null) {
+        host.attachMdnsInfo(mdnsInfo);
+      }
+      yield host;
+    }
+  }
+
+  /// Runs an mDNS scan and returns a map of IP address to [MdnsInfo].
+  ///
+  /// This is used to enrich hosts found by the regular scan with mDNS
+  /// advertisements, so that devices like Android phones can get their names
+  /// even when reverse DNS fails.
+  Future<Map<String, MdnsInfo>> _buildMdnsMap() async {
+    try {
+      final mdnsHosts = await MdnsScannerService.instance.searchMdnsDevices();
+      final map = <String, MdnsInfo>{};
+      for (final host in mdnsHosts) {
+        final mdnsInfo = await host.mdnsInfo;
+        if (mdnsInfo != null) {
+          map[host.address] = mdnsInfo;
+        }
+      }
+      return map;
+    } catch (e, stackTrace) {
+      logger.warning(
+        'mDNS scan failed during host discovery: $e',
+        e,
+        stackTrace,
+      );
+      return {};
     }
   }
 
@@ -148,29 +197,11 @@ class HostScannerServiceImpl extends HostScannerService {
       return;
     }
 
-    // Every live host on a directly connected IPv4 subnet has to answer ARP,
-    // so priming the kernel cache and reading it once finds hosts in
-    // milliseconds. Other cases (mobile, remote subnets, loopback) fall back
-    // to the ICMP sweep.
-    if (_arpTableHelper.isARPSupported && await _isLocalSubnet(subnet)) {
-      final List<ARPData> table = await _readNeighborTable(subnet, idsToScan);
-      if (table.isNotEmpty) {
-        yield* _yieldARPResults(
-          subnet: subnet,
-          idsToScan: idsToScan,
-          table: table,
-          firstHostId: firstHostId,
-          lastValidSubnet: lastValidSubnet,
-          timeoutInSeconds: timeoutInSeconds,
-          progressCallback: progressCallback,
-          resultsInAddressAscendingOrder: resultsInAddressAscendingOrder,
-        );
-        return;
-      }
-      logger.fine('ARP table has no entries for $subnet, using ping sweep');
-    }
-
-    yield* _yieldPingResults(
+    // Use TCP-connect sweep on all platforms for consistent results.
+    // The ARP fast path was unreliable on some platforms (macOS) and caused
+    // inconsistent device counts between mobile and desktop.
+    // ARP is still used to enrich results with MAC addresses when available.
+    yield* _yieldTCPConnectResults(
       subnet: subnet,
       idsToScan: idsToScan,
       firstHostId: firstHostId,
@@ -245,6 +276,9 @@ class HostScannerServiceImpl extends HostScannerService {
     required bool resultsInAddressAscendingOrder,
     ProgressCallback? progressCallback,
   }) async* {
+    final stopwatch = Stopwatch()..start();
+    logger.info('ARP sweep: starting scan of ${idsToScan.length} hosts');
+
     final Map<String, ARPData> byAddress = <String, ARPData>{
       for (final ARPData entry in table) entry.iPAddress: entry,
     };
@@ -260,19 +294,34 @@ class HostScannerServiceImpl extends HostScannerService {
       return;
     }
 
-    final Stream<ConcurrentResult<SendableActiveHost?>> results =
-        mapConcurrently<int, SendableActiveHost?>(candidates, (int id) {
-          final String host = '$subnet.$id';
-          final ARPData? arpData = byAddress[host];
-          if (arpData != null) {
-            return _verifyARPHost(host, arpData, timeoutInSeconds);
-          }
-          return getHostFromPing(
-            activeHostsController: null,
-            host: host,
-            timeoutInSeconds: timeoutInSeconds,
+    int hostsFound = 0;
+    final Stream<ConcurrentResult<SendableActiveHost?>>
+    results = mapConcurrently<int, SendableActiveHost?>(candidates, (int id) {
+      final String host = '$subnet.$id';
+      final ARPData? arpData = byAddress[host];
+      if (arpData != null) {
+        return _verifyARPHost(host, arpData, timeoutInSeconds).then((host) {
+          hostsFound++;
+          final elapsed = stopwatch.elapsedMilliseconds;
+          logger.info('ARP: found $host at ${elapsed}ms (total: $hostsFound)');
+          return host;
+        });
+      }
+      return getHostFromPing(
+        activeHostsController: null,
+        host: host,
+        timeoutInSeconds: timeoutInSeconds,
+      ).then((host) {
+        if (host != null) {
+          hostsFound++;
+          final elapsed = stopwatch.elapsedMilliseconds;
+          logger.info(
+            'ARP (ping fallback): found $host at ${elapsed}ms (total: $hostsFound)',
           );
-        }, maxConcurrency: hostLookupConcurrency);
+        }
+        return host;
+      });
+    }, maxConcurrency: hostLookupConcurrency);
 
     if (!resultsInAddressAscendingOrder) {
       await for (final ConcurrentResult<SendableActiveHost?> result
@@ -282,6 +331,10 @@ class HostScannerServiceImpl extends HostScannerService {
           yield host;
         }
       }
+      final elapsed = stopwatch.elapsedMilliseconds;
+      logger.info(
+        'ARP sweep completed (unordered): $hostsFound hosts found in ${elapsed}ms',
+      );
       return;
     }
 
@@ -303,6 +356,10 @@ class HostScannerServiceImpl extends HostScannerService {
     }
     // Priming probed the whole range, so discovery is complete here.
     progressCallback?.call(100);
+    final elapsed = stopwatch.elapsedMilliseconds;
+    logger.info(
+      'ARP sweep completed (ordered): $hostsFound hosts found in ${elapsed}ms',
+    );
   }
 
   /// Confirms an ARP-discovered host and attaches its resolved name.
@@ -328,7 +385,16 @@ class HostScannerServiceImpl extends HostScannerService {
     );
   }
 
-  Stream<SendableActiveHost> _yieldPingResults({
+  /// TCP-connect sweep: no process spawns, works on all platforms.
+  ///
+  /// Tries to connect to common ports on each host. Connection-refused (errno 111
+  /// on Linux/Android, 10061 on Windows) means the host is up but the port is
+  /// closed; timeout or other errors mean the host is down.
+  ///
+  /// After TCP-connect completes, runs ICMP ping as a fallback for hosts that
+  /// didn't respond to TCP. This ensures we find devices that block TCP but
+  /// respond to ping (like some routers and IoT devices).
+  Stream<SendableActiveHost> _yieldTCPConnectResults({
     required String subnet,
     required List<int> idsToScan,
     required int firstHostId,
@@ -337,47 +403,310 @@ class HostScannerServiceImpl extends HostScannerService {
     required bool resultsInAddressAscendingOrder,
     ProgressCallback? progressCallback,
   }) async* {
-    // The controller is only needed for unordered delivery; creating it in
-    // ordered mode would buffer results that nobody listens to.
+    final stopwatch = Stopwatch()..start();
+    final timeout = Duration(seconds: timeoutInSeconds);
     final StreamController<SendableActiveHost>? activeHostsController =
         resultsInAddressAscendingOrder
         ? null
         : StreamController<SendableActiveHost>();
 
-    final List<Future<SendableActiveHost?>> activeHostsFuture =
-        <Future<SendableActiveHost?>>[
-          for (final int id in idsToScan)
-            getHostFromPing(
-              activeHostsController: activeHostsController,
-              host: '$subnet.$id',
-              timeoutInSeconds: timeoutInSeconds,
-            ),
-        ];
+    logger.info(
+      'TCP-connect sweep: starting scan of ${idsToScan.length} hosts',
+    );
+    int hostsFound = 0;
+    final Set<int> foundHostIds = {};
+
+    // Use bounded concurrency for TCP probes to avoid overwhelming mobile devices
+    final tcpResults = mapConcurrently<int, SendableActiveHost?>(idsToScan, (
+      int id,
+    ) async {
+      final host = await _probeHostViaTCP(
+        '$subnet.$id',
+        timeout,
+        activeHostsController,
+      );
+      if (host != null) {
+        hostsFound++;
+        foundHostIds.add(id);
+        final elapsed = stopwatch.elapsedMilliseconds;
+        logger.info(
+          'TCP-connect: found $subnet.$id at ${elapsed}ms (total: $hostsFound)',
+        );
+      }
+      return host;
+    }, maxConcurrency: hostLookupConcurrency);
 
     if (!resultsInAddressAscendingOrder) {
-      // Close the controller once every ping future has completed, otherwise
-      // consumers iterating this stream would never see it finish.
+      // Track progress for unordered mode
+      int completedProbes = 0;
+      final totalProbes = idsToScan.length;
+
+      // Process TCP results as they complete and emit to stream
       unawaited(
-        Future.wait(activeHostsFuture).then(
-          (_) => activeHostsController?.close(),
-          onError: (Object _) => activeHostsController?.close(),
-        ),
+        tcpResults
+            .forEach((result) {
+              completedProbes++;
+              if (progressCallback != null && totalProbes > 0) {
+                final tcpProgress = (completedProbes / totalProbes) * 50;
+                progressCallback!(tcpProgress);
+              }
+            })
+            .then(
+              (_) async {
+                // After TCP-connect completes, run ICMP ping fallback for missing
+                // hosts with bounded concurrency so Android is not overwhelmed.
+                final missingHostIds = idsToScan
+                    .where((id) => !foundHostIds.contains(id))
+                    .toList();
+                if (missingHostIds.isEmpty) {
+                  activeHostsController?.close();
+                  return;
+                }
+
+                logger.info(
+                  'Ping fallback: probing ${missingHostIds.length} hosts',
+                );
+                int completedPings = 0;
+                final totalPings = missingHostIds.length;
+
+                final pingResults = mapConcurrently<int, SendableActiveHost?>(
+                  missingHostIds,
+                  (int id) async {
+                    final host = '$subnet.$id';
+                    final pingResult = await getHostFromPing(
+                      activeHostsController: activeHostsController,
+                      host: host,
+                      timeoutInSeconds: timeoutInSeconds,
+                    );
+                    if (pingResult != null) {
+                      logger.info('Ping fallback: found $host');
+                    }
+                    completedPings++;
+                    if (progressCallback != null && totalPings > 0) {
+                      final pingProgress =
+                          50 + (completedPings / totalPings) * 50;
+                      progressCallback!(pingProgress);
+                    }
+                    return pingResult;
+                  },
+                  maxConcurrency: hostLookupConcurrency,
+                );
+
+                await for (final _ in pingResults) {
+                  // drain the stream to completion
+                }
+                activeHostsController?.close();
+                final elapsed = stopwatch.elapsedMilliseconds;
+                logger.info(
+                  'TCP-connect sweep completed: $hostsFound hosts found in ${elapsed}ms',
+                );
+              },
+              onError: (Object _) async {
+                final missingHostIds = idsToScan
+                    .where((id) => !foundHostIds.contains(id))
+                    .toList();
+                if (missingHostIds.isEmpty) {
+                  activeHostsController?.close();
+                  return;
+                }
+
+                logger.info(
+                  'Ping fallback: probing ${missingHostIds.length} hosts',
+                );
+                int completedPings = 0;
+                final totalPings = missingHostIds.length;
+
+                final pingResults = mapConcurrently<int, SendableActiveHost?>(
+                  missingHostIds,
+                  (int id) async {
+                    final host = '$subnet.$id';
+                    final pingResult = await getHostFromPing(
+                      activeHostsController: activeHostsController,
+                      host: host,
+                      timeoutInSeconds: timeoutInSeconds,
+                    );
+                    if (pingResult != null) {
+                      logger.info('Ping fallback: found $host');
+                    }
+                    completedPings++;
+                    if (progressCallback != null && totalPings > 0) {
+                      final pingProgress =
+                          50 + (completedPings / totalPings) * 50;
+                      progressCallback!(pingProgress);
+                    }
+                    return pingResult;
+                  },
+                  maxConcurrency: hostLookupConcurrency,
+                );
+
+                await for (final _ in pingResults) {
+                  // drain the stream to completion
+                }
+                activeHostsController?.close();
+                final elapsed = stopwatch.elapsedMilliseconds;
+                logger.info(
+                  'TCP-connect sweep completed: $hostsFound hosts found in ${elapsed}ms',
+                );
+              },
+            ),
       );
       yield* activeHostsController!.stream;
       return;
     }
 
-    int i = 0;
-    for (final Future<SendableActiveHost?> host in activeHostsFuture) {
-      final SendableActiveHost? tempHost = await host;
-      progressCallback?.call(
-        _progressFor(idsToScan[i], firstHostId, lastValidSubnet),
-      );
-      i++;
-      if (tempHost == null) {
-        continue;
+    // Ordered mode: collect all TCP results, then yield in order
+    final tcpResultsMap = <int, SendableActiveHost?>{};
+    int tcpIndex = 0;
+    await for (final concurrentResult in tcpResults) {
+      final id = idsToScan[tcpIndex];
+      tcpResultsMap[id] = concurrentResult.value;
+      progressCallback?.call(_progressFor(id, firstHostId, lastValidSubnet));
+      tcpIndex++;
+    }
+
+    // Yield TCP results in order
+    for (final id in idsToScan) {
+      final tempHost = tcpResultsMap[id];
+      if (tempHost != null) {
+        yield tempHost;
       }
-      yield tempHost;
+    }
+
+    // After TCP-connect completes, run ICMP ping fallback for missing hosts
+    // with bounded concurrency.
+    final missingHostIds = idsToScan
+        .where((id) => !foundHostIds.contains(id))
+        .toList();
+    if (missingHostIds.isNotEmpty) {
+      logger.info('Ping fallback: probing ${missingHostIds.length} hosts');
+
+      final pingFutures = <int, Future<SendableActiveHost?>>{};
+      final pingResults = mapConcurrently<int, SendableActiveHost?>(
+        missingHostIds,
+        (int id) {
+          final host = '$subnet.$id';
+          final future = getHostFromPing(
+            activeHostsController: null,
+            host: host,
+            timeoutInSeconds: timeoutInSeconds,
+          );
+          pingFutures[id] = future;
+          return future;
+        },
+        maxConcurrency: hostLookupConcurrency,
+      );
+
+      // Drain the concurrent stream to let all pings run
+      await for (final _ in pingResults) {
+        // results are collected in pingFutures
+      }
+
+      // Yield results in order
+      for (final id in missingHostIds) {
+        final pingResult = await pingFutures[id];
+        if (pingResult != null) {
+          progressCallback?.call(
+            _progressFor(id, firstHostId, lastValidSubnet),
+          );
+          logger.info('Ping fallback: found $subnet.$id');
+          yield pingResult;
+        }
+      }
+    }
+
+    final elapsed = stopwatch.elapsedMilliseconds;
+    logger.info(
+      'TCP-connect sweep completed (ordered): $hostsFound hosts found in ${elapsed}ms',
+    );
+  }
+
+  /// ICMP ping fallback for hosts that didn't respond to TCP-connect.
+  ///
+  /// This catches devices that block TCP but respond to ping (some routers,
+  /// IoT devices, firewalls). Only runs for hosts not already found by TCP.
+  Stream<SendableActiveHost> _yieldPingFallback({
+    required String subnet,
+    required List<int> idsToScan,
+    required Set<int> foundHostIds,
+    required int timeoutInSeconds,
+  }) async* {
+    final missingHostIds = idsToScan
+        .where((id) => !foundHostIds.contains(id))
+        .toList();
+    if (missingHostIds.isEmpty) {
+      logger.fine('Ping fallback: all hosts found via TCP, skipping');
+      return;
+    }
+
+    logger.info(
+      'Ping fallback: probing ${missingHostIds.length} hosts that missed TCP',
+    );
+
+    for (final id in missingHostIds) {
+      final host = '$subnet.$id';
+      final pingResult = await getHostFromPing(
+        activeHostsController: null,
+        host: host,
+        timeoutInSeconds: timeoutInSeconds,
+      );
+      if (pingResult != null) {
+        logger.info('Ping fallback: found $host');
+        yield pingResult;
+      }
+    }
+  }
+
+  /// Probes a host via TCP-connect to common ports.
+  ///
+  /// Tries multiple common ports in parallel. Returns a
+  /// [SendableActiveHost] if the host is up (any connection succeeded or
+  /// connection-refused), or null if the host is down (all ports timed out).
+  Future<SendableActiveHost?> _probeHostViaTCP(
+    String host,
+    Duration timeout,
+    StreamController<SendableActiveHost>? activeHostsController,
+  ) async {
+    // Try multiple common ports in parallel. If ANY responds, the host is up.
+    // Include common router/admin ports: 80, 443, 22, 23, 8080, 8443
+    const ports = [80, 443, 22, 23, 8080, 8443, 53, 161];
+    final futures = ports.map((port) => _tryConnect(host, port, timeout));
+    final results = await Future.wait(futures);
+
+    // If any port responded (success or connection-refused), host is up.
+    final isUp = results.any((result) => result);
+
+    if (isUp) {
+      final respondedPort = ports[results.indexOf(true)];
+      logger.fine('[TCP Probe] $host is UP (port $respondedPort responded)');
+      final result = SendableActiveHost(host);
+      if (activeHostsController != null && !activeHostsController.isClosed) {
+        activeHostsController.add(result);
+      }
+      return result;
+    }
+
+    logger.fine(
+      '[TCP Probe] $host is DOWN (all ${ports.length} ports timed out after ${timeout.inMilliseconds}ms)',
+    );
+    return null;
+  }
+
+  /// Tries to connect to a specific port. Returns true if the host responded
+  /// (connection succeeded or connection-refused), false if timed out.
+  Future<bool> _tryConnect(String host, int port, Duration timeout) async {
+    try {
+      final socket = await Socket.connect(host, port).timeout(timeout);
+      await socket.close();
+      return true; // Port open
+    } on SocketException catch (e) {
+      // errno 111 = ECONNREFUSED on Linux/Android; 10061 on Windows.
+      // Both mean the host is up but the port is closed.
+      final errorCode = e.osError?.errorCode;
+      return errorCode == 111 || errorCode == 10061;
+    } on TimeoutException {
+      return false; // Host down or port filtered
+    } catch (e) {
+      return false;
     }
   }
 
