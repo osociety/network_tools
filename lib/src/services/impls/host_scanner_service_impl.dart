@@ -46,9 +46,9 @@ class HostScannerServiceImpl extends HostScannerService {
   /// Mobile platforms get lower concurrency to avoid overwhelming their network stacks.
   static int get hostLookupConcurrency {
     if (Platform.isAndroid || Platform.isIOS) {
-      return 40;
+      return 56;
     }
-    return 80;
+    return 96;
   }
 
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
@@ -406,6 +406,9 @@ class HostScannerServiceImpl extends HostScannerService {
         }
       }
     }
+
+    // Ensure progress reaches 100% at the end
+    progressCallback?.call(100);
 
     final elapsed = stopwatch.elapsedMilliseconds;
     logger.info(

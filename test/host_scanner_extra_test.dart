@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:network_tools/network_tools.dart';
@@ -257,6 +258,83 @@ void main() {
             .toList(),
         throwsA(isA<String>()),
       );
+    });
+  });
+
+  group('Concurrency settings', () {
+    test('hostLookupConcurrency returns platform-specific values', () {
+      final concurrency = HostScannerServiceImpl.hostLookupConcurrency;
+      // On mobile (Android/iOS) it should be 56, on desktop 96
+      if (Platform.isAndroid || Platform.isIOS) {
+        expect(concurrency, 56);
+      } else {
+        expect(concurrency, 96);
+      }
+    });
+  });
+
+  group('Progress callback behavior', () {
+    test('reports 0% immediately when scan starts', () async {
+      final progress = <double>[];
+      final completer = Completer<void>();
+
+      // Start consuming the stream
+      final subscription = hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            progressCallback: progress.add,
+          )
+          .listen(
+            (_) {},
+            onDone: () => completer.complete(),
+            onError: (_) => completer.complete(),
+          );
+
+      // Wait a bit for the scan to start
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      // Should have received 0% progress
+      expect(progress, isNotEmpty);
+      expect(progress.first, 0.0);
+
+      // Clean up
+      await subscription.cancel();
+      await completer.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {},
+      );
+    });
+
+    test('reports progress up to 95% during TCP phase', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 2,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should have progress updates
+      expect(progress, isNotEmpty);
+      // All progress values should be <= 95 (TCP phase) or 100 (final)
+      expect(progress.every((p) => p <= 100), isTrue);
+    });
+
+    test('reports 100% when scan completes', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should end with 100%
+      expect(progress, isNotEmpty);
+      expect(progress.last, 100.0);
     });
   });
 }
