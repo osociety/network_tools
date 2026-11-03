@@ -415,8 +415,23 @@ class HostScannerServiceImpl extends HostScannerService {
     StreamController<SendableActiveHost>? activeHostsController,
   ) async {
     // Try multiple common ports in parallel. If ANY responds, the host is up.
-    // Include common router/admin ports: 80, 443, 22, 23, 8080, 8443
-    const ports = [80, 443, 22, 23, 8080, 8443, 53, 161];
+    // Includes web, shell, network service, printer, and Windows ports.
+    const ports = [
+      21, // FTP (NAS, routers)
+      22, // SSH
+      23, // Telnet
+      53, // DNS
+      80, // HTTP
+      161, // SNMP
+      443, // HTTPS
+      445, // SMB (Windows file sharing)
+      631, // IPP (printers)
+      3389, // RDP (Windows remote desktop)
+      5900, // VNC
+      8080, // HTTP-alt
+      8443, // HTTPS-alt
+      9100, // JetDirect (network printers)
+    ];
     final futures = ports.map((port) => _tryConnect(host, port, timeout));
     final results = await Future.wait(futures);
 
