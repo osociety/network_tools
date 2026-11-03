@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.16
+1. Balanced scan speed across platforms: both mobile and desktop now use 48 concurrent connections (was 32 mobile / 64 desktop). Android scans faster, macOS scans slightly slower for consistent experience.
+
 ## 6.0.15
 1. Smooth progress updates: TCP phase now covers 0-95% of progress (was 0-50%), with ping fallback covering 95-100%. Prevents progress bar from jumping suddenly when ping fallback finds few or no hosts.
 
