@@ -43,12 +43,12 @@ class HostScannerServiceImpl extends HostScannerService {
   _spawnScanIsolate;
 
   /// Upper bound for concurrent per-host verification and name lookups.
-  /// Mobile platforms get lower concurrency to avoid overwhelming their network stacks.
+  /// Balanced for consistent scan speed across platforms.
   static int get hostLookupConcurrency {
     if (Platform.isAndroid || Platform.isIOS) {
-      return 32;
+      return 48;
     }
-    return 64;
+    return 48;
   }
 
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
