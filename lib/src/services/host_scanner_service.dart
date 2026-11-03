@@ -54,7 +54,7 @@ abstract class HostScannerService {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
     List<int> hostIds = const [],
-    int timeoutInSeconds = 1,
+    int timeoutInSeconds = 2,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   });
@@ -67,7 +67,7 @@ abstract class HostScannerService {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
     List<int> hostIds = const [],
-    int timeoutInSeconds = 1,
+    int timeoutInSeconds = 2,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   });
@@ -93,7 +93,7 @@ abstract class HostScannerService {
     int firstHostId = defaultFirstHostId,
     int lastHostId = defaultLastHostId,
     List<int> hostIds = const [],
-    int timeoutInSeconds = 1,
+    int timeoutInSeconds = 2,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   });
