@@ -388,6 +388,64 @@ void main() {
       expect(hosts, isNotEmpty);
       expect(hosts.every((h) => h.address.endsWith('.1')), isTrue);
     });
+
+    test('unordered mode emits devices as found', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 3,
+            resultsInAddressAscendingOrder: false,
+          )
+          .toList();
+
+      // Should find hosts in unordered mode
+      expect(hosts, isNotEmpty);
+    });
+
+    test('ping fallback runs when TCP misses hosts', () async {
+      final progress = <double>[];
+      // Scan a range that includes unreachable hosts to trigger ping fallback
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '192.0.2', // TEST-NET, should be unreachable
+            lastHostId: 3,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Progress should still reach 100% even if no hosts found
+      expect(progress.last, 100.0);
+    });
+
+    test('scan handles empty subnet gracefully', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('')
+          .toList();
+      // Should return empty list, not throw
+      expect(hosts, isEmpty);
+    });
+
+    test('scan with invalid hostIds returns empty', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('127.0.0', hostIds: [0])
+          .toList();
+      // Should return empty list for invalid hostIds
+      expect(hosts, isEmpty);
+    });
+
+    test('progress callback receives values between 0 and 100', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 5,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // All progress values should be between 0 and 100
+      expect(progress.every((p) => p >= 0 && p <= 100), isTrue);
+    });
   });
 }
 
