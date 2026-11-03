@@ -48,7 +48,7 @@ class HostScannerServiceImpl extends HostScannerService {
     if (Platform.isAndroid || Platform.isIOS) {
       return 32;
     }
-    return 128;
+    return 64;
   }
 
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
@@ -64,7 +64,7 @@ class HostScannerServiceImpl extends HostScannerService {
     int firstHostId = HostScannerService.defaultFirstHostId,
     int lastHostId = HostScannerService.defaultLastHostId,
     List<int> hostIds = const [],
-    int timeoutInSeconds = 1,
+    int timeoutInSeconds = 2,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
@@ -137,7 +137,7 @@ class HostScannerServiceImpl extends HostScannerService {
     int firstHostId = HostScannerService.defaultFirstHostId,
     int lastHostId = HostScannerService.defaultLastHostId,
     List<int> hostIds = const [],
-    int timeoutInSeconds = 1,
+    int timeoutInSeconds = 2,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
@@ -524,7 +524,7 @@ class HostScannerServiceImpl extends HostScannerService {
   Future<SendableActiveHost?> getHostFromPing({
     required String host,
     required StreamController<SendableActiveHost>? activeHostsController,
-    int timeoutInSeconds = 1,
+    int timeoutInSeconds = 2,
   }) async {
     SendableActiveHost? tempSendableActivateHost;
 
@@ -594,7 +594,7 @@ class HostScannerServiceImpl extends HostScannerService {
     int firstHostId = HostScannerService.defaultFirstHostId,
     int lastHostId = HostScannerService.defaultLastHostId,
     List<int> hostIds = const [],
-    int timeoutInSeconds = 1,
+    int timeoutInSeconds = 2,
     ProgressCallback? progressCallback,
     bool resultsInAddressAscendingOrder = true,
   }) async* {
