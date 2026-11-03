@@ -197,6 +197,8 @@ class HostScannerServiceImpl extends HostScannerService {
     logger.info(
       'TCP-connect sweep: starting scan of ${idsToScan.length} hosts',
     );
+    // Report 0% immediately so the UI shows progress has started
+    progressCallback?.call(0);
     int hostsFound = 0;
     final Set<int> foundHostIds = {};
 
