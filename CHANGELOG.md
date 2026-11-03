@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.15
+1. Smooth progress updates: TCP phase now covers 0-95% of progress (was 0-50%), with ping fallback covering 95-100%. Prevents progress bar from jumping suddenly when ping fallback finds few or no hosts.
+
 ## 6.0.14
 1. Tuned scan timeout and concurrency for cross-platform consistency: default timeout increased from 1s to 2s to catch slow-responding devices, desktop concurrency reduced from 128 to 64 to match mobile behavior. These adjustments help Android and macOS discover the same devices.
 
