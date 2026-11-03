@@ -339,10 +339,7 @@ void main() {
 
     test('TCP probe finds localhost', () async {
       final hosts = await hostScanner
-          .getAllSendablePingableDevices(
-            '127.0.0',
-            lastHostId: 1,
-          )
+          .getAllSendablePingableDevices('127.0.0', lastHostId: 1)
           .toList();
 
       // Should find at least localhost
@@ -384,10 +381,7 @@ void main() {
 
     test('scan with hostIds parameter', () async {
       final hosts = await hostScanner
-          .getAllSendablePingableDevices(
-            '127.0.0',
-            hostIds: [1],
-          )
+          .getAllSendablePingableDevices('127.0.0', hostIds: [1])
           .toList();
 
       // Should only scan host 1
