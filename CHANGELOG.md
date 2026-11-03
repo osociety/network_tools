@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.17
+1. Immediate progress feedback: scan reports 0% progress as soon as it starts, before any TCP probes complete. Prevents UI from appearing frozen during initial setup.
+
 ## 6.0.16
 1. Balanced scan speed across platforms: both mobile and desktop now use 48 concurrent connections (was 32 mobile / 64 desktop). Android scans faster, macOS scans slightly slower for consistent experience.
 
