@@ -48,7 +48,7 @@ class HostScannerServiceImpl extends HostScannerService {
     if (Platform.isAndroid || Platform.isIOS) {
       return 32;
     }
-    return 64;
+    return 80;
   }
 
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
