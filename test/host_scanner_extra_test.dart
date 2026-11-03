@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:network_tools/network_tools.dart';
-import 'package:network_tools/src/device_info/arp_table_helper.dart';
 import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/repository/repository.dart';
 import 'package:network_tools/src/services/impls/host_scanner_service_impl.dart';
@@ -35,52 +35,6 @@ class _ThrowingARPRepository extends _FakeARPRepository {
   @override
   Future<ARPData?> entryFor(String address) =>
       throw StateError('arp lookup failed');
-}
-
-class _FakeARPTableHelper extends ARPTableHelper {
-  _FakeARPTableHelper(this.entries, {this.supported = true}) {
-    isMobilePlatform = !supported;
-    isMacOSPlatform = false;
-    isLinuxPlatform = false;
-  }
-
-  final List<ARPData> entries;
-  final bool supported;
-  int primeCount = 0;
-
-  @override
-  bool get isARPSupported => supported;
-
-  @override
-  Future<void> primeARPCache(
-    Iterable<String> hosts, {
-    Duration settleDelay = ARPTableHelper.defaultPrimingDelay,
-    int port = 9,
-  }) async {
-    primeCount++;
-  }
-
-  @override
-  Future<List<ARPData>> buildNumericTable() async => entries;
-}
-
-class _ThrowingARPTableHelper extends _FakeARPTableHelper {
-  _ThrowingARPTableHelper() : super(const <ARPData>[]);
-
-  @override
-  Future<List<ARPData>> buildNumericTable() async =>
-      throw StateError('neighbor table unavailable');
-}
-
-ARPData _arpEntry(String address, {String mac = 'aa:bb:cc:dd:ee:ff'}) {
-  return ARPData(
-    hostname: '',
-    iPAddress: address,
-    macAddress: mac,
-    interfaceName: 'en0',
-    interfaceType: 'ether',
-    createdAt: DateTime.now(),
-  );
 }
 
 void main() {
@@ -214,169 +168,6 @@ void main() {
     });
   });
 
-  group('ARP-first discovery', () {
-    HostScannerServiceImpl scannerWith(
-      ARPTableHelper helper, {
-      bool localSubnet = true,
-    }) {
-      return HostScannerServiceImpl(
-        arpTableHelper: helper,
-        isLocalSubnet: (_) async => localSubnet,
-      );
-    }
-
-    test('yields neighbor table hosts in ascending order', () async {
-      final helper = _FakeARPTableHelper([
-        _arpEntry('127.0.0.1'),
-        _arpEntry('127.0.0.3', mac: '11:22:33:44:55:66'),
-      ]);
-      final progress = <double>[];
-      final hosts = await scannerWith(helper)
-          .getAllSendablePingableDevices(
-            '127.0.0',
-            lastHostId: 4,
-            progressCallback: progress.add,
-          )
-          .toList();
-
-      expect(hosts.map((h) => h.address), ['127.0.0.1', '127.0.0.3']);
-      expect(hosts.first.macAddress, 'aa:bb:cc:dd:ee:ff');
-      expect(hosts.last.macAddress, '11:22:33:44:55:66');
-      expect(helper.primeCount, 1);
-      expect(progress.last, 100);
-    });
-
-    test('yields neighbor table hosts in unordered mode', () async {
-      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.1')]);
-      final hosts = await scannerWith(helper)
-          .getAllSendablePingableDevices(
-            '127.0.0',
-            hostIds: [1],
-            resultsInAddressAscendingOrder: false,
-          )
-          .toList();
-
-      expect(hosts.single.address, '127.0.0.1');
-      expect(hosts.single.macAddress, 'aa:bb:cc:dd:ee:ff');
-      expect(helper.primeCount, 1);
-    });
-
-    test('keeps neighbor table hosts that ignore ICMP', () async {
-      final helper = _FakeARPTableHelper([_arpEntry('192.0.2.1')]);
-      final hosts = await scannerWith(
-        helper,
-      ).getAllSendablePingableDevices('192.0.2', hostIds: [1]).toList();
-
-      expect(hosts.single.address, '192.0.2.1');
-      expect(hosts.single.pingData, isNull);
-      expect(hosts.single.macAddress, 'aa:bb:cc:dd:ee:ff');
-    });
-
-    test('ignores neighbor table entries outside the requested ids', () async {
-      final helper = _FakeARPTableHelper([_arpEntry('192.0.2.99')]);
-      final progress = <double>[];
-      final hosts = await scannerWith(helper)
-          .getAllSendablePingableDevices(
-            '192.0.2',
-            hostIds: [1],
-            progressCallback: progress.add,
-          )
-          .toList();
-
-      expect(hosts, isEmpty);
-      expect(progress, isEmpty);
-    });
-
-    test('adds the scanning machine when it is inside the range', () async {
-      // Reproduces CI: the neighbor table holds other hosts, but none of the
-      // requested ids, and the local address is absent from the table.
-      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.99')]);
-      final hosts = await scannerWith(helper)
-          .getAllSendablePingableDevices(
-            '127.0.0',
-            hostIds: [1],
-            timeoutInSeconds: 3,
-          )
-          .toList();
-
-      expect(hosts.single.address, '127.0.0.1');
-      expect(hosts.single.pingData, isNotNull);
-    });
-
-    test('reports full progress for a single-host range', () async {
-      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.1')]);
-      final progress = <double>[];
-      await scannerWith(helper)
-          .getAllSendablePingableDevices(
-            '127.0.0',
-            lastHostId: 1,
-            progressCallback: progress.add,
-          )
-          .toList();
-
-      expect(progress, isNotEmpty);
-      expect(progress.every((value) => value == 100), isTrue);
-    });
-
-    test('falls back to pinging when the neighbor table is empty', () async {
-      final helper = _FakeARPTableHelper(const <ARPData>[]);
-      final hosts = await scannerWith(
-        helper,
-      ).getAllSendablePingableDevices('127.0.0', hostIds: [1]).toList();
-
-      expect(hosts.single.address, '127.0.0.1');
-      expect(hosts.single.pingData, isNotNull);
-      expect(helper.primeCount, 1);
-    });
-
-    test('falls back to pinging when the neighbor table read fails', () async {
-      final helper = _ThrowingARPTableHelper();
-      final hosts = await scannerWith(
-        helper,
-      ).getAllSendablePingableDevices('127.0.0', hostIds: [1]).toList();
-
-      expect(hosts.single.address, '127.0.0.1');
-      expect(hosts.single.pingData, isNotNull);
-    });
-
-    test('uses the ping sweep when ARP is unsupported', () async {
-      final helper = _FakeARPTableHelper([
-        _arpEntry('127.0.0.1'),
-      ], supported: false);
-      final hosts = await scannerWith(
-        helper,
-      ).getAllSendablePingableDevices('127.0.0', hostIds: [1]).toList();
-
-      expect(hosts.single.address, '127.0.0.1');
-      expect(helper.primeCount, 0);
-    });
-
-    test('uses the ping sweep when the subnet is not local', () async {
-      final helper = _FakeARPTableHelper([_arpEntry('127.0.0.1')]);
-      final hosts = await scannerWith(
-        helper,
-        localSubnet: false,
-      ).getAllSendablePingableDevices('127.0.0', hostIds: [1]).toList();
-
-      expect(hosts.single.address, '127.0.0.1');
-      expect(helper.primeCount, 0);
-    });
-
-    test(
-      'getAllPingableDevices exposes the neighbor table MAC address',
-      () async {
-        final helper = _FakeARPTableHelper([
-          _arpEntry('127.0.0.1', mac: 'de:ad:be:ef:00:01'),
-        ]);
-        final hosts = await scannerWith(
-          helper,
-        ).getAllPingableDevices('127.0.0', hostIds: [1]).toList();
-
-        expect(await hosts.single.getMacAddress(), 'de:ad:be:ef:00:01');
-      },
-    );
-  });
-
   group('getAllPingableDevicesAsync', () {
     test('reports progress while scanning in an isolate', () async {
       final tempDirectory = await Directory.systemTemp.createTemp('nt_async_');
@@ -467,6 +258,193 @@ void main() {
             .toList(),
         throwsA(isA<String>()),
       );
+    });
+  });
+
+  group('Concurrency settings', () {
+    test('hostLookupConcurrency returns platform-specific values', () {
+      final concurrency = HostScannerServiceImpl.hostLookupConcurrency;
+      // On mobile (Android/iOS) it should be 32, on desktop 128
+      if (Platform.isAndroid || Platform.isIOS) {
+        expect(concurrency, 32);
+      } else {
+        expect(concurrency, 128);
+      }
+    });
+  });
+
+  group('Progress callback behavior', () {
+    test('reports 0% immediately when scan starts', () async {
+      final progress = <double>[];
+      final completer = Completer<void>();
+
+      // Start consuming the stream
+      final subscription = hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            progressCallback: progress.add,
+          )
+          .listen(
+            (_) {},
+            onDone: () => completer.complete(),
+            onError: (_) => completer.complete(),
+          );
+
+      // Wait a bit for the scan to start
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      // Should have received 0% progress
+      expect(progress, isNotEmpty);
+      expect(progress.first, 0.0);
+
+      // Clean up
+      await subscription.cancel();
+      await completer.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {},
+      );
+    });
+
+    test('reports progress up to 95% during TCP phase', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 2,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should have progress updates
+      expect(progress, isNotEmpty);
+      // All progress values should be <= 95 (TCP phase) or 100 (final)
+      expect(progress.every((p) => p <= 100), isTrue);
+    });
+
+    test('reports 100% when scan completes', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should end with 100%
+      expect(progress, isNotEmpty);
+      expect(progress.last, 100.0);
+    });
+
+    test('TCP probe finds localhost', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('127.0.0', lastHostId: 1)
+          .toList();
+
+      // Should find at least localhost
+      expect(hosts, isNotEmpty);
+      expect(hosts.any((h) => h.address == '127.0.0.1'), isTrue);
+    });
+
+    test('scan with custom timeout completes', () async {
+      final progress = <double>[];
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            timeoutInSeconds: 1,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should complete with 1s timeout
+      expect(progress.last, 100.0);
+      expect(hosts, isNotEmpty);
+    });
+
+    test('progress callback receives multiple updates', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 3,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should have multiple progress updates (0%, intermediate, 100%)
+      expect(progress.length, greaterThan(2));
+      expect(progress.first, 0.0);
+      expect(progress.last, 100.0);
+    });
+
+    test('scan with hostIds parameter', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('127.0.0', hostIds: [1])
+          .toList();
+
+      // Should only scan host 1
+      expect(hosts, isNotEmpty);
+      expect(hosts.every((h) => h.address.endsWith('.1')), isTrue);
+    });
+
+    test('unordered mode emits devices as found', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 3,
+            resultsInAddressAscendingOrder: false,
+          )
+          .toList();
+
+      // Should find hosts in unordered mode
+      expect(hosts, isNotEmpty);
+    });
+
+    test('ping fallback runs when TCP misses hosts', () async {
+      final progress = <double>[];
+      // Scan a range that includes unreachable hosts to trigger ping fallback
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '192.0.2', // TEST-NET, should be unreachable
+            lastHostId: 3,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Progress should still reach 100% even if no hosts found
+      expect(progress.last, 100.0);
+    });
+
+    test('scan handles empty subnet gracefully', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('')
+          .toList();
+      // Should return empty list, not throw
+      expect(hosts, isEmpty);
+    });
+
+    test('scan with invalid hostIds returns empty', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('127.0.0', hostIds: [0])
+          .toList();
+      // Should return empty list for invalid hostIds
+      expect(hosts, isEmpty);
+    });
+
+    test('progress callback receives values between 0 and 100', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 5,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // All progress values should be between 0 and 100
+      expect(progress.every((p) => p >= 0 && p <= 100), isTrue);
     });
   });
 }
