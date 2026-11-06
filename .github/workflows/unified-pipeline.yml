@@ -3,7 +3,6 @@ name: Unified CI/CD Pipeline
 on:
   push:
     branches: [main, dev]
-    tags: ['v*']
   pull_request:
     branches: [main, dev]
   workflow_dispatch:
@@ -168,12 +167,15 @@ jobs:
   # Publish to pub.dev
   publish:
     name: Publish to pub.dev
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect-release.outputs.release == 'true'
+    needs: [detect-release, create-tag, test]
     runs-on: ubuntu-latest
     environment: pub.dev
     steps:
-      - name: Checkout
+      - name: Checkout tag
         uses: actions/checkout@v4.2.2
+        with:
+          ref: refs/tags/v${{ needs.detect-release.outputs.version }}
 
       - name: Setup Dart SDK
         uses: dart-lang/setup-dart@v1.6.5
