@@ -13,6 +13,7 @@ class SendableActiveHost {
     this.openPorts = const [],
     this.macAddress,
     this.hostName,
+    this.deviceType,
   });
 
   /// The host's IPv4 or IPv6 address.
@@ -31,4 +32,7 @@ class SendableActiveHost {
   /// Host name resolved during discovery so consumers do not have to wait for
   /// another lookup.
   final String? hostName;
+
+  /// Inferred device type based on open port patterns (e.g., "Router", "Printer").
+  final String? deviceType;
 }

@@ -21,6 +21,7 @@ class ActiveHost {
     PingResponse? pingData,
     MdnsInfo? mdnsInfoVar,
     String? hostName,
+    this.deviceType,
   }) {
     _macAddress = macAddress;
     final String tempAddress = internetAddress.address;
@@ -93,6 +94,7 @@ class ActiveHost {
       pingData: sendableActiveHost.pingData,
       mdnsInfoVar: mdnsInfo,
       hostName: sendableActiveHost.hostName,
+      deviceType: sendableActiveHost.deviceType,
     );
   }
 
@@ -160,6 +162,12 @@ class ActiveHost {
 
   /// List of all the open port of this device
   List<OpenPort> openPorts;
+
+  /// Inferred device type based on open port patterns (e.g., "Router", "Printer").
+  ///
+  /// Determined during discovery by analyzing which common ports responded.
+  /// Returns null when no TCP probe data is available (e.g., host found only via ping).
+  final String? deviceType;
 
   Future<String>? _deviceName;
 
