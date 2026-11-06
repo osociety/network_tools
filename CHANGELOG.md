@@ -1,11 +1,8 @@
 # Change Log
 
-## 6.0.16
-1. **Device type inference**: Discovered devices now include an inferred type (Router, Printer, Switch, etc.) based on open port patterns. The `ActiveHost.deviceType` field is populated during TCP probing by analyzing which common service ports responded.
-2. **CI/CD pipeline fix**: Unified workflow now correctly publishes to pub.dev using tag-based OIDC authentication.
-
 ## 6.0.15
 1. **Device type inference**: Discovered devices now include an inferred type (Router, Printer, Switch, etc.) based on open port patterns. The `ActiveHost.deviceType` field is populated during TCP probing by analyzing which common service ports responded.
+2. **CI/CD pipeline fix**: Unified workflow now correctly publishes to pub.dev using tag-based OIDC authentication.
 
 ## 6.0.14
 1. **TCP-connect sweep for cross-platform consistency**: Host discovery now uses TCP-connect probes to 14 common ports (21, 22, 23, 53, 80, 161, 443, 445, 631, 3389, 5900, 8080, 8443, 9100) instead of ICMP ping on all platforms. This ensures Android, iOS, macOS, Windows, and Linux discover the same devices.
