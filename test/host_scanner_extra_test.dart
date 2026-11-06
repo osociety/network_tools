@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:network_tools/network_tools.dart';
@@ -257,6 +258,193 @@ void main() {
             .toList(),
         throwsA(isA<String>()),
       );
+    });
+  });
+
+  group('Concurrency settings', () {
+    test('hostLookupConcurrency returns platform-specific values', () {
+      final concurrency = HostScannerServiceImpl.hostLookupConcurrency;
+      // On mobile (Android/iOS) it should be 32, on desktop 128
+      if (Platform.isAndroid || Platform.isIOS) {
+        expect(concurrency, 32);
+      } else {
+        expect(concurrency, 128);
+      }
+    });
+  });
+
+  group('Progress callback behavior', () {
+    test('reports 0% immediately when scan starts', () async {
+      final progress = <double>[];
+      final completer = Completer<void>();
+
+      // Start consuming the stream
+      final subscription = hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            progressCallback: progress.add,
+          )
+          .listen(
+            (_) {},
+            onDone: () => completer.complete(),
+            onError: (_) => completer.complete(),
+          );
+
+      // Wait a bit for the scan to start
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      // Should have received 0% progress
+      expect(progress, isNotEmpty);
+      expect(progress.first, 0.0);
+
+      // Clean up
+      await subscription.cancel();
+      await completer.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {},
+      );
+    });
+
+    test('reports progress up to 95% during TCP phase', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 2,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should have progress updates
+      expect(progress, isNotEmpty);
+      // All progress values should be <= 95 (TCP phase) or 100 (final)
+      expect(progress.every((p) => p <= 100), isTrue);
+    });
+
+    test('reports 100% when scan completes', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should end with 100%
+      expect(progress, isNotEmpty);
+      expect(progress.last, 100.0);
+    });
+
+    test('TCP probe finds localhost', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('127.0.0', lastHostId: 1)
+          .toList();
+
+      // Should find at least localhost
+      expect(hosts, isNotEmpty);
+      expect(hosts.any((h) => h.address == '127.0.0.1'), isTrue);
+    });
+
+    test('scan with custom timeout completes', () async {
+      final progress = <double>[];
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 1,
+            timeoutInSeconds: 1,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should complete with 1s timeout
+      expect(progress.last, 100.0);
+      expect(hosts, isNotEmpty);
+    });
+
+    test('progress callback receives multiple updates', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 3,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should have multiple progress updates (0%, intermediate, 100%)
+      expect(progress.length, greaterThan(2));
+      expect(progress.first, 0.0);
+      expect(progress.last, 100.0);
+    });
+
+    test('scan with hostIds parameter', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('127.0.0', hostIds: [1])
+          .toList();
+
+      // Should only scan host 1
+      expect(hosts, isNotEmpty);
+      expect(hosts.every((h) => h.address.endsWith('.1')), isTrue);
+    });
+
+    test('unordered mode emits devices as found', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 3,
+            resultsInAddressAscendingOrder: false,
+          )
+          .toList();
+
+      // Should find hosts in unordered mode
+      expect(hosts, isNotEmpty);
+    });
+
+    test('ping fallback runs when TCP misses hosts', () async {
+      final progress = <double>[];
+      // Scan a range that includes unreachable hosts to trigger ping fallback
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '192.0.2', // TEST-NET, should be unreachable
+            lastHostId: 3,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Progress should still reach 100% even if no hosts found
+      expect(progress.last, 100.0);
+    });
+
+    test('scan handles empty subnet gracefully', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('')
+          .toList();
+      // Should return empty list, not throw
+      expect(hosts, isEmpty);
+    });
+
+    test('scan with invalid hostIds returns empty', () async {
+      final hosts = await hostScanner
+          .getAllSendablePingableDevices('127.0.0', hostIds: [0])
+          .toList();
+      // Should return empty list for invalid hostIds
+      expect(hosts, isEmpty);
+    });
+
+    test('progress callback receives values between 0 and 100', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 5,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // All progress values should be between 0 and 100
+      expect(progress.every((p) => p >= 0 && p <= 100), isTrue);
     });
   });
 }

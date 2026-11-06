@@ -1,0 +1,190 @@
+name: Unified CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+    tags: ['v*']
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: write
+  id-token: write # Required for pub.dev OIDC authentication
+
+jobs:
+  # Detect version and changelog changes
+  detect-release:
+    name: Detect release
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.detect.outputs.release }}
+      version: ${{ steps.detect.outputs.version }}
+    steps:
+      - name: Checkout pushed commit
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Detect version and changelog changes
+        id: detect
+        run: |
+          set -euo pipefail
+
+          BASE_SHA="${{ github.event.before }}"
+          HEAD_SHA="${{ github.sha }}"
+
+          if [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            changed_files="$(git ls-tree -r --name-only "$HEAD_SHA")"
+          else
+            changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          fi
+
+          release=false
+          version=""
+
+          # Check if pubspec.yaml or CHANGELOG.md changed
+          if grep -qE '^(pubspec\.yaml|CHANGELOG\.md)$' <<< "$changed_files"; then
+            version="$(sed -nE 's/^version: ([0-9]+\.[0-9]+\.[0-9]+)$/\1/p' pubspec.yaml)"
+            
+            if [[ -n "$version" ]] && grep -q "^## $version" CHANGELOG.md; then
+              # Verify tag doesn't already exist
+              tag_name="v${version}"
+              existing_tag="$(git ls-remote --tags origin "refs/tags/${tag_name}")"
+              
+              if [[ -z "$existing_tag" ]]; then
+                release=true
+                echo "Release detected: version $version"
+              else
+                echo "::warning::Tag $tag_name already exists, skipping release"
+              fi
+            fi
+          fi
+
+          {
+            echo "release=${release}"
+            echo "version=${version}"
+          } >> "$GITHUB_OUTPUT"
+
+  # Run tests on multiple platforms
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1.6.5
+        with:
+          sdk: stable
+
+      - name: Cache Dart dependencies
+        uses: actions/cache@v4.2.2
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-dart-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-dart-
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze project source
+        run: dart analyze --fatal-infos
+
+      - name: Run tests with coverage (Linux)
+        if: runner.os == 'Linux'
+        run: dart test --coverage="./coverage"
+
+      - name: Run tests (non-Linux)
+        if: runner.os != 'Linux'
+        run: dart test
+
+      - name: Install coverage tools (Linux)
+        if: runner.os == 'Linux'
+        run: dart pub global activate coverage
+
+      - name: Install lcov (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y lcov
+
+      - name: Format coverage and generate lcov (Linux)
+        if: runner.os == 'Linux'
+        run: dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+
+      - name: Remove generated files from lcov (Linux)
+        if: runner.os == 'Linux'
+        run: lcov --remove ./coverage/lcov.info '*/lib/src/*.g.dart' '*/lib/src/models/drift/*' -o ./coverage/lcov.info
+
+      - name: Upload coverage to Codecov (Linux)
+        if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: false
+
+      - name: Revert generated vendor map to stub
+        run: git checkout HEAD -- lib/src/device_info/vendor_map.dart || true
+
+      - name: Check publish dry-run
+        run: dart pub publish --dry-run
+
+  # Create git tag for the release
+  create-tag:
+    name: Create release tag
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect-release.outputs.release == 'true'
+    needs: [detect-release, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ needs.detect-release.outputs.version }}"
+          git push origin "v${{ needs.detect-release.outputs.version }}"
+
+  # Publish to pub.dev
+  publish:
+    name: Publish to pub.dev
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: pub.dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1.6.5
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Revert generated vendor map to stub
+        run: git checkout HEAD -- lib/src/device_info/vendor_map.dart || true
+
+      - name: Publish to pub.dev
+        run: dart pub publish --force

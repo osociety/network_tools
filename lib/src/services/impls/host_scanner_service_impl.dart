@@ -48,7 +48,7 @@ class HostScannerServiceImpl extends HostScannerService {
     if (Platform.isAndroid || Platform.isIOS) {
       return 32;
     }
-    return 64;
+    return 128;
   }
 
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
@@ -197,6 +197,8 @@ class HostScannerServiceImpl extends HostScannerService {
     logger.info(
       'TCP-connect sweep: starting scan of ${idsToScan.length} hosts',
     );
+    // Report 0% immediately so the UI shows progress has started
+    progressCallback?.call(0);
     int hostsFound = 0;
     final Set<int> foundHostIds = {};
 
@@ -231,7 +233,8 @@ class HostScannerServiceImpl extends HostScannerService {
             .forEach((result) {
               completedProbes++;
               if (progressCallback != null && totalProbes > 0) {
-                final tcpProgress = (completedProbes / totalProbes) * 50;
+                // TCP phase covers 0-95% since it finds almost all devices
+                final tcpProgress = (completedProbes / totalProbes) * 95;
                 progressCallback(tcpProgress);
               }
             })
@@ -243,6 +246,10 @@ class HostScannerServiceImpl extends HostScannerService {
                     .where((id) => !foundHostIds.contains(id))
                     .toList();
                 if (missingHostIds.isEmpty) {
+                  // No ping fallback needed, jump to 100%
+                  if (progressCallback != null) {
+                    progressCallback(100);
+                  }
                   activeHostsController?.close();
                   return;
                 }
@@ -267,8 +274,9 @@ class HostScannerServiceImpl extends HostScannerService {
                     }
                     completedPings++;
                     if (progressCallback != null && totalPings > 0) {
+                      // Ping fallback covers 95-100%
                       final pingProgress =
-                          50 + (completedPings / totalPings) * 50;
+                          95 + (completedPings / totalPings) * 5;
                       progressCallback(pingProgress);
                     }
                     return pingResult;
@@ -314,8 +322,9 @@ class HostScannerServiceImpl extends HostScannerService {
                     }
                     completedPings++;
                     if (progressCallback != null && totalPings > 0) {
+                      // Ping fallback covers 95-100%
                       final pingProgress =
-                          50 + (completedPings / totalPings) * 50;
+                          95 + (completedPings / totalPings) * 5;
                       progressCallback(pingProgress);
                     }
                     return pingResult;
@@ -398,6 +407,9 @@ class HostScannerServiceImpl extends HostScannerService {
       }
     }
 
+    // Ensure progress reaches 100% at the end
+    progressCallback?.call(100);
+
     final elapsed = stopwatch.elapsedMilliseconds;
     logger.info(
       'TCP-connect sweep completed (ordered): $hostsFound hosts found in ${elapsed}ms',
@@ -435,13 +447,25 @@ class HostScannerServiceImpl extends HostScannerService {
     final futures = ports.map((port) => _tryConnect(host, port, timeout));
     final results = await Future.wait(futures);
 
+    // Collect all open ports
+    final openPorts = <OpenPort>[];
+    for (int i = 0; i < ports.length; i++) {
+      if (results[i]) {
+        openPorts.add(OpenPort(ports[i]));
+      }
+    }
+
     // If any port responded (success or connection-refused), host is up.
-    final isUp = results.any((result) => result);
+    final isUp = openPorts.isNotEmpty;
 
     if (isUp) {
-      final respondedPort = ports[results.indexOf(true)];
+      final respondedPort = openPorts.first.port;
       logger.fine('[TCP Probe] $host is UP (port $respondedPort responded)');
-      final result = SendableActiveHost(host);
+      final result = SendableActiveHost(
+        host,
+        openPorts: openPorts,
+        deviceType: _inferDeviceType(openPorts),
+      );
       if (activeHostsController != null && !activeHostsController.isClosed) {
         activeHostsController.add(result);
       }
@@ -452,6 +476,81 @@ class HostScannerServiceImpl extends HostScannerService {
       '[TCP Probe] $host is DOWN (all ${ports.length} ports timed out after ${timeout.inMilliseconds}ms)',
     );
     return null;
+  }
+
+  /// Infers device type based on open port patterns.
+  ///
+  /// Uses common port combinations to identify device types like routers,
+  /// printers, Windows PCs, etc.
+  String _inferDeviceType(List<OpenPort> openPorts) {
+    final portNumbers = openPorts.map((p) => p.port).toSet();
+
+    // Printer: IPP (631) or JetDirect (9100) - most specific
+    if (portNumbers.contains(631) || portNumbers.contains(9100)) {
+      return 'Printer';
+    }
+
+    // NAS: FTP (21) + SMB (445) - check before Windows PC
+    if (portNumbers.contains(21) && portNumbers.contains(445)) {
+      return 'NAS';
+    }
+
+    // Router/Gateway: DNS (53) + typically SNMP (161) or multiple web ports
+    if (portNumbers.contains(53) &&
+        (portNumbers.contains(161) ||
+            portNumbers.contains(80) ||
+            portNumbers.contains(443) ||
+            portNumbers.contains(8080) ||
+            portNumbers.contains(8443))) {
+      return 'Router';
+    }
+
+    // Generic server: SSH (22) + both HTTP and HTTPS (3+ ports total)
+    if (portNumbers.contains(22) &&
+        portNumbers.contains(80) &&
+        portNumbers.contains(443)) {
+      return 'Server';
+    }
+
+    // Linux/Unix server: SSH (22) + web services (HTTP or HTTPS, not both)
+    if (portNumbers.contains(22) &&
+        (portNumbers.contains(80) ||
+            portNumbers.contains(443) ||
+            portNumbers.contains(8080))) {
+      return 'Linux Server';
+    }
+
+    // Windows PC: SMB (445) and/or RDP (3389) - after NAS check
+    if (portNumbers.contains(445) || portNumbers.contains(3389)) {
+      return 'Windows PC';
+    }
+
+    // Device with only SSH
+    if (portNumbers.contains(22) && portNumbers.length == 1) {
+      return 'Linux/Unix Device';
+    }
+
+    // Web Device: HTTP + HTTPS specifically (2 ports)
+    if (portNumbers.contains(80) &&
+        portNumbers.contains(443) &&
+        portNumbers.length == 2) {
+      return 'Web Device';
+    }
+
+    // IoT device: limited ports (1-2), often just HTTP or HTTP-alt
+    if (portNumbers.length <= 2 &&
+        (portNumbers.contains(80) ||
+            portNumbers.contains(443) ||
+            portNumbers.contains(8080))) {
+      return 'IoT Device';
+    }
+
+    // VNC-only device (remote display/management)
+    if (portNumbers.contains(5900) && portNumbers.length == 1) {
+      return 'Remote Display';
+    }
+
+    return 'Unknown Device';
   }
 
   /// Tries to connect to a specific port. Returns true if the host responded
@@ -845,4 +944,8 @@ class HostScannerServiceImpl extends HostScannerService {
   }
 
   int get maxHost => HostScannerService.defaultLastHostId;
+
+  /// Test-only accessor for device type inference logic.
+  String testInferDeviceType(List<OpenPort> openPorts) =>
+      _inferDeviceType(openPorts);
 }
