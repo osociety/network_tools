@@ -1,5 +1,20 @@
 # Change Log
 
+## 6.0.15
+1. **Device type inference**: Discovered devices now include an inferred type (Router, Printer, Switch, etc.) based on open port patterns. The `ActiveHost.deviceType` field is populated during TCP probing by analyzing which common service ports responded.
+2. **CI/CD pipeline fix**: Unified workflow now correctly publishes to pub.dev using tag-based OIDC authentication.
+
+## 6.0.14
+1. **TCP-connect sweep for cross-platform consistency**: Host discovery now uses TCP-connect probes to 14 common ports (21, 22, 23, 53, 80, 161, 443, 445, 631, 3389, 5900, 8080, 8443, 9100) instead of ICMP ping on all platforms. This ensures Android, iOS, macOS, Windows, and Linux discover the same devices.
+2. **Bounded concurrency with platform-specific tuning**: Mobile platforms use 56 concurrent connections, desktop uses 96. Prevents network stack overload on mobile while maintaining fast scans on desktop.
+3. **Smooth progress reporting**: Progress bar updates continuously from 0% to 100%. TCP phase covers 0-95%, ping fallback (if needed) covers 95-100%. Reports 0% immediately when scan starts to prevent frozen UI feeling.
+4. **Two-phase discovery**: TCP-connect sweep runs first with bounded concurrency, then ICMP ping fallback for hosts that didn't respond to TCP. Both phases use the same concurrency limits.
+5. **14-port TCP probe**: Discovers more device types by probing common service ports (FTP, SSH, Telnet, DNS, HTTP, SNMP, HTTPS, SMB, IPP, RDP, VNC, HTTP-Alt, HTTPS-Alt, Printer).
+6. **Removed dead ARP code**: Cleaned up unused ARP table reading methods and simplified the discovery pipeline.
+7. **Default timeout increased to 2s**: Catches slow-responding devices that were missed with the previous 1s timeout.
+8. **mDNS merge by IP**: Devices found via mDNS are merged with TCP-discovered hosts by IP address, enriching device information.
+9. **Unit tests added**: Tests for concurrency settings, progress callback behavior, and cross-platform consistency.
+
 ## 6.0.13
 1. Build hook refined: removed unused `data_assets` dependency, added comprehensive tests for generated vendor map (6 new tests verifying structure, count, and known entries).
 2. Hybrid approach for vendor map: committed minimal stub file that build hook replaces with full 34,451-entry map during `dart pub get`. Reduces repository size while ensuring package works immediately after cloning.
