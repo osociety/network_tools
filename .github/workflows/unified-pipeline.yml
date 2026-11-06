@@ -165,6 +165,18 @@ jobs:
           git tag "v${{ needs.detect-release.outputs.version }}"
           git push origin "v${{ needs.detect-release.outputs.version }}"
 
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Extract changelog for this version
+          version="${{ needs.detect-release.outputs.version }}"
+          changelog=$(awk "/^## ${version}/{flag=1; next} /^## /{flag=0} flag" CHANGELOG.md | sed '/^$/d')
+          gh release create "v${version}" \
+            --title "v${version}" \
+            --notes "${changelog}" \
+            --target "${{ github.sha }}"
+
   # Publish to pub.dev
   publish:
     name: Publish to pub.dev
