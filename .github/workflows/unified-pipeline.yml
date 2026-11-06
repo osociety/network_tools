@@ -14,13 +14,14 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write # Required to dispatch the publish run at the tag ref
   id-token: write # Required for pub.dev OIDC authentication
 
 jobs:
   # Detect version and changelog changes
   detect-release:
     name: Detect release
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.detect.outputs.release }}
@@ -74,6 +75,9 @@ jobs:
   # Run tests on multiple platforms
   test:
     name: Test on ${{ matrix.os }}
+    # Pull requests already gate the tests; tag refs and main pushes reuse a
+    # commit that passed them. Code Coverage still runs tests on main pushes.
+    if: ${{ !startsWith(github.ref, 'refs/tags/v') && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -150,7 +154,7 @@ jobs:
   create-tag:
     name: Create release tag
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect-release.outputs.release == 'true'
-    needs: [detect-release, test]
+    needs: [detect-release]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -177,10 +181,21 @@ jobs:
             --notes "${changelog}" \
             --target "${{ github.sha }}"
 
+      # A tag pushed with GITHUB_TOKEN never triggers a new workflow run, so
+      # dispatch the publish run explicitly. workflow_dispatch is the one event
+      # GitHub allows GITHUB_TOKEN to trigger, and its OIDC token carries the
+      # tag refType that pub.dev requires.
+      - name: Dispatch publish at tag ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run unified-pipeline.yml \
+            --ref "v${{ needs.detect-release.outputs.version }}"
+
   # Publish to pub.dev
   publish:
     name: Publish to pub.dev
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment: pub.dev
     steps:
