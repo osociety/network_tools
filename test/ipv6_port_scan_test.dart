@@ -74,21 +74,23 @@ void main() {
       expect(hosts, hasLength(openPorts.length));
     });
 
-    test('scanPortsForSingleDevice finds open ports on IPv6 loopback',
-        () async {
-      final firstPort = openPorts.first;
-      final hosts = await PortScannerService.instance
-          .scanPortsForSingleDevice(
-            InternetAddress.loopbackIPv6.address,
-            startPort: firstPort,
-            endPort: firstPort,
-            maxConcurrency: 1,
-          )
-          .toList();
+    test(
+      'scanPortsForSingleDevice finds open ports on IPv6 loopback',
+      () async {
+        final firstPort = openPorts.first;
+        final hosts = await PortScannerService.instance
+            .scanPortsForSingleDevice(
+              InternetAddress.loopbackIPv6.address,
+              startPort: firstPort,
+              endPort: firstPort,
+              maxConcurrency: 1,
+            )
+            .toList();
 
-      expect(hosts, hasLength(1));
-      expect(hosts.single.openPorts.single.port, firstPort);
-    });
+        expect(hosts, hasLength(1));
+        expect(hosts.single.openPorts.single.port, firstPort);
+      },
+    );
   });
 }
 
