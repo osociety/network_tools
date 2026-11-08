@@ -75,9 +75,8 @@ jobs:
   # Run tests on multiple platforms
   test:
     name: Test on ${{ matrix.os }}
-    # Pull requests already gate the tests; tag refs and main pushes reuse a
-    # commit that passed them. Code Coverage still runs tests on main pushes.
-    if: ${{ !startsWith(github.ref, 'refs/tags/v') && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    # Tag refs reuse a commit that already passed PR checks.
+    if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
