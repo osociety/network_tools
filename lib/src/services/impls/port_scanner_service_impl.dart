@@ -51,10 +51,7 @@ class PortScannerServiceImpl extends PortScannerService {
       throw 'Provide a valid port range between '
           '0 to 65535 or startPort < endPort is not true';
     }
-    final List<InternetAddress> address = await InternetAddress.lookup(
-      target,
-      type: InternetAddressType.IPv4,
-    );
+    final List<InternetAddress> address = await InternetAddress.lookup(target);
     if (address.isNotEmpty) {
       final String hostAddress = address[0].address;
       return await connectToPort(
@@ -204,10 +201,7 @@ class PortScannerServiceImpl extends PortScannerService {
     bool resultsInAddressAscendingOrder = true,
     int maxConcurrency = PortScannerService.defaultMaxConcurrency,
   }) async* {
-    final List<InternetAddress> address = await InternetAddress.lookup(
-      target,
-      type: InternetAddressType.IPv4,
-    );
+    final List<InternetAddress> address = await InternetAddress.lookup(target);
     if (address.isEmpty) {
       throw 'Name can not be resolved';
     }

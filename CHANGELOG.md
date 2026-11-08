@@ -1,5 +1,8 @@
 # Change Log
 
+## 6.0.16
+1. **IPv6 port scanning**: Port scanner now resolves and scans IPv6 addresses. Removed the IPv4-only DNS filter so both IPv4 and IPv6 hosts work.
+
 ## 6.0.15
 1. **Device type inference**: Discovered devices now include an inferred type (Router, Printer, Switch, etc.) based on open port patterns. The `ActiveHost.deviceType` field is populated during TCP probing by analyzing which common service ports responded.
 2. **CI/CD pipeline**: Releasing a new version now creates the git tag and GitHub release, then publishes to pub.dev automatically with tag-based OIDC authentication.
