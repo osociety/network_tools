@@ -16,6 +16,30 @@ void main() {
       expect(result, equals('Router'));
     });
 
+    test('infers Router from DNS + HTTP ports', () {
+      final ports = [OpenPort(53), OpenPort(80)];
+      final result = scanner.testInferDeviceType(ports);
+      expect(result, equals('Router'));
+    });
+
+    test('infers Router from DNS + HTTPS ports', () {
+      final ports = [OpenPort(53), OpenPort(443)];
+      final result = scanner.testInferDeviceType(ports);
+      expect(result, equals('Router'));
+    });
+
+    test('infers Router from DNS + HTTP-alt ports', () {
+      final ports = [OpenPort(53), OpenPort(8080)];
+      final result = scanner.testInferDeviceType(ports);
+      expect(result, equals('Router'));
+    });
+
+    test('infers Router from DNS + HTTPS-alt ports', () {
+      final ports = [OpenPort(53), OpenPort(8443)];
+      final result = scanner.testInferDeviceType(ports);
+      expect(result, equals('Router'));
+    });
+
     test('infers Printer from IPP port', () {
       final ports = [OpenPort(631)];
       final result = scanner.testInferDeviceType(ports);

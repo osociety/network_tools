@@ -446,6 +446,45 @@ void main() {
       // All progress values should be between 0 and 100
       expect(progress.every((p) => p >= 0 && p <= 100), isTrue);
     });
+
+    test('unordered mode reports progress with callback', () async {
+      final progress = <double>[];
+      await hostScanner
+          .getAllSendablePingableDevices(
+            '127.0.0',
+            lastHostId: 3,
+            resultsInAddressAscendingOrder: false,
+            progressCallback: progress.add,
+          )
+          .toList();
+
+      // Should have progress updates in unordered mode
+      expect(progress, isNotEmpty);
+      expect(progress.first, 0.0);
+    });
+
+    test('TCP probe finds host with server on probe port', () async {
+      // Bind a server on a port that the TCP probe checks (8080 is in the
+      // probe list and doesn't require root)
+      final server = await ServerSocket.bind(
+        InternetAddress.loopbackIPv4,
+        8080,
+      );
+      try {
+        final hosts = await hostScanner
+            .getAllSendablePingableDevices('127.0.0', lastHostId: 1)
+            .toList();
+
+        // Should find localhost via TCP probe
+        expect(hosts, isNotEmpty);
+        expect(hosts.any((h) => h.address == '127.0.0.1'), isTrue);
+        // The host should have port 8080 in its open ports
+        final localhost = hosts.firstWhere((h) => h.address == '127.0.0.1');
+        expect(localhost.openPorts.map((p) => p.port), contains(8080));
+      } finally {
+        await server.close();
+      }
+    });
   });
 }
 
