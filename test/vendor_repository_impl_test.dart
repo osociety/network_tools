@@ -50,6 +50,60 @@ void main() {
       }
     });
 
+    group('entryFor longest-prefix matching', () {
+      test(
+        'prefers an MA-S sub-block over the MA-L block holding it',
+        () async {
+          final result = await repository.entryFor('00:1B:C5:00:2:AA:BB');
+          expect(result!.macPrefix, '001BC5002');
+          expect(result.vendorName, 'GORAMO - Janusz Gorecki');
+          expect(result.blockType, 'MA-S');
+          expect(
+            result.vendorName,
+            isNot('IEEE Registration Authority'),
+            reason: 'The parent MA-L entry only stands in for its sub-blocks',
+          );
+        },
+      );
+
+      test('matches an MA-M block on 7 hex digits', () async {
+        final result = await repository.entryFor('1C:87:76:D5:AA:BB');
+        expect(result!.macPrefix, '1C8776D');
+        expect(result.vendorName, 'Qivivo');
+        expect(result.blockType, 'MA-M');
+      });
+
+      test('matches an IAB block on 9 hex digits', () async {
+        final result = await repository.entryFor('00:50:C2:00:01:23');
+        expect(result!.macPrefix, '0050C2000');
+        expect(result.vendorName, 'T.L.S. Corp.');
+        expect(result.blockType, 'IAB');
+      });
+
+      test('still resolves MA-L prefixes as before', () async {
+        final result = await repository.entryFor('00:03:93:AB:CD:EF');
+        expect(result!.macPrefix, '000393');
+        expect(result.vendorName, 'Apple, Inc.');
+      });
+
+      test('falls back to the parent when no sub-block matches', () async {
+        final result = await repository.entryFor('00:1B:C5:AA:BB:CC');
+        expect(result!.macPrefix, '001BC5');
+        expect(result.blockType, 'MA-L');
+      });
+
+      test('ignores separators in sub-block lookups', () async {
+        final dashed = await repository.entryFor('00-1b-c5-00-2a-ab');
+        final raw = await repository.entryFor('001BC5002AAB');
+        expect(dashed!.macPrefix, raw!.macPrefix);
+      });
+
+      test('returns null for unregistered and truncated input', () async {
+        expect(await repository.entryFor('FF:FF:FF:00:00:00'), isNull);
+        expect(await repository.entryFor('aabb'), isNull);
+      });
+    });
+
     test('clear returns true', () async {
       final result = await repository.clear();
       expect(result, isTrue);

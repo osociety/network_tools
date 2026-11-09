@@ -73,6 +73,10 @@ void main(List<String> args) async {
   });
 }
 
+/// Hex-prefix lengths of the IEEE assignment blocks the vendor table can match:
+/// MA-L (3 octets), MA-M (3.5 octets) and MA-S/IAB (4.5 octets).
+const Set<int> _vendorPrefixLengths = {6, 7, 9};
+
 String _generateVendorMap(String csvContent) {
   // Split on \n; \r is stripped per-field to handle all platform line endings.
   final lines = csvContent.split('\n');
@@ -82,7 +86,7 @@ String _generateVendorMap(String csvContent) {
     final row = _parseCsvLine(lines[i].trimRight());
     if (row.length < 2) continue;
     final prefix = row[0].replaceAll(RegExp('[^0-9a-fA-F]'), '').toUpperCase();
-    if (prefix.length != 6) continue;
+    if (!_vendorPrefixLengths.contains(prefix.length)) continue;
     final vendorName = row[1].trim();
     if (vendorName.isEmpty) continue;
 

@@ -26,5 +26,26 @@ void main() {
         expect(VendorTable.noColonString('aabb'), 'AABB');
       });
     });
+
+    group('normalizedHex', () {
+      test('keeps every octet of a full MAC', () {
+        expect(VendorTable.normalizedHex('aa:bb:cc:dd:ee:ff'), 'AABBCCDDEEFF');
+      });
+
+      test('strips dash and dot separators', () {
+        expect(VendorTable.normalizedHex('aa-bb-cc-dd-ee-ff'), 'AABBCCDDEEFF');
+        expect(VendorTable.normalizedHex('aabb.ccdd.eeff'), 'AABBCCDDEEFF');
+      });
+
+      test('does not truncate to an MA-L prefix', () {
+        expect(VendorTable.normalizedHex('00:1b:c5:00:2a:ab'), '001BC5002AAB');
+      });
+    });
+
+    group('prefixLengths', () {
+      test('probes the most specific IEEE block first', () {
+        expect(VendorTable.prefixLengths, [9, 7, 6]);
+      });
+    });
   });
 }

@@ -19,6 +19,11 @@ void main() async {
   await _writeVendorMap(entries);
 }
 
+/// Hex-prefix lengths of the IEEE assignment blocks the vendor table can match:
+/// MA-L (3 octets), MA-M (3.5 octets) and MA-S/IAB (4.5 octets).
+/// Keep in sync with the identical constant in `hook/build.dart`.
+const Set<int> _vendorPrefixLengths = {6, 7, 9};
+
 Map<String, List<String>> _parseVendorCsv(String csvContent) {
   // Split on \n; \r is stripped per-field to handle all platform line endings.
   final lines = csvContent.split('\n');
@@ -32,7 +37,7 @@ Map<String, List<String>> _parseVendorCsv(String csvContent) {
     final row = _parseCsvLine(lines[i].trimRight());
     if (row.length < 2) continue;
     final prefix = row[0].replaceAll(RegExp('[^0-9a-fA-F]'), '').toUpperCase();
-    if (prefix.length != 6) continue;
+    if (!_vendorPrefixLengths.contains(prefix.length)) continue;
     final vendorName = row[1].trim();
     if (vendorName.isEmpty) continue;
 
