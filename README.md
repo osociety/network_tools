@@ -67,6 +67,14 @@ A MAC is matched against the longest IEEE block that covers it: MA-S and IAB
 are therefore attributed to their own assignee instead of to the MA-L entry
 that only stands in for them.
 
+The table itself is not stored in the repository. `vendor_map.dart` holds a
+stub, and `hook/build.dart` fills it while your app builds — from
+`lib/assets/mac-vendors-export.csv` in a source checkout, or by downloading that
+file from GitHub when the package comes from pub.dev. A build that reaches
+neither compiles against the stub and resolves no vendors, so vendor data needs
+network access at build time. In this repository, run
+`dart run tool/generate_vendor_map.dart` before the vendor tests.
+
 ## Usage
 
 ### Host Scanner

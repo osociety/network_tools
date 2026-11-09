@@ -5,6 +5,15 @@ import 'package:test/test.dart';
 
 void main() {
   group('Build hook generates vendor_map.dart correctly', () {
+    setUpAll(() {
+      if (kVendorMap.isEmpty) {
+        throw StateError(
+          'kVendorMap is the committed stub. Run '
+          '"dart run tool/generate_vendor_map.dart" before this suite.',
+        );
+      }
+    });
+
     test('kVendorMap is not empty', () {
       expect(kVendorMap, isNotEmpty);
       expect(kVendorMap.length, greaterThan(30000));

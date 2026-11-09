@@ -51,6 +51,15 @@ void main() {
     });
 
     group('entryFor longest-prefix matching', () {
+      setUpAll(() {
+        if (kVendorMap.isEmpty) {
+          throw StateError(
+            'kVendorMap is the committed stub. Run '
+            '"dart run tool/generate_vendor_map.dart" before this suite.',
+          );
+        }
+      });
+
       test(
         'prefers an MA-S sub-block over the MA-L block holding it',
         () async {
