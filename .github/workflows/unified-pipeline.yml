@@ -104,6 +104,14 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
+      # The committed vendor map is a stub; the tests assert against real IEEE
+      # block data, so build it from the bundled CSV before the checks run.
+      - name: Generate vendor map from CSV
+        run: dart run tool/generate_vendor_map.dart
+
+      - name: Format generated vendor map
+        run: dart format lib/src/device_info/vendor_map.dart
+
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 

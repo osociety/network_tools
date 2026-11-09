@@ -22,20 +22,26 @@ class VendorRepository implements Repository<Vendor> {
 
   @override
   Future<Vendor?> entryFor(String address) async {
-    final prefix = VendorTable.noColonString(address);
-    final data = kVendorMap[prefix];
-    if (data == null) {
-      _logger.fine('No Vendor entry found for address: $address');
-      return null;
+    final hex = VendorTable.normalizedHex(address);
+    // Longest match wins: an MA-S, MA-M or IAB sub-block is registered to its
+    // own vendor even when the MA-L block containing it is not.
+    for (var i = 0; i < VendorTable.prefixLengths.length; i++) {
+      final length = VendorTable.prefixLengths[i];
+      if (hex.length < length) continue;
+      final prefix = hex.substring(0, length);
+      final data = kVendorMap[prefix];
+      if (data == null) continue;
+      _logger.fine('Found Vendor entry for address: $address');
+      return Vendor(
+        macPrefix: prefix,
+        vendorName: data.$1,
+        private: data.$2,
+        blockType: data.$3,
+        lastUpdate: data.$4,
+      );
     }
-    _logger.fine('Found Vendor entry for address: $address');
-    return Vendor(
-      macPrefix: prefix,
-      vendorName: data.$1,
-      private: data.$2,
-      blockType: data.$3,
-      lastUpdate: data.$4,
-    );
+    _logger.fine('No Vendor entry found for address: $address');
+    return null;
   }
 
   @override

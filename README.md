@@ -55,10 +55,25 @@ Future<void> main() async {
 }
 ```
 
-Pass `buildVendorTable: false` from worker isolate entry points. The vendor
-table downloads a multi-megabyte CSV on first use, and vendor lookups happen in
-the isolate that receives the hosts, not the one that starts the scan. Scans
-started through `getAllPingableDevicesAsync` already do this.
+Pass `buildVendorTable: false` from worker isolate entry points, where the table
+is never read: vendor lookups happen in the isolate that receives the hosts, not
+the one that starts the scan. Scans started through
+`getAllPingableDevicesAsync` already do this. The flag does not disable
+lookups — the table is generated into the package at build time, so it is
+present whether or not the table is "built".
+
+A MAC is matched against the longest IEEE block that covers it: MA-S and IAB
+(4.5 octets) first, then MA-M (3.5 octets), then MA-L (3 octets). Sub-blocks
+are therefore attributed to their own assignee instead of to the MA-L entry
+that only stands in for them.
+
+The table itself is not stored in the repository. `vendor_map.dart` holds a
+stub, and `hook/build.dart` fills it while your app builds — from
+`lib/assets/mac-vendors-export.csv` in a source checkout, or by downloading that
+file from GitHub when the package comes from pub.dev. A build that reaches
+neither compiles against the stub and resolves no vendors, so vendor data needs
+network access at build time. In this repository, run
+`dart run tool/generate_vendor_map.dart` before the vendor tests.
 
 ## Usage
 
