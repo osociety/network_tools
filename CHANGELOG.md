@@ -1,5 +1,9 @@
 # Change Log
 
+## 6.0.17
+1. **Longest-prefix vendor matching**: `ActiveHost.vendor` now resolves MA-M, MA-S and IAB blocks as well as MA-L. Lookups probe the most specific block first (9 hex digits, then 7, then 6), so a device in a sub-block is attributed to its own assignee instead of the `IEEE Registration Authority` entry registered for the parent block. Fixes #303.
+2. **Fuller vendor table**: the generated map grows from 34,451 to 49,533 entries, adding 15,082 previously unreachable assignments. In an AOT build this costs roughly 0.6 MB compressed, and a lookup is still about a microsecond.
+
 ## 6.0.16
 1. **IPv6 port scanning**: Port scanner now resolves and scans IPv6 addresses. Removed the IPv4-only DNS filter so both IPv4 and IPv6 hosts work.
 
