@@ -58,22 +58,25 @@ Future<void> main() async {
 Pass `buildVendorTable: false` from worker isolate entry points, where the table
 is never read: vendor lookups happen in the isolate that receives the hosts, not
 the one that starts the scan. Scans started through
-`getAllPingableDevicesAsync` already do this. The flag does not disable
-lookups — the table is generated into the package at build time, so it is
-present whether or not the table is "built".
+`getAllPingableDevicesAsync` already do this. The flag skips the warm-up only —
+the data ships inside the package, so lookups still resolve in an isolate that
+never built it.
 
 A MAC is matched against the longest IEEE block that covers it: MA-S and IAB
 (4.5 octets) first, then MA-M (3.5 octets), then MA-L (3 octets). Sub-blocks
 are therefore attributed to their own assignee instead of to the MA-L entry
 that only stands in for them.
 
-The table itself is not stored in the repository. `vendor_map.dart` holds a
-stub, and `hook/build.dart` fills it while your app builds — from
-`lib/assets/mac-vendors-export.csv` in a source checkout, or by downloading that
-file from GitHub when the package comes from pub.dev. A build that reaches
-neither compiles against the stub and resolves no vendors, so vendor data needs
-network access at build time. In this repository, run
-`dart run tool/generate_vendor_map.dart` before the vendor tests.
+The table ships as a packed binary index. `vendor_index.data.dart` holds the
+49,533 assignments gzip-compressed into a Dart string literal, and the first
+lookup decodes it — about 10 ms and 1.4 MB in an AOT build, then shared by every
+caller in that isolate. Nothing is generated while you build, so no network
+access is needed to compile the package and a cold first build resolves vendors.
+
+To refresh the data, replace `lib/assets/mac-vendors-export.csv`, run
+`dart run tool/build_vendor_index.dart` and commit both files.
+`test/vendor_index_parity_test.dart` rebuilds the index from the CSV and fails
+when the committed bytes no longer match it.
 
 ## Usage
 

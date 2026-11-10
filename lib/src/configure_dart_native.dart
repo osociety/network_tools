@@ -20,10 +20,10 @@ import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart'
 /// [enableDebugging] forwards package logs to [Logger.root] at [Level.FINE];
 /// [rebuildData] clears stale cached ARP entries before rebuilding the table.
 ///
-/// [buildVendorTable] should stay `false` in worker isolates. The vendor table
-/// can trigger a slow first-use download, vendor lookups happen in the isolate
-/// that created the host objects, and host discovery only needs the ARP
-/// repository.
+/// [buildVendorTable] should stay `false` in worker isolates. Decoding the
+/// vendor table costs a few milliseconds on first use, vendor lookups happen in
+/// the isolate that created the host objects, and host discovery only needs the
+/// ARP repository.
 Future<void> configureNetworkTools(
   String dbDirectory, {
   bool enableDebugging = false,
