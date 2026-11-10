@@ -1,5 +1,11 @@
 # Change Log
 
+## 6.0.18
+1. **Vendor table ships inside the package**: `hook/build.dart` and the `vendor_map.dart` stub are replaced by `vendor_index.data.dart` — the same 49,533 assignments as a packed binary index, gzipped into a Dart string literal. The first lookup decodes it, about 10 ms and 1.4 MB, and every lookup after that is a binary search. Nothing is generated while you build, so the 6.0.17 failure mode where a cold build raced the hook and compiled the empty stub is gone: vendor data needs no network access at build time and the first build of an app resolves vendors.
+2. **Smaller app binaries**: on a Vernet macOS release build carrying the same data, the Dart AOT snapshot drops from 13.6 MB to 10.1 MB and the `.app` bundle from 32.6 MB to 29.2 MB. Against 6.0.16 the snapshot is 2.0 MB smaller while covering a third more assignments.
+3. **Bigger install**: the published archive grows from 49 KB to 611 KB — the same trade, moved from build time to download time. The `hooks` dependency is dropped, and `configureNetworkTools(buildVendorTable: false)` now only skips the warm-up in isolates that never look a vendor up.
+4. **One generator, drift-checked**: `tool/build_vendor_index.dart` replaces `tool/generate_vendor_map.dart` and the hook, and `test/vendor_index_parity_test.dart` rebuilds the index from the bundled IEEE CSV and compares it byte for byte, so the committed index cannot silently go stale. Replace the CSV, run the tool, commit both files.
+
 ## 6.0.17
 1. **Longest-prefix vendor matching**: `ActiveHost.vendor` now resolves MA-M, MA-S and IAB blocks as well as MA-L. Lookups probe the most specific block first (9 hex digits, then 7, then 6), so a device in a sub-block is attributed to its own assignee instead of the `IEEE Registration Authority` entry registered for the parent block. Fixes #303.
 2. **Smaller package, fuller table**: the generated table is no longer committed. `hook/build.dart` builds it at compile time from the IEEE CSV, and it now covers 49,533 assignments instead of 34,451. The published archive drops from 749 KB to 49 KB. Vendor data therefore needs network access at build time: a build that cannot fetch the CSV compiles against an empty table and resolves no vendors.
