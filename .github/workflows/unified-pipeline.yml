@@ -104,14 +104,6 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
-      # The committed vendor map is a stub; the tests assert against real IEEE
-      # block data, so build it from the bundled CSV before the checks run.
-      - name: Generate vendor map from CSV
-        run: dart run tool/generate_vendor_map.dart
-
-      - name: Format generated vendor map
-        run: dart format lib/src/device_info/vendor_map.dart
-
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
@@ -150,9 +142,6 @@ jobs:
           files: ./coverage/lcov.info
           flags: unittests
           fail_ci_if_error: false
-
-      - name: Revert generated vendor map to stub
-        run: git checkout HEAD -- lib/src/device_info/vendor_map.dart || true
 
       - name: Check publish dry-run
         run: dart pub publish --dry-run
@@ -216,9 +205,6 @@ jobs:
 
       - name: Install dependencies
         run: dart pub get
-
-      - name: Revert generated vendor map to stub
-        run: git checkout HEAD -- lib/src/device_info/vendor_map.dart || true
 
       - name: Publish to pub.dev
         run: dart pub publish --force
