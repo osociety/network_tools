@@ -26,8 +26,6 @@ dependencies:
   drift: ^2.34.0
   # Service locator
   get_it: ^9.2.1
-  # Dart build hook support for bundling data assets at compile time.
-  hooks: ^2.2.0
   # Convenient code generator for get_it
   injectable: ">=2.5.1 <4.0.0"
   # Defines the annotations used by json_serializable.

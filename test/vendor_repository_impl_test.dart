@@ -1,4 +1,4 @@
-import 'package:network_tools/src/device_info/vendor_map.dart';
+import 'package:network_tools/src/device_info/vendor_index.dart';
 import 'package:network_tools/src/repository/vendor_repository_impl.dart';
 import 'package:test/test.dart';
 
@@ -17,20 +17,20 @@ void main() {
     test('entries returns all MAC prefixes from the generated map', () async {
       final result = await repository.entries();
       expect(result, isNotEmpty);
-      expect(result.length, kVendorMap.length);
+      expect(result.length, vendorIndex.length);
     });
 
     test('entryFor returns Vendor if prefix is in the map', () async {
       // Pick the first known prefix from the generated map.
-      final knownPrefix = kVendorMap.keys.first;
+      final knownPrefix = vendorIndex.prefixes.first;
       final result = await repository.entryFor(knownPrefix);
       expect(result, isNotNull);
       expect(result!.macPrefix, knownPrefix);
-      expect(result.vendorName, kVendorMap[knownPrefix]!.$1);
+      expect(result.vendorName, vendorIndex.entryFor(knownPrefix)!.name);
     });
 
     test('entryFor normalizes MAC addresses with separators', () async {
-      final knownPrefix = kVendorMap.keys.first;
+      final knownPrefix = vendorIndex.prefixes.first;
       // Format as colon-separated MAC (prefix + extra bytes).
       final mac =
           '${knownPrefix[0]}${knownPrefix[1]}:'
@@ -44,22 +44,11 @@ void main() {
 
     test('entryFor returns null for unknown prefix', () async {
       final result = await repository.entryFor('FF:FF:FF:00:00:00');
-      // FF:FF:FF might or might not be in the map; use a clearly invalid one.
-      if (!kVendorMap.containsKey('FFFFFF')) {
-        expect(result, isNull);
-      }
+      // FF:FF:FF is not an assigned block prefix.
+      expect(result, isNull);
     });
 
     group('entryFor longest-prefix matching', () {
-      setUpAll(() {
-        if (kVendorMap.isEmpty) {
-          throw StateError(
-            'kVendorMap is the committed stub. Run '
-            '"dart run tool/generate_vendor_map.dart" before this suite.',
-          );
-        }
-      });
-
       test(
         'prefers an MA-S sub-block over the MA-L block holding it',
         () async {
