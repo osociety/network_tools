@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/injection.dart';
@@ -530,6 +531,138 @@ void main() {
       });
     });
   });
+
+  group('TCP probe resource handling', () {
+    // A socket the scan never releases stays owned by the isolate that ran it,
+    // and that isolate never terminates. Its exit is therefore the observation,
+    // which needs no operating system introspection and behaves identically on
+    // every platform.
+    Future<void> expectScanToReleaseItsHandles(
+      String subnet, {
+      required int lastHostId,
+    }) async {
+      final reportPort = ReceivePort();
+      final exitPort = ReceivePort();
+      final errorPort = ReceivePort();
+      final errors = <Object?>[];
+      errorPort.listen(errors.add);
+      final exited = Completer<void>();
+      exitPort.listen((dynamic _) {
+        if (!exited.isCompleted) exited.complete();
+      });
+
+      final Isolate isolate = await Isolate.spawn(
+        _scanThenReport,
+        _ScanRequest(
+          reportTo: reportPort.sendPort,
+          subnet: subnet,
+          lastHostId: lastHostId,
+        ),
+        onExit: exitPort.sendPort,
+        onError: errorPort.sendPort,
+      );
+
+      String report = 'no report';
+      try {
+        report =
+            await reportPort.first.timeout(
+                  const Duration(seconds: 20),
+                  onTimeout: () => 'the scan never finished',
+                )
+                as String;
+        await exited.future.timeout(
+          const Duration(seconds: 20),
+          onTimeout: () {},
+        );
+      } finally {
+        isolate.kill();
+        reportPort.close();
+        exitPort.close();
+        errorPort.close();
+      }
+
+      expect(errors, isEmpty, reason: 'the scanning isolate failed: $errors');
+      expect(report, 'SCAN-DONE');
+      expect(
+        exited.isCompleted,
+        isTrue,
+        reason: 'the isolate stayed alive, so the scan leaked a handle',
+      );
+    }
+
+    test(
+      'releases the sockets of probes that timed out',
+      () => expectScanToReleaseItsHandles(
+        '192.0.2', // TEST-NET-1, so every probe has to time out
+        lastHostId: 12,
+      ),
+    );
+
+    test('releases the socket of a probe that reached an open port', () async {
+      // The other half of the probe: a host that answers. Half-closing instead
+      // of destroying waits for the server to hang up first, and this server
+      // never does, so the socket is still held when the scan reports done.
+      final ServerSocket server = await _bindProbePort();
+      final accepted = <Socket>[];
+      server.listen(accepted.add);
+
+      try {
+        await expectScanToReleaseItsHandles('127.0.0', lastHostId: 1);
+      } finally {
+        await server.close();
+        for (final Socket socket in accepted) {
+          socket.destroy();
+        }
+      }
+    });
+  });
+}
+
+/// Binds a port the TCP sweep probes, so a loopback scan sees it open.
+///
+/// Falls back through the probe list because 8080 is also bound by other suites
+/// and may already be taken on a runner.
+Future<ServerSocket> _bindProbePort() async {
+  for (final int port in const <int>[8080, 8443, 9100, 5900, 3389]) {
+    try {
+      return await ServerSocket.bind(InternetAddress.loopbackIPv4, port);
+    } on SocketException {
+      continue;
+    }
+  }
+  throw StateError('None of the probe ports could be bound');
+}
+
+class _ScanRequest {
+  _ScanRequest({
+    required this.reportTo,
+    required this.subnet,
+    required this.lastHostId,
+  });
+
+  final SendPort reportTo;
+  final String subnet;
+  final int lastHostId;
+}
+
+/// Runs one host scan in a spawned isolate and reports back.
+///
+/// It registers the ARP fake instead of calling [configureNetworkTools] so the
+/// only resources the scan can leave behind are the sockets it opens.
+Future<void> _scanThenReport(_ScanRequest request) async {
+  HostScannerServiceImpl();
+  PortScannerServiceImpl();
+  getIt.registerSingleton<Repository<ARPData>>(_FakeARPRepository(null));
+
+  await HostScannerServiceImpl()
+      .getAllSendablePingableDevices(
+        request.subnet,
+        lastHostId: request.lastHostId,
+        timeoutInSeconds: 1,
+      )
+      .toList();
+
+  request.reportTo.send('SCAN-DONE');
 }
 
 /// The scan isolate opens the database inside the temporary directory, and
