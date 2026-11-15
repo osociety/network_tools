@@ -20,8 +20,11 @@ funding:
   - https://ko-fi.com/op3nsoc13ty
   
 dependencies:
-  # Multi-platform network ping utility.
-  dart_ping: ">=9.0.1 <11.0.0"
+  # Multi-platform network ping utility. The floor matters on iOS: 9.x throws
+  # UnimplementedError from its `ios` factory branch unless a separate plugin
+  # registers a factory, and the scanner catches that per host, so the ICMP
+  # fallback silently finds nothing. 10.x implements iOS natively.
+  dart_ping: ^10.0.1
   # Drift is a reactive persistence library for Flutter and Dart, built on top of SQLite.
   drift: ^2.34.0
   # Service locator
