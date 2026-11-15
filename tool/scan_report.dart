@@ -13,6 +13,8 @@ import 'dart:io';
 
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/device_info/arp_table_helper.dart';
+import 'package:network_tools/src/injection.dart';
+import 'package:network_tools/src/repository/repository.dart';
 
 Future<void> main(List<String> arguments) async {
   final Directory dbDir = await Directory.systemTemp.createTemp('nt_report_');
@@ -71,11 +73,16 @@ Future<void> main(List<String> arguments) async {
   }
   await stdout.flush();
 
+  // configureNetworkTools opens the drift/SQLite ARP database and no public
+  // API closes it, so the VM outlives main() and `dart run` never returns.
+  await getIt<Repository<ARPData>>().close();
+
   try {
     await dbDir.delete(recursive: true);
   } on FileSystemException {
     // The report is already printed; a locked temp database is harmless.
   }
+  exit(0);
 }
 
 /// Reverse lookups for the table entries, independent of the scanner.
