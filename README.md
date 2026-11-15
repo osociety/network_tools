@@ -55,6 +55,18 @@ Future<void> main() async {
 }
 ```
 
+The configuration owns a database connection, and that connection keeps the
+process alive after the work is done. A CLI, a test or a one-shot script should
+therefore release it before returning, otherwise `dart run` prints everything and
+then hangs at exit:
+
+```dart
+await closeNetworkTools();
+```
+
+Configuring again afterwards works, so this is safe in a tear-down. A Flutter app
+that keeps scanning for its whole lifetime never needs to call it.
+
 Pass `buildVendorTable: false` from worker isolate entry points, where the table
 is never read: vendor lookups happen in the isolate that receives the hosts, not
 the one that starts the scan. Scans started through

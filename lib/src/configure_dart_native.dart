@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:logging/logging.dart';
 import 'package:network_tools/network_tools.dart' as packages_page;
+import 'package:network_tools/src/database/drfit_database_service.dart';
+import 'package:network_tools/src/database/drift_database.dart';
 import 'package:network_tools/src/injection.dart';
 import 'package:network_tools/src/models/arp_data.dart';
 import 'package:network_tools/src/models/vendor.dart';
@@ -9,6 +12,30 @@ import 'package:network_tools/src/repository/repository.dart';
 import 'package:network_tools/src/services/impls/host_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/mdns_scanner_service_impl.dart';
 import 'package:network_tools/src/services/impls/port_scanner_service_impl.dart';
+
+/// Handler installed by [configureNetworkTools] when debugging is enabled.
+///
+/// `Logger.root.onRecord` is a broadcast stream, so a listener that is never
+/// removed prints every record again each time the package is configured.
+StreamSubscription<LogRecord>? _debugLogSubscription;
+
+/// Releases what [configureNetworkTools] opened and forgets it.
+///
+/// Without it the process outlives the app's work: the database connection owns
+/// a background isolate that only terminates once the connection is closed.
+/// Calling [configureNetworkTools] again afterwards works, so this is safe at the
+/// end of a CLI or a test, not just before the app exits.
+Future<void> closeNetworkTools() async {
+  final AppDatabase? database = DriftDatabaseService.appDatabase;
+  // The cache is dropped before the close is awaited so a scan that starts while
+  // this is still running builds a fresh connection instead of writing to one
+  // being torn down.
+  DriftDatabaseService.reset();
+  final StreamSubscription<LogRecord>? subscription = _debugLogSubscription;
+  _debugLogSubscription = null;
+  await subscription?.cancel();
+  await database?.close();
+}
 
 /// Configures the network tools package for Dart native platforms.
 ///
@@ -40,7 +67,8 @@ Future<void> configureNetworkTools(
 
   if (packages_page.enableDebugging) {
     Logger.root.level = Level.FINE;
-    Logger.root.onRecord.listen((record) {
+    await _debugLogSubscription?.cancel();
+    _debugLogSubscription = Logger.root.onRecord.listen((record) {
       if (record.loggerName == logger.name) {
         // When debugging is enabled, log only the network_tools logger
         // ignore: avoid_print
@@ -49,6 +77,11 @@ Future<void> configureNetworkTools(
         );
       }
     });
+  } else {
+    // A reconfigure with debugging off must not leave the previous listener
+    // printing.
+    await _debugLogSubscription?.cancel();
+    _debugLogSubscription = null;
   }
 
   // Setting dart native classes implementations
@@ -68,7 +101,13 @@ Future<void> initializeNetworkTools(
   bool rebuildData, {
   bool buildVendorTable = true,
 }) async {
-  configureDependencies(Env.prod);
+  // Configuring twice has to work: `closeNetworkTools` releases the database but
+  // leaves the service locator alone, and the generated registrations throw when
+  // a type is already there. Unregistering instead is not an option because this
+  // is the app's own `GetIt.instance`, which holds its services too.
+  if (!getIt.isRegistered<Repository<ARPData>>()) {
+    configureDependencies(Env.prod);
+  }
   if (rebuildData) {
     await getIt<Repository<ARPData>>().clear();
   }
