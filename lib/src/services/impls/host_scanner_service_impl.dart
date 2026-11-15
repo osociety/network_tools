@@ -557,8 +557,16 @@ class HostScannerServiceImpl extends HostScannerService {
   /// (connection succeeded or connection-refused), false if timed out.
   Future<bool> _tryConnect(String host, int port, Duration timeout) async {
     try {
-      final socket = await Socket.connect(host, port).timeout(timeout);
-      await socket.close();
+      // The deadline has to be an argument to `connect`, not `Future.timeout` on
+      // the returned future: abandoning the future leaves the pending socket
+      // open with nothing left to close it. Every timed-out probe then holds a
+      // descriptor for the life of the isolate, so a whole-subnet sweep keeps
+      // the VM running after the scan finishes and accumulates across repeated
+      // scans. `destroy()` rather than `close()` because a probe never reads,
+      // and a half-closed socket to a host that keeps the connection open holds
+      // a descriptor the same way.
+      final socket = await Socket.connect(host, port, timeout: timeout);
+      socket.destroy();
       return true; // Port open
     } on SocketException catch (e) {
       // errno 111 = ECONNREFUSED on Linux/Android; 10061 on Windows.
