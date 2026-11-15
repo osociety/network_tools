@@ -348,13 +348,7 @@ class PortScannerServiceImpl extends PortScannerService {
         rethrow;
       }
 
-      // Check if connection timed out or we got one of predefined errors.
-      // Windows can surface refusal errors with different codes/messages, so
-      // treat those as closed ports as well.
-      final errorCode = e.osError?.errorCode;
-      if (e.osError == null ||
-          _errorCodes.contains(errorCode) ||
-          e.message.toLowerCase().contains('refused')) {
+      if (isClosedPortError(e)) {
         return null;
       }
 
@@ -381,21 +375,47 @@ class PortScannerServiceImpl extends PortScannerService {
     }
   }
 
-  final _errorCodes = [
+  /// Error codes that mean nothing is listening on the probed port, as opposed
+  /// to the probe itself failing.
+  ///
+  /// A refused connect and a reset both answer "closed", but every platform
+  /// numbers them differently: ECONNREFUSED is 111 on Linux/Android, 61 on
+  /// Darwin and 10061 on Windows, and ECONNRESET is 104, 54 and 10054 for the
+  /// same three. Darwin and Linux also answer RST instead of refusal when a
+  /// port is rebound between the probe and the reply, so without the reset code
+  /// a scan aborts on a port that is simply closed.
+  static const Set<int> closedPortErrorCodes = <int>{
     13,
     49,
-    61,
+    54, // ECONNRESET, Darwin
+    61, // ECONNREFUSED, Darwin
     64,
     65,
     101,
+    104, // ECONNRESET, Linux
     110,
-    111,
+    111, // ECONNREFUSED, Linux
     113,
+    10054, // WSAECONNRESET, Windows
     10060,
-    10061,
+    10061, // WSAECONNREFUSED, Windows
     // WSAENOTCONN: Windows reports this when a pending connect is destroyed on
     // timeout, so the port never opened.
     10057,
     1225,
-  ];
+  };
+
+  /// Whether [error] reports the probed port as closed rather than a failed
+  /// probe; see [closedPortErrorCodes].
+  static bool isClosedPortError(SocketException error) {
+    // A socket error with no OS code behind it came from the Dart layer, for
+    // example a connect destroyed once its timeout elapsed, so the port never
+    // opened.
+    final int? errorCode = error.osError?.errorCode;
+    if (errorCode == null) {
+      return true;
+    }
+    return closedPortErrorCodes.contains(errorCode) ||
+        error.message.toLowerCase().contains('refused');
+  }
 }
