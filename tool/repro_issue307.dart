@@ -20,6 +20,8 @@ import 'dart:io';
 
 import 'package:network_tools/network_tools.dart';
 import 'package:network_tools/src/concurrency.dart';
+import 'package:network_tools/src/injection.dart';
+import 'package:network_tools/src/repository/repository.dart';
 
 /// The 14 ports the scanner probes, copied so the predicate can be swapped.
 const List<int> _probePorts = [
@@ -161,11 +163,18 @@ Future<void> main(List<String> arguments) async {
   }
 
   await stdout.flush();
+
+  // configureNetworkTools opens the drift/SQLite ARP database and nothing in
+  // the public API closes it, so the VM outlives main() and `dart run` never
+  // returns. Closing the repository is not enough on its own — the scan path
+  // keeps another handle open — so this CLI exits explicitly.
+  await getIt<Repository<ARPData>>().close();
   try {
     await dbDir.delete(recursive: true);
   } on FileSystemException {
     // Temp database still locked; the report is already printed.
   }
+  exit(0);
 }
 
 Future<void> _say(String line) async {
