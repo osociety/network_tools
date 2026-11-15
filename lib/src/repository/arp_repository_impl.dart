@@ -63,7 +63,9 @@ class ARPRepository implements Repository<ARPData> {
   @override
   Future<void> close() async {
     final database = await _database.open();
-    database!.close();
+    // Awaited: drift tears the connection and its background isolate down
+    // asynchronously, so returning early leaves both alive.
+    await database!.close();
   }
 
   Future<List<ARPDriftData>> _fullEntries() async {

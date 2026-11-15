@@ -51,6 +51,15 @@ class HostScannerServiceImpl extends HostScannerService {
     return 128;
   }
 
+  /// `ECONNREFUSED` values that prove a host answered with a RST, so the
+  /// address is alive even though the port is closed.
+  ///
+  /// The code is platform specific — 111 on Linux/Android, 61 on Darwin
+  /// (macOS and iOS), 10061 on Windows — so leaving Darwin out makes the TCP
+  /// sweep blind to every closed-port host on iOS while Android still sees
+  /// them.
+  static const Set<int> refusalErrorCodes = <int>{111, 61, 10061};
+
   /// Scans for all hosts in a particular subnet (e.g., 192.168.1.0/24)
   /// Set maxHost to higher value if you are not getting results.
   /// It won't firstHostId again unless previous scan is completed due to heavy
@@ -171,9 +180,9 @@ class HostScannerServiceImpl extends HostScannerService {
 
   /// TCP-connect sweep: no process spawns, works on all platforms.
   ///
-  /// Tries to connect to common ports on each host. Connection-refused (errno 111
-  /// on Linux/Android, 10061 on Windows) means the host is up but the port is
-  /// closed; timeout or other errors mean the host is down.
+  /// Tries to connect to common ports on each host. Connection-refused (see
+  /// [refusalErrorCodes]) means the host is up but the port is closed; timeout
+  /// or other errors mean the host is down.
   ///
   /// After TCP-connect completes, runs ICMP ping as a fallback for hosts that
   /// didn't respond to TCP. This ensures we find devices that block TCP but
@@ -569,10 +578,9 @@ class HostScannerServiceImpl extends HostScannerService {
       socket.destroy();
       return true; // Port open
     } on SocketException catch (e) {
-      // errno 111 = ECONNREFUSED on Linux/Android; 10061 on Windows.
-      // Both mean the host is up but the port is closed.
-      final errorCode = e.osError?.errorCode;
-      return errorCode == 111 || errorCode == 10061;
+      // A refusal means the host answered, so it is up even with the port
+      // closed. See [refusalErrorCodes] for the per-platform codes.
+      return refusalErrorCodes.contains(e.osError?.errorCode);
     } on TimeoutException {
       return false; // Host down or port filtered
     } catch (e) {

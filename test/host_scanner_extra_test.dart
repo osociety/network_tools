@@ -488,6 +488,50 @@ void main() {
     });
   });
 
+  group('TCP refusal codes', () {
+    test('accepts the code this OS reports for a refused connect', () async {
+      final ServerSocket server = await ServerSocket.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final int closedPort = server.port;
+      await server.close();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      int? observedCode;
+      try {
+        final Socket socket = await Socket.connect(
+          InternetAddress.loopbackIPv4.address,
+          closedPort,
+          timeout: const Duration(seconds: 2),
+        );
+        await socket.close();
+        markTestSkipped('the closed port accepted instead of refusing');
+      } on SocketException catch (e) {
+        final String message = e.osError?.message ?? e.message;
+        if (!message.toLowerCase().contains('refused')) {
+          markTestSkipped('this runner reported "$message" not a refusal');
+          return;
+        }
+        observedCode = e.osError?.errorCode;
+      }
+
+      expect(
+        HostScannerServiceImpl.refusalErrorCodes,
+        contains(observedCode),
+        reason: 'this OS reports ECONNREFUSED as $observedCode',
+      );
+    });
+
+    test('lists every platform refusal code and nothing else', () {
+      expect(HostScannerServiceImpl.refusalErrorCodes, <int>{
+        111, // Linux and Android
+        61, // Darwin, which covers both macOS and iOS
+        10061, // Windows
+      });
+    });
+  });
+
   group('TCP probe resource handling', () {
     // A socket the scan never releases stays owned by the isolate that ran it,
     // and that isolate never terminates. Its exit is therefore the observation,
