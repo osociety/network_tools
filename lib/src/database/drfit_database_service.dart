@@ -11,6 +11,15 @@ class DriftDatabaseService extends DatabaseService<AppDatabase> {
   @override
   Future<AppDatabase?> open() => _openFuture ??= _open();
 
+  /// Forgets the cached connection so the next [open] builds a fresh database.
+  ///
+  /// A drift connection cannot be reopened once closed, so without this the
+  /// package stays broken for the rest of the process after a shutdown.
+  static void reset() {
+    _openFuture = null;
+    appDatabase = null;
+  }
+
   static Future<AppDatabase?> _open() async {
     final AppDatabase database = appDatabase ??= AppDatabase();
     try {
